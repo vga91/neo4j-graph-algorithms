@@ -30,8 +30,8 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.scc.SCCIterativeTarjan;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 
@@ -88,7 +88,7 @@ public class IterativeTarjanSCCTest {
         api = TestDatabaseCreator.createTestDatabase();
 
         api.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(StronglyConnectedComponentsProc.class);
 
         try (Transaction tx = api.beginTx()) {
@@ -134,7 +134,7 @@ public class IterativeTarjanSCCTest {
 
         String cypher = "CALL algo.scc.iterative('', '', {write:true}) YIELD loadMillis, computeMillis, writeMillis";
 
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             final long loadMillis = row.getNumber("loadMillis").longValue();
             final long computeMillis = row.getNumber("computeMillis").longValue();
             final long writeMillis = row.getNumber("writeMillis").longValue();
@@ -165,7 +165,7 @@ public class IterativeTarjanSCCTest {
 
         String cypher = "CALL algo.scc.iterative.stream() YIELD nodeId, partition";
 
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             testMap.addTo(row.getNumber("partition").intValue(), 1);
             return true;
         });

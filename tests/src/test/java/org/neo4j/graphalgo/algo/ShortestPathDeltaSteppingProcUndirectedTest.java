@@ -26,8 +26,8 @@ import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.ShortestPathDeltaSteppingProc;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.Arrays;
@@ -88,7 +88,7 @@ public final class ShortestPathDeltaSteppingProcUndirectedTest {
         api = TestDatabaseCreator.createTestDatabase();
 
         api.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(ShortestPathDeltaSteppingProc.class);
 
         try (Transaction tx = api.beginTx()) {
@@ -122,7 +122,7 @@ public final class ShortestPathDeltaSteppingProcUndirectedTest {
         final String cypher = "MATCH(n:Node {name:'x'}) WITH n CALL algo.shortestPath.deltaStepping.stream(n, 'cost', 3.0,{graph:'"+graphImpl+"', direction: 'OUTGOING'}) " +
                 "YIELD nodeId, distance RETURN nodeId, distance";
 
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             long nodeId = row.getNumber("nodeId").longValue();
             double distance = row.getNumber("distance").doubleValue();
 
@@ -145,7 +145,7 @@ public final class ShortestPathDeltaSteppingProcUndirectedTest {
         final String cypher = "MATCH(n:Node {name:'x'}) WITH n CALL algo.shortestPath.deltaStepping.stream(n, 'cost', 3.0,{graph:'"+graphImpl+"'}) " +
                 "YIELD nodeId, distance RETURN nodeId, distance";
 
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             long nodeId = row.getNumber("nodeId").longValue();
             double distance = row.getNumber("distance").doubleValue();
 

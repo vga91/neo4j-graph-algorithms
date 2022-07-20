@@ -26,8 +26,8 @@ import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.StronglyConnectedComponentsProc;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 
@@ -73,7 +73,7 @@ public class StronglyConnectedComponentsProcIntegrationTest {
         }
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(StronglyConnectedComponentsProc.class);
     }
 

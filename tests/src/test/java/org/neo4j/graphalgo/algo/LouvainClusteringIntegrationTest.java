@@ -22,9 +22,9 @@ import com.carrotsearch.hppc.IntIntScatterMap;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.neo4j.graphalgo.LouvainProc;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.List;
@@ -81,7 +81,7 @@ public class LouvainClusteringIntegrationTest {
                         " (g)-[:TYPE]->(h),\n" +
                         " (b)-[:TYPE]->(e)";
 
-        DB.resolveDependency(Procedures.class).registerProcedure(LouvainProc.class);
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(LouvainProc.class);
         DB.execute(cypher);
     }
 

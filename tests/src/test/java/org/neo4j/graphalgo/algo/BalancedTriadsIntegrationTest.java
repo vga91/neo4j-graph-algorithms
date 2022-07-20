@@ -24,9 +24,9 @@ import org.junit.Test;
 import org.mockito.AdditionalMatchers;
 import org.neo4j.graphalgo.BalancedTriadsProc;
 import org.neo4j.graphalgo.api.HugeGraph;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.anyLong;
@@ -79,7 +79,7 @@ public class BalancedTriadsIntegrationTest {
                         " (g)-[:TYPE {w:1.0}]->(b)";
 
         DB.execute(cypher);
-        DB.resolveDependency(Procedures.class).registerProcedure(BalancedTriadsProc.class);
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(BalancedTriadsProc.class);
     }
 
     @Test

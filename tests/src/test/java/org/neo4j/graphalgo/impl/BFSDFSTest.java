@@ -27,8 +27,8 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.Traverse.ExitPredicate.Result;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 

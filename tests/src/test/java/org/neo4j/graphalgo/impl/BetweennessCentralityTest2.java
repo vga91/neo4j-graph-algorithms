@@ -35,8 +35,8 @@ import org.neo4j.graphalgo.impl.betweenness.BetweennessCentrality;
 import org.neo4j.graphalgo.impl.betweenness.BetweennessCentralitySuccessorBrandes;
 import org.neo4j.graphalgo.impl.betweenness.ParallelBetweennessCentrality;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.concurrent.atomic.AtomicIntegerArray;
@@ -100,7 +100,7 @@ public class BetweennessCentralityTest2 {
         }
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(BetweennessCentralityProc.class);
 
         graph = new GraphLoader(db)

@@ -25,7 +25,6 @@ import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.neo4j.graphalgo.LouvainProc;
 import org.neo4j.graphalgo.TestProgressLogger;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
@@ -39,7 +38,7 @@ import org.neo4j.graphalgo.core.utils.paged.HugeLongArray;
 import org.neo4j.graphalgo.impl.louvain.Louvain;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -112,7 +111,7 @@ public class LouvainTest1 {
         try (Transaction transaction = DB.beginTx()) {
             for (int i = 0; i < ABCD.length(); i++) {
                 final String value = String.valueOf(ABCD.charAt(i));
-                final int id = graph.toMappedNodeId(DB.findNode(LABEL, "name", value).getId());
+                final int id = graph.toMappedNodeId(tx.findNode(LABEL, "name", value).getId());
                 nameMap.put(value, id);
             }
             transaction.success();

@@ -31,8 +31,8 @@ import org.neo4j.graphalgo.ShortestPathProc;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 public class ShortestPathAStarTest {
@@ -90,7 +90,7 @@ public class ShortestPathAStarTest {
         }
         
         db.getDependencyResolver()
-        .resolveDependency(Procedures.class)
+        .resolveDependency(GlobalProcedures.class)
         .registerProcedure(ShortestPathProc.class);
 	}
 	

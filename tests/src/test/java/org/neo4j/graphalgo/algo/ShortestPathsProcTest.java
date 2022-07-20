@@ -27,9 +27,9 @@ import org.junit.runners.Parameterized;
 import org.mockito.Matchers;
 import org.neo4j.graphalgo.ShortestPathsProc;
 import org.neo4j.graphdb.Label;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -94,7 +94,7 @@ public final class ShortestPathsProcTest {
                         " (h)-[:TYPE {cost:2}]->(i),\n" +
                         " (i)-[:TYPE {cost:2}]->(x)";
 
-        api.resolveDependency(Procedures.class)
+        api.resolveDependency(GlobalProcedures.class)
                 .registerProcedure(ShortestPathsProc.class);
 
         api.executeAndCommit(__ -> {
@@ -129,7 +129,7 @@ public final class ShortestPathsProcTest {
         final String cypher = "MATCH(n:Node {name:'s'}) WITH n CALL algo.shortestPaths.stream(n, 'cost',{graph:'" + graphImpl + "'}) " +
                 "YIELD nodeId, distance RETURN nodeId, distance";
 
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             long nodeId = row.getNumber("nodeId").longValue();
             double distance = row.getNumber("distance").doubleValue();
             consumer.accept(distance);
@@ -185,7 +185,7 @@ public final class ShortestPathsProcTest {
         final String cypher = "MATCH(n:Node {name:'x'}) WITH n CALL algo.shortestPaths.stream(n, 'cost',{graph:'" + graphImpl + "'}) " +
                 "YIELD nodeId, distance RETURN nodeId, distance";
 
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             long nodeId = row.getNumber("nodeId").longValue();
             double distance = row.getNumber("distance").doubleValue();
             System.out.printf(

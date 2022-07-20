@@ -23,8 +23,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.neo4j.graphalgo.*;
 import org.neo4j.graphdb.Result;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.junit.Assert.assertEquals;
@@ -42,7 +42,7 @@ public class EmptyGraphIntegrationTest {
 
         db = TestDatabaseCreator.createTestDatabase();
 
-        Procedures procedures = db.getDependencyResolver().resolveDependency(Procedures.class);
+        Procedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(UnionFindProc.class);
         procedures.registerProcedure(MSColoringProc.class);
         procedures.registerProcedure(StronglyConnectedComponentsProc.class);

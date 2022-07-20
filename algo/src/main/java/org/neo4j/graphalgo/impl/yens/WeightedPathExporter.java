@@ -25,7 +25,7 @@ import org.neo4j.graphalgo.core.utils.ParallelUtil;
 import org.neo4j.graphalgo.core.utils.Pointer;
 import org.neo4j.graphalgo.core.utils.StatementApi;
 import org.neo4j.helpers.collection.Pair;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.values.storable.Values;
 

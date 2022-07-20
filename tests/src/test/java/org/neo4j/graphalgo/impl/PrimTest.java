@@ -33,7 +33,7 @@ import org.neo4j.graphalgo.impl.spanningTrees.Prim;
 import org.neo4j.graphalgo.impl.spanningTrees.SpanningTree;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -118,13 +118,13 @@ public class PrimTest {
                 .load(graphImpl);
 
         try (Transaction transaction = DB.beginTx()) {
-            a = graph.toMappedNodeId(DB.findNode(label, "name", "a").getId());
-            b = graph.toMappedNodeId(DB.findNode(label, "name", "b").getId());
-            c = graph.toMappedNodeId(DB.findNode(label, "name", "c").getId());
-            d = graph.toMappedNodeId(DB.findNode(label, "name", "d").getId());
-            e = graph.toMappedNodeId(DB.findNode(label, "name", "e").getId());
-            y = graph.toMappedNodeId(DB.findNode(label, "name", "y").getId());
-            z = graph.toMappedNodeId(DB.findNode(label, "name", "z").getId());
+            a = graph.toMappedNodeId(tx.findNode(label, "name", "a").getId());
+            b = graph.toMappedNodeId(tx.findNode(label, "name", "b").getId());
+            c = graph.toMappedNodeId(tx.findNode(label, "name", "c").getId());
+            d = graph.toMappedNodeId(tx.findNode(label, "name", "d").getId());
+            e = graph.toMappedNodeId(tx.findNode(label, "name", "e").getId());
+            y = graph.toMappedNodeId(tx.findNode(label, "name", "y").getId());
+            z = graph.toMappedNodeId(tx.findNode(label, "name", "z").getId());
             transaction.success();
         }
     }

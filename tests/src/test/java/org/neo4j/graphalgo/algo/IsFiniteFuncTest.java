@@ -22,8 +22,8 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.IsFiniteFunc;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Collection;
 import java.util.List;
@@ -39,7 +39,7 @@ public class IsFiniteFuncTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        DB.resolveDependency(Procedures.class).registerFunction(IsFiniteFunc.class);
+        DB.resolveDependency(GlobalProcedures.class).registerFunction(IsFiniteFunc.class);
     }
 
     @Test

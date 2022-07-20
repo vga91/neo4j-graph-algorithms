@@ -34,7 +34,7 @@ import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -259,7 +259,7 @@ public final class ShortestPathDijkstraTest {
             Node prev = null;
             long[] nodeIds = new long[kvPairs.length / 2];
             for (int i = 0; i < nodeIds.length; i++) {
-                Node current = db.findNode(label, kvPairs[2*i], kvPairs[2*i + 1]);
+                Node current = tx.findNode(label, kvPairs[2*i], kvPairs[2*i + 1]);
                 long id = current.getId();
                 nodeIds[i] = id;
                 if (prev != null) {

@@ -34,8 +34,8 @@ import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.impl.closeness.HugeMSClosenessCentrality;
 import org.neo4j.graphalgo.impl.closeness.MSClosenessCentrality;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;

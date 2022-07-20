@@ -98,7 +98,7 @@
         <dependency>
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j-slf4j</artifactId>
-            <version>${neo4j.version}</version>
+            <version>4.0.12</version>
             <scope>provided</scope>
         </dependency>
 

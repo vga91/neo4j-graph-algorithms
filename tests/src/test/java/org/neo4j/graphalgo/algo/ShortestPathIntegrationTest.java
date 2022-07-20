@@ -37,24 +37,19 @@
  */
 package org.neo4j.graphalgo.algo;
 
-import org.hamcrest.Matcher;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.ShortestPathProc;
 import org.neo4j.graphdb.Result;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 
 import static org.hamcrest.Matchers.is;
 
@@ -94,7 +89,7 @@ public class ShortestPathIntegrationTest {
                         "  (nD)-[:TYPE {cost:1.0}]->(nX)";
 
         DB.execute(createGraph).close();
-        DB.resolveDependency(Procedures.class).registerProcedure(ShortestPathProc.class);
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(ShortestPathProc.class);
     }
 
     @Parameterized.Parameters(name = "{0}")

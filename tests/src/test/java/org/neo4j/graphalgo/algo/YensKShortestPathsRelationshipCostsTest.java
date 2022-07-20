@@ -22,14 +22,10 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.KShortestPathsProc;
-import org.neo4j.graphdb.Transaction;
 import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.assertEquals;
 
@@ -61,7 +57,7 @@ public class YensKShortestPathsRelationshipCostsTest {
                         " (b)-[:TYPE {cost:2.0}]->(c)";
 
         DB.execute(cypher);
-        DB.resolveDependency(Procedures.class).registerProcedure(KShortestPathsProc.class);
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(KShortestPathsProc.class);
     }
 
     @Test

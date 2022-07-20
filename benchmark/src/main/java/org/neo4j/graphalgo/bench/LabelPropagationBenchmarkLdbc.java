@@ -27,8 +27,8 @@ import org.neo4j.graphalgo.helper.ldbc.LdbcDownloader;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -75,7 +75,7 @@ public class LabelPropagationBenchmarkLdbc {
     public void setup() throws KernelException, IOException {
         db = LdbcDownloader.openDb();
 
-        Procedures procedures = db.getDependencyResolver().resolveDependency(Procedures.class);
+        Procedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(LabelPropagationProc.class);
 
         graph = (HeavyGraph) new GraphLoader(db)

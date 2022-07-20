@@ -31,8 +31,8 @@ import org.neo4j.graphalgo.impl.spanningTrees.KSpanningTree;
 import org.neo4j.graphalgo.impl.spanningTrees.SpanningTree;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -99,11 +99,11 @@ public class KSpanningTreeTest {
                 .load(graphImpl);
 
         try (Transaction tx = DB.beginTx()) {
-            a = graph.toMappedNodeId(DB.findNode(Label.label("Node"), "name", "a").getId());
-            b = graph.toMappedNodeId(DB.findNode(Label.label("Node"), "name", "b").getId());
-            c = graph.toMappedNodeId(DB.findNode(Label.label("Node"), "name", "c").getId());
-            d = graph.toMappedNodeId(DB.findNode(Label.label("Node"), "name", "d").getId());
-            x = graph.toMappedNodeId(DB.findNode(Label.label("Node"), "name", "x").getId());
+            a = graph.toMappedNodeId(tx.findNode(Label.label("Node"), "name", "a").getId());
+            b = graph.toMappedNodeId(tx.findNode(Label.label("Node"), "name", "b").getId());
+            c = graph.toMappedNodeId(tx.findNode(Label.label("Node"), "name", "c").getId());
+            d = graph.toMappedNodeId(tx.findNode(Label.label("Node"), "name", "d").getId());
+            x = graph.toMappedNodeId(tx.findNode(Label.label("Node"), "name", "x").getId());
             tx.success();
         };
     }

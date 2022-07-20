@@ -32,8 +32,8 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.test.TestGraphDatabaseFactory;
 
@@ -87,7 +87,7 @@ public class LabelPropagationProcLoadPredefinedPartitionsTest {
                 .setConfig(GraphDatabaseSettings.procedure_unrestricted,"algo.*")
                 .newGraphDatabase();
 
-        Procedures proceduresService = ((GraphDatabaseAPI) DB).getDependencyResolver().resolveDependency(Procedures.class);
+        Procedures proceduresService = ((GraphDatabaseAPI) DB).getDependencyResolver().resolveDependency(GlobalProcedures.class);
 
         proceduresService.registerProcedure(Procedures.class, true);
         proceduresService.registerProcedure(LabelPropagationProc.class, true);

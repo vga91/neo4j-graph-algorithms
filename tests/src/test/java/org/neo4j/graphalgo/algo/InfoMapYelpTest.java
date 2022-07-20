@@ -24,8 +24,8 @@ import org.neo4j.graphalgo.InfoMapProc;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.helper.ldbc.LdbcDownloader;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.io.IOException;
@@ -42,7 +42,7 @@ public class InfoMapYelpTest {
     @BeforeClass
     public static void setupGraph() throws KernelException, IOException {
         db = LdbcDownloader.openDb("Yelp");
-        Procedures proceduresService = ((GraphDatabaseAPI) db).getDependencyResolver().resolveDependency(Procedures.class);
+        Procedures proceduresService = ((GraphDatabaseAPI) db).getDependencyResolver().resolveDependency(GlobalProcedures.class);
         proceduresService.registerProcedure(InfoMapProc.class, true);
     }
 

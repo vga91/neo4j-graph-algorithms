@@ -32,8 +32,8 @@ import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Result;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.junit.Assert.assertNotEquals;
@@ -94,7 +94,7 @@ public class DangalchevCentralityIntegrationTest {
                 });
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(DangalchevCentralityProc.class);
     }
 

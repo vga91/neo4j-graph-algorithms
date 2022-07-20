@@ -25,10 +25,10 @@ import org.neo4j.graphalgo.TerminateProcedure;
 import org.neo4j.graphalgo.core.utils.ParallelUtil;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphdb.*;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.exceptions.Status;
 import org.neo4j.kernel.impl.api.KernelTransactions;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 
@@ -60,7 +60,7 @@ public class TerminationTest {
         api = TestDatabaseCreator.createTestDatabase();
 
         final Procedures procedures = api.getDependencyResolver()
-                .resolveDependency(Procedures.class);
+                .resolveDependency(GlobalProcedures.class);
 
         procedures.registerProcedure(TerminateProcedure.class);
 

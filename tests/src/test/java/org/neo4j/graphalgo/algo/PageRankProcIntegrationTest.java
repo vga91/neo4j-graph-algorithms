@@ -28,8 +28,8 @@ import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 
@@ -110,33 +110,33 @@ public class PageRankProcIntegrationTest {
         }
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(PageRankProc.class);
 
 
         try (Transaction tx = db.beginTx()) {
             final Label label = Label.label("Label1");
-            expected.put(db.findNode(label, "name", "a").getId(), 0.243);
-            expected.put(db.findNode(label, "name", "b").getId(), 1.844);
-            expected.put(db.findNode(label, "name", "c").getId(), 1.777);
-            expected.put(db.findNode(label, "name", "d").getId(), 0.218);
-            expected.put(db.findNode(label, "name", "e").getId(), 0.243);
-            expected.put(db.findNode(label, "name", "f").getId(), 0.218);
-            expected.put(db.findNode(label, "name", "g").getId(), 0.150);
-            expected.put(db.findNode(label, "name", "h").getId(), 0.150);
-            expected.put(db.findNode(label, "name", "i").getId(), 0.150);
-            expected.put(db.findNode(label, "name", "j").getId(), 0.150);
+            expected.put(tx.findNode(label, "name", "a").getId(), 0.243);
+            expected.put(tx.findNode(label, "name", "b").getId(), 1.844);
+            expected.put(tx.findNode(label, "name", "c").getId(), 1.777);
+            expected.put(tx.findNode(label, "name", "d").getId(), 0.218);
+            expected.put(tx.findNode(label, "name", "e").getId(), 0.243);
+            expected.put(tx.findNode(label, "name", "f").getId(), 0.218);
+            expected.put(tx.findNode(label, "name", "g").getId(), 0.150);
+            expected.put(tx.findNode(label, "name", "h").getId(), 0.150);
+            expected.put(tx.findNode(label, "name", "i").getId(), 0.150);
+            expected.put(tx.findNode(label, "name", "j").getId(), 0.150);
 
-            weightedExpected.put(db.findNode(label, "name", "a").getId(), 0.218);
-            weightedExpected.put(db.findNode(label, "name", "b").getId(), 2.008);
-            weightedExpected.put(db.findNode(label, "name", "c").getId(), 1.850);
-            weightedExpected.put(db.findNode(label, "name", "d").getId(), 0.185);
-            weightedExpected.put(db.findNode(label, "name", "e").getId(), 0.182);
-            weightedExpected.put(db.findNode(label, "name", "f").getId(), 0.174);
-            weightedExpected.put(db.findNode(label, "name", "g").getId(), 0.150);
-            weightedExpected.put(db.findNode(label, "name", "h").getId(), 0.150);
-            weightedExpected.put(db.findNode(label, "name", "i").getId(), 0.150);
-            weightedExpected.put(db.findNode(label, "name", "j").getId(), 0.150);
+            weightedExpected.put(tx.findNode(label, "name", "a").getId(), 0.218);
+            weightedExpected.put(tx.findNode(label, "name", "b").getId(), 2.008);
+            weightedExpected.put(tx.findNode(label, "name", "c").getId(), 1.850);
+            weightedExpected.put(tx.findNode(label, "name", "d").getId(), 0.185);
+            weightedExpected.put(tx.findNode(label, "name", "e").getId(), 0.182);
+            weightedExpected.put(tx.findNode(label, "name", "f").getId(), 0.174);
+            weightedExpected.put(tx.findNode(label, "name", "g").getId(), 0.150);
+            weightedExpected.put(tx.findNode(label, "name", "h").getId(), 0.150);
+            weightedExpected.put(tx.findNode(label, "name", "i").getId(), 0.150);
+            weightedExpected.put(tx.findNode(label, "name", "j").getId(), 0.150);
             tx.success();
         }
     }

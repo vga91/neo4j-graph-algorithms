@@ -135,16 +135,16 @@ public final class ArticleRankTest {
         final Map<Long, Double> expected = new HashMap<>();
 
         try (Transaction tx = db.beginTx()) {
-            expected.put(db.findNode(label, "name", "a").getId(), 0.2071625);
-            expected.put(db.findNode(label, "name", "b").getId(), 0.4706795);
-            expected.put(db.findNode(label, "name", "c").getId(), 0.3605195);
-            expected.put(db.findNode(label, "name", "d").getId(), 0.195118);
-            expected.put(db.findNode(label, "name", "e").getId(), 0.2071625);
-            expected.put(db.findNode(label, "name", "f").getId(), 0.195118);
-            expected.put(db.findNode(label, "name", "g").getId(), 0.15);
-            expected.put(db.findNode(label, "name", "h").getId(), 0.15);
-            expected.put(db.findNode(label, "name", "i").getId(), 0.15);
-            expected.put(db.findNode(label, "name", "j").getId(), 0.15);
+            expected.put(tx.findNode(label, "name", "a").getId(), 0.2071625);
+            expected.put(tx.findNode(label, "name", "b").getId(), 0.4706795);
+            expected.put(tx.findNode(label, "name", "c").getId(), 0.3605195);
+            expected.put(tx.findNode(label, "name", "d").getId(), 0.195118);
+            expected.put(tx.findNode(label, "name", "e").getId(), 0.2071625);
+            expected.put(tx.findNode(label, "name", "f").getId(), 0.195118);
+            expected.put(tx.findNode(label, "name", "g").getId(), 0.15);
+            expected.put(tx.findNode(label, "name", "h").getId(), 0.15);
+            expected.put(tx.findNode(label, "name", "i").getId(), 0.15);
+            expected.put(tx.findNode(label, "name", "j").getId(), 0.15);
             tx.close();
         }
 

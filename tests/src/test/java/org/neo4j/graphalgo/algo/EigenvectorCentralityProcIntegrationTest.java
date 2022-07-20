@@ -31,9 +31,9 @@ import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.io.fs.FileUtils;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.test.TestGraphDatabaseFactory;
 
@@ -84,23 +84,23 @@ public class EigenvectorCentralityProcIntegrationTest {
             tx.success();
         }
 
-        Procedures procedures = db.getDependencyResolver().resolveDependency(Procedures.class);
+        Procedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(EigenvectorCentralityProc.class);
         procedures.registerProcedure(PageRankProc.class);
 
 
         try (Transaction tx = db.beginTx()) {
             final Label label = Label.label("Character");
-            expected.put(db.findNode(label, "name", "Ned").getId(), 111.68570401574802);
-            expected.put(db.findNode(label, "name", "Robert").getId(), 88.09448401574804);
-            expected.put(db.findNode(label, "name", "Cersei").getId(), 		84.59226401574804);
-            expected.put(db.findNode(label, "name", "Catelyn").getId(), 	84.51566401574803);
-            expected.put(db.findNode(label, "name", "Tyrion").getId(), 82.00291401574802);
-            expected.put(db.findNode(label, "name", "Joffrey").getId(), 77.67397401574803);
-            expected.put(db.findNode(label, "name", "Robb").getId(), 73.56551401574802);
-            expected.put(db.findNode(label, "name", "Arya").getId(), 73.32532401574804	);
-            expected.put(db.findNode(label, "name", "Petyr").getId(), 72.26733401574802);
-            expected.put(db.findNode(label, "name", "Sansa").getId(), 71.56470401574803);
+            expected.put(tx.findNode(label, "name", "Ned").getId(), 111.68570401574802);
+            expected.put(tx.findNode(label, "name", "Robert").getId(), 88.09448401574804);
+            expected.put(tx.findNode(label, "name", "Cersei").getId(), 		84.59226401574804);
+            expected.put(tx.findNode(label, "name", "Catelyn").getId(), 	84.51566401574803);
+            expected.put(tx.findNode(label, "name", "Tyrion").getId(), 82.00291401574802);
+            expected.put(tx.findNode(label, "name", "Joffrey").getId(), 77.67397401574803);
+            expected.put(tx.findNode(label, "name", "Robb").getId(), 73.56551401574802);
+            expected.put(tx.findNode(label, "name", "Arya").getId(), 73.32532401574804	);
+            expected.put(tx.findNode(label, "name", "Petyr").getId(), 72.26733401574802);
+            expected.put(tx.findNode(label, "name", "Sansa").getId(), 71.56470401574803);
             tx.success();
         }
     }

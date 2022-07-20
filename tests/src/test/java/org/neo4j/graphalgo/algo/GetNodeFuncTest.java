@@ -20,25 +20,19 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.GetNodeFunc;
-import org.neo4j.graphalgo.IsFiniteFunc;
-import org.neo4j.graphalgo.LouvainProc;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.test.TestGraphDatabaseFactory;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
-import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import static java.util.Collections.singletonMap;
 import static org.junit.Assert.*;
 
 public class GetNodeFuncTest {
@@ -51,7 +45,7 @@ public class GetNodeFuncTest {
                 .setConfig(GraphDatabaseSettings.procedure_unrestricted,"algo.*")
                 .newGraphDatabase();
 
-        Procedures proceduresService = ((GraphDatabaseAPI) DB).getDependencyResolver().resolveDependency(Procedures.class);
+        Procedures proceduresService = ((GraphDatabaseAPI) DB).getDependencyResolver().resolveDependency(GlobalProcedures.class);
 
         proceduresService.registerProcedure(Procedures.class, true);
         proceduresService.registerFunction(GetNodeFunc.class, true);

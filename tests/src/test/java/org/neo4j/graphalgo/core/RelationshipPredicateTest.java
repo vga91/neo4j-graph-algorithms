@@ -31,8 +31,8 @@ import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -88,9 +88,9 @@ public class RelationshipPredicateTest {
                 " (c)-[:TYPE]->(a)");
 
         try (Transaction transaction = DB.beginTx()) {
-            nodeA = DB.findNode(LABEL, "name", "a").getId();
-            nodeB = DB.findNode(LABEL, "name", "b").getId();
-            nodeC = DB.findNode(LABEL, "name", "c").getId();
+            nodeA = tx.findNode(LABEL, "name", "a").getId();
+            nodeB = tx.findNode(LABEL, "name", "b").getId();
+            nodeC = tx.findNode(LABEL, "name", "c").getId();
             transaction.success();
         };
     }

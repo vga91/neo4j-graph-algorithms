@@ -22,7 +22,7 @@ import org.neo4j.graphalgo.core.utils.ExceptionUtil;
 import org.neo4j.graphalgo.core.utils.StatementApi;
 import org.neo4j.internal.kernel.api.exceptions.EntityNotFoundException;
 import org.neo4j.internal.kernel.api.exceptions.InvalidTransactionTypeKernelException;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.internal.kernel.api.exceptions.explicitindex.AutoIndexingKernelException;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;

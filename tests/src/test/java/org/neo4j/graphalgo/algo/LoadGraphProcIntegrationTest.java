@@ -31,9 +31,9 @@ import org.neo4j.graphalgo.PageRankProc;
 import org.neo4j.graphalgo.core.loading.LoadGraphFactory;
 import org.neo4j.graphdb.QueryExecutionException;
 import org.neo4j.graphdb.Result;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -86,7 +86,7 @@ public class LoadGraphProcIntegrationTest {
 
     @Before
     public void setup() throws KernelException {
-        Procedures procedures = db.resolveDependency(Procedures.class);
+        Procedures procedures = db.resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(LoadGraphProc.class);
         procedures.registerProcedure(PageRankProc.class);
         procedures.registerProcedure(LabelPropagationProc.class);

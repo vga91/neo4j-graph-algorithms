@@ -22,8 +22,8 @@ import org.junit.*;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphdb.*;
 import org.neo4j.helpers.collection.Iterators;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.*;
@@ -41,7 +41,7 @@ public class Node2VecWalkTest {
     @BeforeClass
     public static void beforeClass() throws KernelException {
         db = TestDatabaseCreator.createTestDatabase();
-        db.getDependencyResolver().resolveDependency(Procedures.class).registerProcedure(NodeWalkerProc.class);
+        db.getDependencyResolver().resolveDependency(GlobalProcedures.class).registerProcedure(NodeWalkerProc.class);
 
         db.execute(buildDatabaseQuery(), Collections.singletonMap("count",NODE_COUNT-4)).close();
     }

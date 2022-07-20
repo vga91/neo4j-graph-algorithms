@@ -25,12 +25,10 @@ import org.junit.Test;
 import org.neo4j.graphalgo.ListProc;
 import org.neo4j.graphalgo.PageRankProc;
 import org.neo4j.graphalgo.linkprediction.LinkPrediction;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.kernel.internal.GraphDatabaseAPI;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.test.TestGraphDatabaseFactory;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,7 +54,7 @@ public class ListProcTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        Procedures procedures = DB.getDependencyResolver().resolveDependency(Procedures.class);
+        Procedures procedures = DB.getDependencyResolver().resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(ListProc.class);
         procedures.registerProcedure(PageRankProc.class);
         procedures.registerFunction(LinkPrediction.class);

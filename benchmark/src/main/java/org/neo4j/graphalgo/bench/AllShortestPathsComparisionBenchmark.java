@@ -28,7 +28,7 @@ import org.neo4j.graphalgo.impl.AllShortestPaths;
 import org.neo4j.graphalgo.impl.HugeMSBFSAllShortestPaths;
 import org.neo4j.graphalgo.impl.MSBFSAllShortestPaths;
 import org.neo4j.graphdb.*;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.test.TestGraphDatabaseFactory;
 import org.openjdk.jmh.annotations.*;

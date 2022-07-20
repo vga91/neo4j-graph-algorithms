@@ -25,8 +25,8 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.test.TestGraphDatabaseFactory;
 import org.openjdk.jmh.annotations.*;
@@ -67,7 +67,7 @@ public class ClosenessCentralityBenchmark {
                         .newImpermanentDatabaseBuilder()
                         .newGraphDatabase();
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(ClosenessCentralityProc.class);
 
         try (ProgressTimer ignored = ProgressTimer.start(l -> System.out.println("setup took " + l + "ms"))) {

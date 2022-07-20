@@ -24,8 +24,8 @@ import org.junit.Test;
 import org.neo4j.graphalgo.TriangleProc;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 
@@ -88,7 +88,7 @@ public class TriangleProcTest {
         api = TestDatabaseCreator.createTestDatabase();
 
         api.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(TriangleProc.class);
 
         try (Transaction tx = api.beginTx()) {
@@ -127,7 +127,7 @@ public class TriangleProcTest {
     public void testTriangleCountWriteCypher() throws Exception {
         final String cypher = "CALL algo.triangleCount('Node', '', {concurrency:4, write:true}) " +
                 "YIELD loadMillis, computeMillis, writeMillis, nodeCount, triangleCount";
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             final long loadMillis = row.getNumber("loadMillis").longValue();
             final long computeMillis = row.getNumber("computeMillis").longValue();
             final long writeMillis = row.getNumber("writeMillis").longValue();
@@ -154,7 +154,7 @@ public class TriangleProcTest {
     public void testTriangleCountExp1WriteCypher() throws Exception {
         final String cypher = "CALL algo.triangleCount.forkJoin('Node', '', {concurrency:4, write:true}) " +
                 "YIELD loadMillis, computeMillis, writeMillis, nodeCount, triangleCount";
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             final long loadMillis = row.getNumber("loadMillis").longValue();
             final long computeMillis = row.getNumber("computeMillis").longValue();
             final long writeMillis = row.getNumber("writeMillis").longValue();
@@ -180,7 +180,7 @@ public class TriangleProcTest {
     public void testTriangleCountStream() throws Exception {
         final TriangleCountConsumer mock = mock(TriangleCountConsumer.class);
         final String cypher = "CALL algo.triangleCount.stream('Node', '', {concurrency:4}) YIELD nodeId, triangles";
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             final long nodeId = row.getNumber("nodeId").longValue();
             final long triangles = row.getNumber("triangles").longValue();
             mock.consume(nodeId, triangles);
@@ -193,7 +193,7 @@ public class TriangleProcTest {
     public void testTriangleCountExp1Stream() throws Exception {
         final TriangleCountConsumer mock = mock(TriangleCountConsumer.class);
         final String cypher = "CALL algo.triangleCount.forkJoin.stream('Node', '', {concurrency:4}) YIELD nodeId, triangles";
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             final long nodeId = row.getNumber("nodeId").longValue();
             final long triangles = row.getNumber("triangles").longValue();
             mock.consume(nodeId, triangles);
@@ -207,7 +207,7 @@ public class TriangleProcTest {
         HashSet<Integer> sums = new HashSet<>();
         final TripleConsumer consumer = (a, b, c) -> sums.add(idsum(a, b, c));
         final String cypher = "CALL algo.triangle.stream('Node', '', {concurrency:4}) YIELD nodeA, nodeB, nodeC";
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             final long nodeA = row.getNumber("nodeA").longValue();
             final long nodeB = row.getNumber("nodeB").longValue();
             final long nodeC = row.getNumber("nodeC").longValue();

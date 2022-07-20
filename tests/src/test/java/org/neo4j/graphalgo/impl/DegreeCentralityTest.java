@@ -148,16 +148,16 @@ public final class DegreeCentralityTest {
         final Map<Long, Double> expected = new HashMap<>();
 
         try (Transaction tx = db.beginTx()) {
-            expected.put(db.findNode(label, "name", "a").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "b").getId(), 1.0);
-            expected.put(db.findNode(label, "name", "c").getId(), 1.0);
-            expected.put(db.findNode(label, "name", "d").getId(), 2.0);
-            expected.put(db.findNode(label, "name", "e").getId(), 3.0);
-            expected.put(db.findNode(label, "name", "f").getId(), 2.0);
-            expected.put(db.findNode(label, "name", "g").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "h").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "i").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "j").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "a").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "b").getId(), 1.0);
+            expected.put(tx.findNode(label, "name", "c").getId(), 1.0);
+            expected.put(tx.findNode(label, "name", "d").getId(), 2.0);
+            expected.put(tx.findNode(label, "name", "e").getId(), 3.0);
+            expected.put(tx.findNode(label, "name", "f").getId(), 2.0);
+            expected.put(tx.findNode(label, "name", "g").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "h").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "i").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "j").getId(), 0.0);
         }
 
         final Graph graph;
@@ -196,16 +196,16 @@ public final class DegreeCentralityTest {
         final Map<Long, Double> expected = new HashMap<>();
 
         try (Transaction tx = db.beginTx()) {
-            expected.put(db.findNode(label, "name", "a").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "b").getId(), 2.0);
-            expected.put(db.findNode(label, "name", "c").getId(), 2.0);
-            expected.put(db.findNode(label, "name", "d").getId(), 4.0);
-            expected.put(db.findNode(label, "name", "e").getId(), 6.0);
-            expected.put(db.findNode(label, "name", "f").getId(), 4.0);
-            expected.put(db.findNode(label, "name", "g").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "h").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "i").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "j").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "a").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "b").getId(), 2.0);
+            expected.put(tx.findNode(label, "name", "c").getId(), 2.0);
+            expected.put(tx.findNode(label, "name", "d").getId(), 4.0);
+            expected.put(tx.findNode(label, "name", "e").getId(), 6.0);
+            expected.put(tx.findNode(label, "name", "f").getId(), 4.0);
+            expected.put(tx.findNode(label, "name", "g").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "h").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "i").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "j").getId(), 0.0);
         }
 
         final Graph graph;
@@ -245,16 +245,16 @@ public final class DegreeCentralityTest {
         final Map<Long, Double> expected = new HashMap<>();
 
         try (Transaction tx = db.beginTx()) {
-            expected.put(db.findNode(label, "name", "a").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "b").getId(), 2.0);
-            expected.put(db.findNode(label, "name", "c").getId(), 2.0);
-            expected.put(db.findNode(label, "name", "d").getId(), 4.0);
-            expected.put(db.findNode(label, "name", "e").getId(), 6.0);
-            expected.put(db.findNode(label, "name", "f").getId(), 4.0);
-            expected.put(db.findNode(label, "name", "g").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "h").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "i").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "j").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "a").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "b").getId(), 2.0);
+            expected.put(tx.findNode(label, "name", "c").getId(), 2.0);
+            expected.put(tx.findNode(label, "name", "d").getId(), 4.0);
+            expected.put(tx.findNode(label, "name", "e").getId(), 6.0);
+            expected.put(tx.findNode(label, "name", "f").getId(), 4.0);
+            expected.put(tx.findNode(label, "name", "g").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "h").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "i").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "j").getId(), 0.0);
         }
 
         final Graph graph;
@@ -294,16 +294,16 @@ public final class DegreeCentralityTest {
         final Map<Long, Double> expected = new HashMap<>();
 
         try (Transaction tx = db.beginTx()) {
-            expected.put(db.findNode(label, "name", "a").getId(), 1.0);
-            expected.put(db.findNode(label, "name", "b").getId(), 4.0);
-            expected.put(db.findNode(label, "name", "c").getId(), 1.0);
-            expected.put(db.findNode(label, "name", "d").getId(), 1.0);
-            expected.put(db.findNode(label, "name", "e").getId(), 1.0);
-            expected.put(db.findNode(label, "name", "f").getId(), 1.0);
-            expected.put(db.findNode(label, "name", "g").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "h").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "i").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "j").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "a").getId(), 1.0);
+            expected.put(tx.findNode(label, "name", "b").getId(), 4.0);
+            expected.put(tx.findNode(label, "name", "c").getId(), 1.0);
+            expected.put(tx.findNode(label, "name", "d").getId(), 1.0);
+            expected.put(tx.findNode(label, "name", "e").getId(), 1.0);
+            expected.put(tx.findNode(label, "name", "f").getId(), 1.0);
+            expected.put(tx.findNode(label, "name", "g").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "h").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "i").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "j").getId(), 0.0);
         }
 
         Direction direction = Direction.INCOMING;
@@ -348,16 +348,16 @@ public final class DegreeCentralityTest {
         final Map<Long, Double> expected = new HashMap<>();
 
         try (Transaction tx = db.beginTx()) {
-            expected.put(db.findNode(label, "name", "a").getId(), 2.0);
-            expected.put(db.findNode(label, "name", "b").getId(), 8.0);
-            expected.put(db.findNode(label, "name", "c").getId(), 2.0);
-            expected.put(db.findNode(label, "name", "d").getId(), 2.0);
-            expected.put(db.findNode(label, "name", "e").getId(), 2.0);
-            expected.put(db.findNode(label, "name", "f").getId(), 2.0);
-            expected.put(db.findNode(label, "name", "g").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "h").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "i").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "j").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "a").getId(), 2.0);
+            expected.put(tx.findNode(label, "name", "b").getId(), 8.0);
+            expected.put(tx.findNode(label, "name", "c").getId(), 2.0);
+            expected.put(tx.findNode(label, "name", "d").getId(), 2.0);
+            expected.put(tx.findNode(label, "name", "e").getId(), 2.0);
+            expected.put(tx.findNode(label, "name", "f").getId(), 2.0);
+            expected.put(tx.findNode(label, "name", "g").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "h").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "i").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "j").getId(), 0.0);
         }
 
         Direction direction = Direction.INCOMING;
@@ -407,16 +407,16 @@ public final class DegreeCentralityTest {
         // if there are 2 relationships between a pair of nodes these get squashed into a single relationship
         // when we use an undirected graph
         try (Transaction tx = db.beginTx()) {
-            expected.put(db.findNode(label, "name", "a").getId(), 1.0);
-            expected.put(db.findNode(label, "name", "b").getId(), 4.0);
-            expected.put(db.findNode(label, "name", "c").getId(), 1.0);
-            expected.put(db.findNode(label, "name", "d").getId(), 3.0);
-            expected.put(db.findNode(label, "name", "e").getId(), 3.0);
-            expected.put(db.findNode(label, "name", "f").getId(), 2.0);
-            expected.put(db.findNode(label, "name", "g").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "h").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "i").getId(), 0.0);
-            expected.put(db.findNode(label, "name", "j").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "a").getId(), 1.0);
+            expected.put(tx.findNode(label, "name", "b").getId(), 4.0);
+            expected.put(tx.findNode(label, "name", "c").getId(), 1.0);
+            expected.put(tx.findNode(label, "name", "d").getId(), 3.0);
+            expected.put(tx.findNode(label, "name", "e").getId(), 3.0);
+            expected.put(tx.findNode(label, "name", "f").getId(), 2.0);
+            expected.put(tx.findNode(label, "name", "g").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "h").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "i").getId(), 0.0);
+            expected.put(tx.findNode(label, "name", "j").getId(), 0.0);
         }
 
         final Graph graph;

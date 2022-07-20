@@ -23,8 +23,8 @@ import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.similarity.OverlapProc;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.Collections;
@@ -67,7 +67,7 @@ public class OverlapTest {
     @BeforeClass
     public static void beforeClass() throws KernelException {
         db = TestDatabaseCreator.createTestDatabase();
-        db.getDependencyResolver().resolveDependency(Procedures.class).registerProcedure(OverlapProc.class);
+        db.getDependencyResolver().resolveDependency(GlobalProcedures.class).registerProcedure(OverlapProc.class);
         db.execute(buildDatabaseQuery()).close();
     }
 

@@ -28,9 +28,9 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.function.DoubleConsumer;
 
@@ -70,13 +70,13 @@ public class ShortestPathTest_152 {
                 " (e)-[:ROAD {d:40}]->(f),\n" +
                 " (e)-[:RAIL {d:20}]->(f);";
 
-        DB.resolveDependency(Procedures.class).registerProcedure(ShortestPathProc.class);
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(ShortestPathProc.class);
         DB.execute(cypher).close();
 
         try (Transaction tx = DB.beginTx()) {
 
-            startNodeId = DB.findNode(Label.label("Loc"), "name", "A").getId();
-            endNodeId = DB.findNode(Label.label("Loc"), "name", "F").getId();
+            startNodeId = tx.findNode(Label.label("Loc"), "name", "A").getId();
+            endNodeId = tx.findNode(Label.label("Loc"), "name", "F").getId();
 
             tx.success();
         }

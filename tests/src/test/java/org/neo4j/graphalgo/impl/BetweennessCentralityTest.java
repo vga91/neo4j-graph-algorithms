@@ -30,8 +30,8 @@ import org.neo4j.graphalgo.core.utils.AtomicDoubleArray;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.impl.betweenness.*;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.mockito.Matchers.eq;
@@ -74,7 +74,7 @@ public class BetweennessCentralityTest {
         }
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(BetweennessCentralityProc.class);
 
         graph = new GraphLoader(db)

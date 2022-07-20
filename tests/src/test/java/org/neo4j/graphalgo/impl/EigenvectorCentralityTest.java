@@ -136,16 +136,16 @@ public final class EigenvectorCentralityTest {
         final Map<Long, Double> expected = new HashMap<>();
 
         try (Transaction tx = db.beginTx()) {
-            expected.put(db.findNode(label, "name", "a").getId(), 1.762540000000000);
-            expected.put(db.findNode(label, "name", "b").getId(), 31.156790000000008);
-            expected.put(db.findNode(label, "name", "c").getId(), 28.694439999999993);
-            expected.put(db.findNode(label, "name", "d").getId(), 1.7625400000000004);
-            expected.put(db.findNode(label, "name", "e").getId(), 1.7625400000000004);
-            expected.put(db.findNode(label, "name", "f").getId(), 1.7625400000000004);
-            expected.put(db.findNode(label, "name", "g").getId(), 0.1);
-            expected.put(db.findNode(label, "name", "h").getId(), 0.1);
-            expected.put(db.findNode(label, "name", "i").getId(), 0.1);
-            expected.put(db.findNode(label, "name", "j").getId(), 0.1);
+            expected.put(tx.findNode(label, "name", "a").getId(), 1.762540000000000);
+            expected.put(tx.findNode(label, "name", "b").getId(), 31.156790000000008);
+            expected.put(tx.findNode(label, "name", "c").getId(), 28.694439999999993);
+            expected.put(tx.findNode(label, "name", "d").getId(), 1.7625400000000004);
+            expected.put(tx.findNode(label, "name", "e").getId(), 1.7625400000000004);
+            expected.put(tx.findNode(label, "name", "f").getId(), 1.7625400000000004);
+            expected.put(tx.findNode(label, "name", "g").getId(), 0.1);
+            expected.put(tx.findNode(label, "name", "h").getId(), 0.1);
+            expected.put(tx.findNode(label, "name", "i").getId(), 0.1);
+            expected.put(tx.findNode(label, "name", "j").getId(), 0.1);
         }
 
         final Graph graph;

@@ -22,9 +22,9 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.KShortestPathsProc;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.HashMap;
 import java.util.List;
@@ -66,7 +66,7 @@ public class YensKSharedPrefixMaxDepthTest {
                         " (f)-[:TYPE {cost:1.0}]->(d)\n";
 
         db.execute(cypher);
-        db.resolveDependency(Procedures.class).registerProcedure(KShortestPathsProc.class);
+        db.resolveDependency(GlobalProcedures.class).registerProcedure(KShortestPathsProc.class);
     }
 
     @Test

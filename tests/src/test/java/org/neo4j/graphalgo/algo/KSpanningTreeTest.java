@@ -24,9 +24,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.graphalgo.KSpanningTreeProc;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.HashMap;
 
@@ -59,7 +59,7 @@ public class KSpanningTreeTest {
                         " (b)-[:TYPE {w:1.0}]->(c),\n" +
                         " (d)-[:TYPE {w:3.0}]->(c)";
 
-        DB.resolveDependency(Procedures.class).registerProcedure(KSpanningTreeProc.class);
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(KSpanningTreeProc.class);
         DB.execute(cypher);
     }
 

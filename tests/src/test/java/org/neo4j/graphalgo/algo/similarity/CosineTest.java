@@ -24,8 +24,8 @@ import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.similarity.CosineProc;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.Collections;
@@ -74,7 +74,7 @@ public class CosineTest {
     @BeforeClass
     public static void beforeClass() throws KernelException {
         db = TestDatabaseCreator.createTestDatabase();
-        Procedures procedures = db.getDependencyResolver().resolveDependency(Procedures.class);
+        Procedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(CosineProc.class);
         procedures.registerFunction(IsFiniteFunc.class);
         db.execute(buildDatabaseQuery()).close();

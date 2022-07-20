@@ -35,8 +35,8 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.betweenness.BetweennessCentrality;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.junit.Assert.assertEquals;
@@ -100,7 +100,7 @@ public class ParallelBetweennessCentralityIntegrationTest {
                 .load(HeavyGraphFactory.class);
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(BetweennessCentralityProc.class);
     }
 

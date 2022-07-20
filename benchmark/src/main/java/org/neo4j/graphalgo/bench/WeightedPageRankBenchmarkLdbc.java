@@ -28,7 +28,7 @@ import org.neo4j.graphalgo.impl.results.CentralityResult;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.openjdk.jmh.annotations.*;
 

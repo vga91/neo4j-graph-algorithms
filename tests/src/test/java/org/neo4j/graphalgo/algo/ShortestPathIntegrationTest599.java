@@ -19,17 +19,15 @@
 package org.neo4j.graphalgo.algo;
 
 import org.hamcrest.Matcher;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.ShortestPathProc;
 import org.neo4j.graphdb.Result;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,11 +36,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.anyDouble;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
 
 /**
  * @author mknblch
@@ -68,7 +62,7 @@ public class ShortestPathIntegrationTest599 {
     /** @see <a href="https://github.com/neo4j-contrib/neo4j-graph-algorithms/issues/599">Issue #599</a> */
     @Test
     public void test599() throws KernelException {
-        db_599.resolveDependency(Procedures.class).registerProcedure(ShortestPathProc.class);
+        db_599.resolveDependency(GlobalProcedures.class).registerProcedure(ShortestPathProc.class);
         final String create = "CREATE\n" +
                 "    (v1:Node {VID: 1})\n" +
                 "  , (v2:Node {VID: 2})\n" +

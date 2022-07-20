@@ -25,9 +25,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.graphalgo.LouvainProc;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.assertEquals;
 
@@ -49,7 +49,7 @@ public class LouvainClusteringPreDefinedCommunitiesIntegrationTest {
                 "MERGE (nMark:User {id:'Mark'}) SET nMark.community = 10\n" +
                 "MERGE (nAlice)-[:FRIEND]->(nBridget);";
 
-        DB.resolveDependency(Procedures.class).registerProcedure(LouvainProc.class);
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(LouvainProc.class);
         DB.execute(cypher);
     }
 

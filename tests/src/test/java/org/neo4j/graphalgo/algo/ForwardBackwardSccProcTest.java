@@ -29,8 +29,8 @@ import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.junit.Assert.assertEquals;
@@ -80,7 +80,7 @@ public class ForwardBackwardSccProcTest {
 
 
         api.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(StronglyConnectedComponentsProc.class);
 
         graph = new GraphLoader(api)
@@ -122,7 +122,7 @@ public class ForwardBackwardSccProcTest {
     public LongScatterSet call(long nodeId) throws Exception {
         String cypher = String.format("CALL algo.scc.forwardBackward.stream(%d, 'Node', 'TYPE', {concurrency:4}) YIELD nodeId RETURN nodeId", nodeId);
         final LongScatterSet set = new LongScatterSet();
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             set.add(row.getNumber("nodeId").longValue());
             return true;
         });

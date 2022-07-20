@@ -31,9 +31,9 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.internal.kernel.api.TokenWrite;
 import org.neo4j.internal.kernel.api.Write;
 import org.neo4j.kernel.api.KernelTransaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 import org.neo4j.values.storable.Values;
 
 import static org.junit.Assert.assertEquals;

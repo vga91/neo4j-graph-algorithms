@@ -153,16 +153,16 @@ public final class WeightedDegreeCentralityTest {
         final Map<Long, double[]> expected = new HashMap<>();
 
         try (Transaction tx = db.beginTx()) {
-            expected.put(db.findNode(label, "name", "a").getId(), new double[] {});
-            expected.put(db.findNode(label, "name", "b").getId(), new double[] {2.0});
-            expected.put(db.findNode(label, "name", "c").getId(), new double[] {2.0});
-            expected.put(db.findNode(label, "name", "d").getId(), new double[] {5.0,2.0});
-            expected.put(db.findNode(label, "name", "e").getId(), new double[] {2.0,7.0,1.0});
-            expected.put(db.findNode(label, "name", "f").getId(), new double[] {2.0,2.0});
-            expected.put(db.findNode(label, "name", "g").getId(), new double[] {});
-            expected.put(db.findNode(label, "name", "h").getId(), new double[] {});
-            expected.put(db.findNode(label, "name", "i").getId(), new double[] {});
-            expected.put(db.findNode(label, "name", "j").getId(), new double[] {});
+            expected.put(tx.findNode(label, "name", "a").getId(), new double[] {});
+            expected.put(tx.findNode(label, "name", "b").getId(), new double[] {2.0});
+            expected.put(tx.findNode(label, "name", "c").getId(), new double[] {2.0});
+            expected.put(tx.findNode(label, "name", "d").getId(), new double[] {5.0,2.0});
+            expected.put(tx.findNode(label, "name", "e").getId(), new double[] {2.0,7.0,1.0});
+            expected.put(tx.findNode(label, "name", "f").getId(), new double[] {2.0,2.0});
+            expected.put(tx.findNode(label, "name", "g").getId(), new double[] {});
+            expected.put(tx.findNode(label, "name", "h").getId(), new double[] {});
+            expected.put(tx.findNode(label, "name", "i").getId(), new double[] {});
+            expected.put(tx.findNode(label, "name", "j").getId(), new double[] {});
             tx.close();
         }
 

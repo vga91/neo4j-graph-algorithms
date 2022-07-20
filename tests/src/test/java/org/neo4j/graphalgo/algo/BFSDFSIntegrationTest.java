@@ -22,9 +22,9 @@ import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.neo4j.graphalgo.TraverseProc;
 import org.neo4j.graphdb.Node;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.List;
@@ -71,7 +71,7 @@ public class BFSDFSIntegrationTest {
                         " (e)-[:TYPE {cost:2.0}]->(g),\n" +
                         " (f)-[:TYPE {cost:1.0}]->(g)";
 
-        db.resolveDependency(Procedures.class).registerProcedure(TraverseProc.class);
+        db.resolveDependency(GlobalProcedures.class).registerProcedure(TraverseProc.class);
         db.execute(cypher);
     }
 

@@ -27,9 +27,9 @@ import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.LabelPropagationProc;
 import org.neo4j.graphdb.Result;
 import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -86,7 +86,7 @@ public class LabelPropagationProcIntegrationTest {
 
     @Before
     public void setup() throws KernelException {
-        db.resolveDependency(Procedures.class).registerProcedure(LabelPropagationProc.class);
+        db.resolveDependency(GlobalProcedures.class).registerProcedure(LabelPropagationProc.class);
         db.execute(DB_CYPHER);
     }
 

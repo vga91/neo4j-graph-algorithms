@@ -26,7 +26,7 @@ import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.impl.closeness.MSClosenessCentrality;
 import org.neo4j.graphalgo.impl.DangalchevClosenessCentrality;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 /**
  *

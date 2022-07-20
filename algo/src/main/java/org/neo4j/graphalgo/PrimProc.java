@@ -33,7 +33,7 @@ import org.neo4j.graphalgo.impl.spanningTrees.Prim;
 import org.neo4j.graphalgo.impl.spanningTrees.SpanningTree;
 import org.neo4j.internal.kernel.api.Write;
 import org.neo4j.kernel.api.KernelTransaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
 import org.neo4j.procedure.*;

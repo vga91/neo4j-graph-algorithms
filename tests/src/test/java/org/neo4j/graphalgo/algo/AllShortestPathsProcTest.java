@@ -28,17 +28,19 @@ import org.neo4j.graphalgo.AllShortestPathsProc;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.*;
+import static org.neo4j.graphalgo.util.TestUtil.executeAndAccept;
 
 
 /**         5     5      5
@@ -93,21 +95,16 @@ public final class AllShortestPathsProcTest {
         api = TestDatabaseCreator.createTestDatabase();
 
         api.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(AllShortestPathsProc.class);
 
         try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
+            tx.execute(cypher);
 
-            startNodeId = api.findNode(Label.label("Node"), "name", "s").getId();
-            targetNodeId = api.findNode(Label.label("Node"), "name", "x").getId();
-            tx.success();
+            startNodeId = tx.findNode(Label.label("Node"), "name", "s").getId();
+            targetNodeId = tx.findNode(Label.label("Node"), "name", "x").getId();
+            tx.commit();
         }
-    }
-
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        api.shutdown();
     }
 
     @Parameterized.Parameters(name = "{0}")
@@ -131,7 +128,7 @@ public final class AllShortestPathsProcTest {
         final String cypher = "CALL algo.allShortestPaths.stream('', {graph:'"+graphImpl+"', direction: 'OUTGOING'}) " +
                 "YIELD sourceNodeId, targetNodeId, distance RETURN sourceNodeId, targetNodeId, distance";
 
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             final long source = row.getNumber("sourceNodeId").longValue();
             final long target = row.getNumber("targetNodeId").longValue();
             final double distance = row.getNumber("distance").doubleValue();
@@ -159,7 +156,7 @@ public final class AllShortestPathsProcTest {
         final String cypher = "CALL algo.allShortestPaths.stream('', {graph:'"+graphImpl+"', direction: 'INCOMING'}) " +
                 "YIELD sourceNodeId, targetNodeId, distance RETURN sourceNodeId, targetNodeId, distance";
 
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             final long source = row.getNumber("sourceNodeId").longValue();
             final long target = row.getNumber("targetNodeId").longValue();
             final double distance = row.getNumber("distance").doubleValue();
@@ -184,8 +181,8 @@ public final class AllShortestPathsProcTest {
 
         final String cypher = "CALL algo.allShortestPaths.stream('cost', {graph:'"+graphImpl+"', direction: 'OUTGOING'}) " +
                 "YIELD sourceNodeId, targetNodeId, distance RETURN sourceNodeId, targetNodeId, distance";
-
-        api.execute(cypher).accept(row -> {
+        
+        executeAndAccept(api, cypher, row -> {
             final long source = row.getNumber("sourceNodeId").longValue();
             final long target = row.getNumber("targetNodeId").longValue();
             final double distance = row.getNumber("distance").doubleValue();

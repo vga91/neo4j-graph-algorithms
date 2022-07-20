@@ -114,16 +114,16 @@ public final class PersonalizedPageRankTest {
 
         try (Transaction tx = db.beginTx()) {
 
-            expected.put(db.findNode(personLabel, "name", "John").getId(), 0.24851499999999993);
-            expected.put(db.findNode(personLabel, "name", "Jill").getId(), 0.12135449999999998);
-            expected.put(db.findNode(personLabel, "name", "Mary").getId(), 0.12135449999999998);
-            expected.put(db.findNode(personLabel, "name", "Todd").getId(), 0.043511499999999995);
+            expected.put(tx.findNode(personLabel, "name", "John").getId(), 0.24851499999999993);
+            expected.put(tx.findNode(personLabel, "name", "Jill").getId(), 0.12135449999999998);
+            expected.put(tx.findNode(personLabel, "name", "Mary").getId(), 0.12135449999999998);
+            expected.put(tx.findNode(personLabel, "name", "Todd").getId(), 0.043511499999999995);
 
-            expected.put(db.findNode(productLabel, "name", "Kindle Fire").getId(), 0.17415649999999996);
-            expected.put(db.findNode(productLabel, "name", "iPhone5").getId(), 0.17415649999999996);
-            expected.put(db.findNode(productLabel, "name", "Fitbit Flex Wireless").getId(), 0.08085200000000001);
-            expected.put(db.findNode(productLabel, "name", "Harry Potter").getId(), 0.01224);
-            expected.put(db.findNode(productLabel, "name", "Hobbit").getId(), 0.01224);
+            expected.put(tx.findNode(productLabel, "name", "Kindle Fire").getId(), 0.17415649999999996);
+            expected.put(tx.findNode(productLabel, "name", "iPhone5").getId(), 0.17415649999999996);
+            expected.put(tx.findNode(productLabel, "name", "Fitbit Flex Wireless").getId(), 0.08085200000000001);
+            expected.put(tx.findNode(productLabel, "name", "Harry Potter").getId(), 0.01224);
+            expected.put(tx.findNode(productLabel, "name", "Hobbit").getId(), 0.01224);
             tx.close();
         }
 
@@ -144,7 +144,7 @@ public final class PersonalizedPageRankTest {
 
         LongStream sourceNodeIds;
         try(Transaction tx = db.beginTx()) {
-            Node node = db.findNode(personLabel, "name", "John");
+            Node node = tx.findNode(personLabel, "name", "John");
             sourceNodeIds = LongStream.of(node.getId());
         }
 

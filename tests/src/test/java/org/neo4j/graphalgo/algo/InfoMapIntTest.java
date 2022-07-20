@@ -24,21 +24,16 @@ import org.junit.Test;
 import org.neo4j.graphalgo.InfoMapProc;
 import org.neo4j.graphalgo.PageRankProc;
 import org.neo4j.graphalgo.api.Graph;
-import org.neo4j.graphalgo.impl.pagerank.PageRank;
-import org.neo4j.graphalgo.impl.pagerank.PageRankAlgorithm;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.BitSet;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -82,8 +77,8 @@ public class InfoMapIntTest {
                         " (e)-[:TYPE {v:1.0}]->(f)";
 
         db.execute(cypher);
-        db.resolveDependency(Procedures.class).registerProcedure(InfoMapProc.class);
-        db.resolveDependency(Procedures.class).registerProcedure(PageRankProc.class);
+        db.resolveDependency(GlobalProcedures.class).registerProcedure(InfoMapProc.class);
+        db.resolveDependency(GlobalProcedures.class).registerProcedure(PageRankProc.class);
     }
 
     @Test

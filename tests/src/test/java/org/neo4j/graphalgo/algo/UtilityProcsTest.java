@@ -24,26 +24,22 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.graphalgo.KShortestPathsProc;
 import org.neo4j.graphalgo.UtilityProc;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.StreamSupport;
 
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.matchers.JUnitMatchers.containsString;
 
 /**
  * Graph:
@@ -73,7 +69,7 @@ public class UtilityProcsTest {
                         "CREATE (f:Node {name:'f'})\n";
 
         DB.execute(cypher);
-        DB.resolveDependency(Procedures.class).registerProcedure(UtilityProc.class);
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(UtilityProc.class);
     }
 
 
@@ -163,7 +159,7 @@ public class UtilityProcsTest {
         List<Node> nodeIds;
         try (Transaction tx = DB.beginTx()) {
             nodeIds = Arrays.stream(nodes)
-                    .map(name -> DB.findNode(Label.label("Node"), "name", name))
+                    .map(name -> tx.findNode(Label.label("Node"), "name", name))
                     .collect(toList());
         }
         return nodeIds;

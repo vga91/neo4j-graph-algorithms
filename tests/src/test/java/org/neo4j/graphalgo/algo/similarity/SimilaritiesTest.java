@@ -25,7 +25,7 @@ import org.neo4j.graphalgo.similarity.Similarities;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.junit.Assert.assertEquals;
@@ -61,7 +61,7 @@ public class SimilaritiesTest {
         db = TestDatabaseCreator.createTestDatabase();
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerFunction(Similarities.class);
 
         db.execute(SETUP).close();

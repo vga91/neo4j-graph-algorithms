@@ -30,8 +30,8 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.scc.SCCTunedTarjan;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 
@@ -89,7 +89,7 @@ public class SCCTunedTarjanTest {
         api = TestDatabaseCreator.createTestDatabase();
 
         api.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(StronglyConnectedComponentsProc.class);
 
         try (Transaction tx = api.beginTx()) {
@@ -137,7 +137,7 @@ public class SCCTunedTarjanTest {
 
         String cypher = "CALL algo.scc.recursive.tunedTarjan('', '', {write:true}) YIELD loadMillis, computeMillis, writeMillis";
 
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             final long loadMillis = row.getNumber("loadMillis").longValue();
             final long computeMillis = row.getNumber("computeMillis").longValue();
             final long writeMillis = row.getNumber("writeMillis").longValue();
@@ -169,7 +169,7 @@ public class SCCTunedTarjanTest {
 
         String cypher = "CALL algo.scc.recursive.tunedTarjan.stream() YIELD nodeId, partition";
 
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             testMap.addTo(row.getNumber("partition").intValue(), 1);
             return true;
         });

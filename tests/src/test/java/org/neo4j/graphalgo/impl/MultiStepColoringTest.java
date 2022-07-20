@@ -36,7 +36,7 @@ import org.neo4j.internal.kernel.api.exceptions.EntityNotFoundException;
 import org.neo4j.internal.kernel.api.exceptions.InvalidTransactionTypeKernelException;
 import org.neo4j.internal.kernel.api.exceptions.schema.IllegalTokenNameException;
 import org.neo4j.kernel.api.KernelTransaction;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicIntegerArray;

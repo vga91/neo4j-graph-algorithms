@@ -25,8 +25,8 @@ import org.mockito.AdditionalMatchers;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.TriangleProc;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.junit.Assert.assertEquals;
@@ -79,7 +79,7 @@ public class ClusteringCoefficientIntegrationTest {
         api = TestDatabaseCreator.createTestDatabase();
 
         api.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(TriangleProc.class);
 
         try (Transaction tx = api.beginTx()) {
@@ -96,7 +96,7 @@ public class ClusteringCoefficientIntegrationTest {
     @Test
     public void testTriangleCountWriteCypher() throws Exception {
         final String cypher = "CALL algo.triangleCount('Node', '', {concurrency:4, write:true, clusterCoefficientProperty:'c'})";
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             final long loadMillis = row.getNumber("loadMillis").longValue();
             final long computeMillis = row.getNumber("computeMillis").longValue();
             final long writeMillis = row.getNumber("writeMillis").longValue();
@@ -128,7 +128,7 @@ public class ClusteringCoefficientIntegrationTest {
     public void testTriangleCountStream() throws Exception {
         final TriangleCountConsumer mock = mock(TriangleCountConsumer.class);
         final String cypher = "CALL algo.triangleCount.stream('Node', '', {concurrency:4}) YIELD nodeId, triangles, coefficient";
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             final long nodeId = row.getNumber("nodeId").longValue();
             final long triangles = row.getNumber("triangles").longValue();
             final double coefficient = row.getNumber("coefficient").doubleValue();

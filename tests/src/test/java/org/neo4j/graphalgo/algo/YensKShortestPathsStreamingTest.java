@@ -27,12 +27,11 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static java.util.stream.Collectors.toList;
@@ -75,7 +74,7 @@ public class YensKShortestPathsStreamingTest {
 
         DB.execute(cypher);
         DB.execute("MATCH (c:Node {name: 'c'}) DELETE c");
-        DB.resolveDependency(Procedures.class).registerProcedure(KShortestPathsProc.class);
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(KShortestPathsProc.class);
     }
 
     @Test
@@ -175,7 +174,7 @@ public class YensKShortestPathsStreamingTest {
         List<Long> nodeIds;
         try (Transaction tx = DB.beginTx()) {
             nodeIds = Arrays.stream(nodes)
-                    .map(name -> DB.findNode(Label.label("Node"), "name", name).getId())
+                    .map(name -> tx.findNode(Label.label("Node"), "name", name).getId())
                     .collect(toList());
         }
         return nodeIds;
@@ -184,7 +183,7 @@ public class YensKShortestPathsStreamingTest {
         List<Node> nodeIds;
         try (Transaction tx = DB.beginTx()) {
             nodeIds = Arrays.stream(nodes)
-                    .map(name -> DB.findNode(Label.label("Node"), "name", name))
+                    .map(name -> tx.findNode(Label.label("Node"), "name", name))
                     .collect(toList());
         }
         return nodeIds;
