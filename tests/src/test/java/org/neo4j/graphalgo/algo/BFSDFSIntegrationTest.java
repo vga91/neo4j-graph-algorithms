@@ -24,7 +24,7 @@ import org.neo4j.graphalgo.TraverseProc;
 import org.neo4j.graphdb.Node;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.List;
@@ -72,7 +72,7 @@ public class BFSDFSIntegrationTest {
                         " (f)-[:TYPE {cost:1.0}]->(g)";
 
         db.resolveDependency(GlobalProcedures.class).registerProcedure(TraverseProc.class);
-        db.execute(cypher);
+        dB.executeTransactionally(cypher);
     }
 
     @Rule
@@ -80,7 +80,7 @@ public class BFSDFSIntegrationTest {
 
     private static long id(String name) {
         final Node[] node = new Node[1];
-        db.execute("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
+        dB.executeTransactionally("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
             node[0] = row.getNode("n");
             return false;
         });
@@ -89,7 +89,7 @@ public class BFSDFSIntegrationTest {
 
     private static String name(long id) {
         final String[] node = new String[1];
-        db.execute("MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name").accept(row -> {
+        dB.executeTransactionally("MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name").accept(row -> {
             node[0] = row.getString("name");
             return false;
         });
@@ -113,7 +113,7 @@ public class BFSDFSIntegrationTest {
     @Test
     public void testFindAnyOf() {
         final String cypher = "MATCH (n:Node {name:'a'}) WITH id(n) as s CALL algo.dfs.stream('Node', 'Type', '>', s, {targetNodes:[4,5]}) YIELD nodeIds RETURN nodeIds";
-        db.execute(cypher).accept(row -> {
+        dB.executeTransactionally(cypher).accept(row -> {
             List<Long> nodeIds = (List<Long>) row.get("nodeIds");
             assertEquals(4, nodeIds.size());
             return true;
@@ -123,7 +123,7 @@ public class BFSDFSIntegrationTest {
     @Test
     public void testMaxDepthOut() {
         final String cypher = "MATCH (n:Node {name:'a'}) WITH id(n) as s CALL algo.dfs.stream('Node', 'Type', '>', s, {maxDepth:2}) YIELD nodeIds RETURN nodeIds";
-        db.execute(cypher).accept(row -> {
+        dB.executeTransactionally(cypher).accept(row -> {
             List<Long> nodeIds = (List<Long>) row.get("nodeIds");
             assertContains(new String[]{"a", "b", "c", "d"}, nodeIds);
             return true;
@@ -133,7 +133,7 @@ public class BFSDFSIntegrationTest {
     @Test
     public void testMaxDepthIn() {
         final String cypher = "MATCH (n:Node {name:'g'}) WITH id(n) as s CALL algo.dfs.stream('Node', 'Type', '<', s, {maxDepth:2}) YIELD nodeIds RETURN nodeIds";
-        db.execute(cypher).accept(row -> {
+        dB.executeTransactionally(cypher).accept(row -> {
             List<Long> nodeIds = (List<Long>) row.get("nodeIds");
             assertContains(new String[]{"g", "e", "f", "d"}, nodeIds);
             return true;

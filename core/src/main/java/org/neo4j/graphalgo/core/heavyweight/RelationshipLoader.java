@@ -24,7 +24,7 @@ import org.neo4j.graphalgo.core.loading.ReadHelper;
 import org.neo4j.graphalgo.core.utils.RawValues;
 import org.neo4j.internal.kernel.api.NodeCursor;
 import org.neo4j.internal.kernel.api.PropertyCursor;
-import org.neo4j.internal.kernel.api.helpers.RelationshipSelectionCursor;
+import org.neo4j.internal.kernel.api.RelationshipTraversalCursor;
 import org.neo4j.kernel.api.KernelTransaction;
 
 abstract class RelationshipLoader {
@@ -38,7 +38,9 @@ abstract class RelationshipLoader {
             final int[] relationType) {
         this.transaction = transaction;
         this.matrix = matrix;
-        loadRelationships = LoadRelationships.of(transaction.cursors(), relationType);
+        // todo - check here...
+        loadRelationships = LoadRelationships.of(transaction, relationType);
+//        loadRelationships = LoadRelationships.of(transaction.cursors(), relationType);
     }
 
     RelationshipLoader(final RelationshipLoader other) {
@@ -110,8 +112,8 @@ abstract class RelationshipLoader {
         visitRelationships(loadRelationships.relationshipsIn(cursor), visit);
     }
 
-    private void visitRelationships(RelationshipSelectionCursor rels, VisitRelationship visit) {
-        try (RelationshipSelectionCursor cursor = rels) {
+    private void visitRelationships(RelationshipTraversalCursor rels, VisitRelationship visit) {
+        try (RelationshipTraversalCursor cursor = rels) {
             while (cursor.next()) {
                 visit.visit(cursor);
             }

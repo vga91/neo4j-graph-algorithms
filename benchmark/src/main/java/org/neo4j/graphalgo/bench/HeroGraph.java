@@ -125,7 +125,7 @@ public class HeroGraph {
                 write.relationshipCreate(heroId, appearedIn, comicId);
                 ++rels;
             }
-            tx.success();
+            tx.commit();
         }
 
         long took = System.nanoTime() - startTime;

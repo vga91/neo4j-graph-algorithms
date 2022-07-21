@@ -93,7 +93,7 @@ public class TriangleProcTest {
 
         try (Transaction tx = api.beginTx()) {
             api.execute(cypher);
-            tx.success();
+            tx.commit();
         }
 
         idToName = new String[9];

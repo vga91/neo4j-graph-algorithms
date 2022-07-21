@@ -31,7 +31,7 @@ import org.neo4j.graphalgo.impl.yens.WeightedPath;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.exceptions.KernelException;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.*;
 
@@ -79,7 +79,7 @@ public class DijkstraTest {
                         " (e)-[:TYPE {cost:2.0}]->(g),\n" +
                         " (f)-[:TYPE {cost:1.0}]->(g)";
 
-        db.execute(cypher);
+        dB.executeTransactionally(cypher);
 
         graph = new GraphLoader(db)
                 .withAnyRelationshipType()
@@ -98,7 +98,7 @@ public class DijkstraTest {
 
     private static int id(String name) {
         final Node[] node = new Node[1];
-        db.execute("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
+        dB.executeTransactionally("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
             node[0] = row.getNode("n");
             return false;
         });

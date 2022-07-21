@@ -95,8 +95,8 @@ public class BetweennessCentralityTest2 {
         db = TestDatabaseCreator.createTestDatabase();
 
         try (Transaction tx = db.beginTx()) {
-            db.execute(cypher);
-            tx.success();
+            dB.executeTransactionally(cypher);
+            tx.commit();
         }
 
         db.getDependencyResolver()
@@ -118,7 +118,7 @@ public class BetweennessCentralityTest2 {
 
     private String name(long id) {
         String[] name = {""};
-        db.execute("MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name")
+        dB.executeTransactionally("MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name")
                 .accept(row -> {
                     name[0] = row.getString("name");
                     return false;

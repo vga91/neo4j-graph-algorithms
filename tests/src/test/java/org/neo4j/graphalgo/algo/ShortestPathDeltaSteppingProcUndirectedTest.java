@@ -93,7 +93,7 @@ public final class ShortestPathDeltaSteppingProcUndirectedTest {
 
         try (Transaction tx = api.beginTx()) {
             api.execute(cypher);
-            tx.success();
+            tx.commit();
         }
     }
 

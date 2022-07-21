@@ -27,7 +27,7 @@ import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.heavyweight.HeavyCypherGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 
@@ -51,7 +51,7 @@ public class GraphLoaderCypherTest {
 
     @Test
     public void both() {
-        db.execute("" +
+        dB.executeTransactionally("" +
                 "CREATE (a:Node),(b:Node),(c:Node),(d:Node) " +
                 "CREATE" +
                 " (a)-[:REL]->(a)," +
@@ -74,7 +74,7 @@ public class GraphLoaderCypherTest {
 
     @Test
     public void outgoing() {
-        db.execute("" +
+        dB.executeTransactionally("" +
                 "CREATE (a:Node),(b:Node),(c:Node),(d:Node) " +
                 "CREATE" +
                 " (a)-[:REL]->(a)," +
@@ -97,7 +97,7 @@ public class GraphLoaderCypherTest {
 
     @Test
     public void incoming() {
-        db.execute("" +
+        dB.executeTransactionally("" +
                 "CREATE (a:Node),(b:Node),(c:Node),(d:Node) " +
                 "CREATE" +
                 " (a)-[:REL]->(a)," +

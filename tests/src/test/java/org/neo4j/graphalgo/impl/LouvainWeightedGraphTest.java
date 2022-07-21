@@ -38,7 +38,7 @@ import org.neo4j.graphalgo.impl.louvain.*;
 import org.neo4j.graphalgo.TestProgressLogger;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.*;
 
@@ -114,7 +114,7 @@ public class LouvainWeightedGraphTest {
     }
 
     private void setup(String cypher) {
-        DB.execute(cypher);
+        DB.executeTransactionally(cypher);
         graph = new GraphLoader(DB)
                 .withAnyRelationshipType()
                 .withAnyLabel()
@@ -129,7 +129,7 @@ public class LouvainWeightedGraphTest {
                 final int id = graph.toMappedNodeId(tx.findNode(LABEL, "name", value).getId());
                 nameMap.put(value, id);
             }
-            transaction.success();
+            transaction.commit();
         }
     }
 
@@ -139,7 +139,7 @@ public class LouvainWeightedGraphTest {
                     .forEach(r -> {
                         System.out.println(DB.getNodeById(r.nodeId).getProperty("name") + ":" + r.community);
                     });
-            transaction.success();
+            transaction.commit();
         }
     }
 

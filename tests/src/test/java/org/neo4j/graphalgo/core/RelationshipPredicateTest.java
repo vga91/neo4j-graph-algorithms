@@ -32,7 +32,7 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -79,7 +79,7 @@ public class RelationshipPredicateTest {
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
-        DB.execute("CREATE (a:Node {name:'a'})\n" +
+        DB.executeTransactionally("CREATE (a:Node {name:'a'})\n" +
                 "CREATE (b:Node {name:'b'})\n" +
                 "CREATE (c:Node {name:'c'})\n" +
                 "CREATE" +
@@ -91,7 +91,7 @@ public class RelationshipPredicateTest {
             nodeA = tx.findNode(LABEL, "name", "a").getId();
             nodeB = tx.findNode(LABEL, "name", "b").getId();
             nodeC = tx.findNode(LABEL, "name", "c").getId();
-            transaction.success();
+            transaction.commit();
         };
     }
 

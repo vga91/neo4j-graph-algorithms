@@ -28,7 +28,7 @@ import org.neo4j.graphalgo.linkprediction.LinkPrediction;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.test.TestGraphDatabaseFactory;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -81,10 +81,10 @@ public class ListProcTest {
     @Test
     public void listEmpty() throws Exception {
         assertEquals(ALL,
-                DB.execute("CALL algo.list()").<String>columnAs("name").stream().collect(Collectors.toList()));
+                DB.executeTransactionally("CALL algo.list()").<String>columnAs("name").stream().collect(Collectors.toList()));
     }
 
     private List<String> listProcs(Object name) {
-        return DB.execute("CALL algo.list($name)", singletonMap("name", name)).<String>columnAs("name").stream().collect(Collectors.toList());
+        return DB.executeTransactionally("CALL algo.list($name)", singletonMap("name", name)).<String>columnAs("name").stream().collect(Collectors.toList());
     }
 }

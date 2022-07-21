@@ -26,7 +26,7 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 
@@ -56,7 +56,7 @@ public final class UndirectedLoopsTest {
 
     @Before
     public void setUp() {
-        DB.execute(DB_CYPHER).close();
+        DB.executeTransactionally(DB_CYPHER).close();
     }
 
     @Test

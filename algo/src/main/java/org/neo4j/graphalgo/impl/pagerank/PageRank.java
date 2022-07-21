@@ -19,7 +19,6 @@
 package org.neo4j.graphalgo.impl.pagerank;
 
 import com.carrotsearch.hppc.IntArrayList;
-import org.neo4j.collection.primitive.PrimitiveIntIterator;
 import org.neo4j.graphalgo.api.*;
 import org.neo4j.graphalgo.core.utils.ParallelUtil;
 import org.neo4j.graphalgo.core.utils.Pools;

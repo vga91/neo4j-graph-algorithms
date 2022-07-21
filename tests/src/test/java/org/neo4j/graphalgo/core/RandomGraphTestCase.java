@@ -88,8 +88,8 @@ public abstract class RandomGraphTestCase {
         final GraphDatabaseService db = TestDatabaseCreator.createTestDatabase();
         for (String cypher : cyphers) {
             try (Transaction tx = db.beginTx()) {
-                 db.execute(cypher).close();
-                tx.success();
+                 dB.executeTransactionally(cypher).close();
+                tx.commit();
             } catch (Exception e) {
                 markFailure();
                 throw e;

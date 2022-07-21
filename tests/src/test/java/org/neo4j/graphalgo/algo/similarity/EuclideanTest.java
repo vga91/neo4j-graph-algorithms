@@ -76,7 +76,7 @@ public class EuclideanTest {
     public static void beforeClass() throws KernelException {
         db = TestDatabaseCreator.createTestDatabase();
         db.getDependencyResolver().resolveDependency(GlobalProcedures.class).registerProcedure(EuclideanProc.class);
-        db.execute(buildDatabaseQuery()).close();
+        dB.executeTransactionally(buildDatabaseQuery()).close();
     }
 
     @AfterClass
@@ -95,15 +95,15 @@ public class EuclideanTest {
     }
 
     private static void buildRandomDB(int size) {
-        db.execute("MATCH (n) DETACH DELETE n").close();
-        db.execute("UNWIND range(1,$size/10) AS _ CREATE (:Person) CREATE (:Item) ", singletonMap("size", size)).close();
+        dB.executeTransactionally("MATCH (n) DETACH DELETE n").close();
+        dB.executeTransactionally("UNWIND range(1,$size/10) AS _ CREATE (:Person) CREATE (:Item) ", singletonMap("size", size)).close();
         String statement =
                 "MATCH (p:Person) WITH collect(p) AS people " +
                         "MATCH (i:Item) WITH people, collect(i) AS items " +
                         "UNWIND range(1,$size) AS _ " +
                         "WITH people[toInteger(rand()*size(people))] AS p, items[toInteger(rand()*size(items))] AS i " +
                         "MERGE (p)-[:LIKES]->(i) RETURN COUNT(*) ";
-        db.execute(statement, singletonMap("size", size)).close();
+        dB.executeTransactionally(statement, singletonMap("size", size)).close();
     }
 
     private static String buildDatabaseQuery() {
@@ -137,10 +137,10 @@ public class EuclideanTest {
     public void euclideanSingleMultiThreadComparision() {
         int size = 333;
         buildRandomDB(size);
-        Result result1 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "concurrency", 1), "missingValue", 0));
-        Result result2 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "concurrency", 2), "missingValue", 0));
-        Result result4 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "concurrency", 4), "missingValue", 0));
-        Result result8 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "concurrency", 8), "missingValue", 0));
+        Result result1 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "concurrency", 1), "missingValue", 0));
+        Result result2 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "concurrency", 2), "missingValue", 0));
+        Result result4 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "concurrency", 4), "missingValue", 0));
+        Result result8 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "concurrency", 8), "missingValue", 0));
         int count = 0;
         while (result1.hasNext()) {
             Map<String, Object> row1 = result1.next();
@@ -158,10 +158,10 @@ public class EuclideanTest {
         int size = 333;
         buildRandomDB(size);
 
-        Result result1 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "topK", 1, "concurrency", 1), "missingValue", 0));
-        Result result2 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "topK", 1, "concurrency", 2), "missingValue", 0));
-        Result result4 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "topK", 1, "concurrency", 4), "missingValue", 0));
-        Result result8 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "topK", 1, "concurrency", 8), "missingValue", 0));
+        Result result1 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "topK", 1, "concurrency", 1), "missingValue", 0));
+        Result result2 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "topK", 1, "concurrency", 2), "missingValue", 0));
+        Result result4 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "topK", 1, "concurrency", 4), "missingValue", 0));
+        Result result8 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff", -0.1, "topK", 1, "concurrency", 8), "missingValue", 0));
         int count = 0;
         while (result1.hasNext()) {
             Map<String, Object> row1 = result1.next();
@@ -176,7 +176,7 @@ public class EuclideanTest {
 
     @Test
     public void topNeuclideanStreamTest() {
-        Result results = db.execute(STATEMENT_STREAM, map("config", map("top", 2), "missingValue", 0));
+        Result results = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("top", 2), "missingValue", 0));
         assert02(results.next());
         assert13(results.next());
         assertFalse(results.hasNext());
@@ -184,7 +184,7 @@ public class EuclideanTest {
 
     @Test
     public void euclideanStreamTest() {
-        // System.out.println(db.execute("MATCH (i:Item) WITH i ORDER BY id(i) MATCH (p:Person) OPTIONAL MATCH (p)-[r:LIKES]->(i) RETURN p,r,i").resultAsString());
+        // System.out.println(dB.executeTransactionally("MATCH (i:Item) WITH i ORDER BY id(i) MATCH (p:Person) OPTIONAL MATCH (p)-[r:LIKES]->(i) RETURN p,r,i").resultAsString());
         // a: 1,2,5
         // b: 1,3,0
         // c: 0,0,4
@@ -195,9 +195,9 @@ public class EuclideanTest {
         // b1 - c2: sqrt(26) = 5.1
         // b1 - d3: sqrt(10) =  3.2
         // c2 - d3: sqrt(16) = 4
-        // System.out.println(db.execute(query).resultAsString());
+        // System.out.println(dB.executeTransactionally(query).resultAsString());
 
-        Result results = db.execute(STATEMENT_STREAM, map("config",map("concurrency",1), "missingValue", 0));
+        Result results = dB.executeTransactionally(STATEMENT_STREAM, map("config",map("concurrency",1), "missingValue", 0));
         assertTrue(results.hasNext());
         assert01(results.next());
         assert02(results.next());
@@ -215,7 +215,7 @@ public class EuclideanTest {
                 "sourceIds", Collections.singletonList(0L),
                 "targetIds", Collections.singletonList(1L)
         );
-        Result results = db.execute(STATEMENT_STREAM, map("config", config, "missingValue", 0));
+        Result results = dB.executeTransactionally(STATEMENT_STREAM, map("config", config, "missingValue", 0));
         assertTrue(results.hasNext());
         assert01(results.next());
         assertFalse(results.hasNext());
@@ -223,7 +223,7 @@ public class EuclideanTest {
 
     @Test
     public void euclideanCypherStreamTest() {
-        // System.out.println(db.execute("MATCH (i:Item) WITH i ORDER BY id(i) MATCH (p:Person) OPTIONAL MATCH (p)-[r:LIKES]->(i) RETURN p,r,i").resultAsString());
+        // System.out.println(dB.executeTransactionally("MATCH (i:Item) WITH i ORDER BY id(i) MATCH (p:Person) OPTIONAL MATCH (p)-[r:LIKES]->(i) RETURN p,r,i").resultAsString());
         // a: 1,2,5
         // b: 1,3,0
         // c: 0,0,4
@@ -234,13 +234,13 @@ public class EuclideanTest {
         // b1 - c2: sqrt(26) = 5.1
         // b1 - d3: sqrt(10) =  3.2
         // c2 - d3: sqrt(16) = 4
-        // System.out.println(db.execute(query).resultAsString());
+        // System.out.println(dB.executeTransactionally(query).resultAsString());
 
         String query = "MATCH (i:Item), (p:Person)" +
                        "OPTIONAL MATCH (p)-[r:LIKES]->(i) " +
                        "RETURN id(p) AS item, id(i) AS category, coalesce(r.stars, 0) AS weight";
 
-        Result results = db.execute(STATEMENT_CYPHER_STREAM, map("config", map("concurrency", 1, "graph", "cypher", "skipValue", Double.NaN), "query", query));
+        Result results = dB.executeTransactionally(STATEMENT_CYPHER_STREAM, map("config", map("concurrency", 1, "graph", "cypher", "skipValue", Double.NaN), "query", query));
         assertTrue(results.hasNext());
         assert01(results.next());
         assert02(results.next());
@@ -253,7 +253,7 @@ public class EuclideanTest {
 
     @Test
     public void eucideanSkipStreamTest() {
-        Result results = db.execute(STATEMENT_STREAM,
+        Result results = dB.executeTransactionally(STATEMENT_STREAM,
                 map("config", map("concurrency", 1, "skipValue", Double.NaN), "missingValue", Double.NaN));
 
         assertTrue(results.hasNext());
@@ -267,7 +267,7 @@ public class EuclideanTest {
     public void topKEuclideanStreamTest() {
         Map<String, Object> params = map("config", map("concurrency", 1, "topK", 1), "missingValue", 0);
 
-        Result results = db.execute(STATEMENT_STREAM, params);
+        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
         assertTrue(results.hasNext());
         assert02(results.next());
         assert13(results.next());
@@ -286,7 +286,7 @@ public class EuclideanTest {
         );
         Map<String, Object> params = map("config", config, "missingValue", 0);
 
-        Result results = db.execute(STATEMENT_STREAM, params);
+        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
         assertTrue(results.hasNext());
         assert02(results.next());
         assertFalse(results.hasNext());
@@ -314,9 +314,9 @@ public class EuclideanTest {
     @Test
     public void topK4euclideanStreamTest() {
         Map<String, Object> params = map("config", map("topK", 4, "concurrency", 4, "similarityCutoff", -0.1), "missingValue", 0);
-        System.out.println(db.execute(STATEMENT_STREAM, params).resultAsString());
+        System.out.println(dB.executeTransactionally(STATEMENT_STREAM, params).resultAsString());
 
-        Result results = db.execute(STATEMENT_STREAM, params);
+        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
         assertSameSource(results, 3, 0L);
         assertSameSource(results, 3, 1L);
         assertSameSource(results, 3, 2L);
@@ -334,9 +334,9 @@ public class EuclideanTest {
         // c2 - d3: sqrt(16) = 4
         Map<String, Object> params = map("config", map("concurrency", 3, "topK", 3), "missingValue", 0);
 
-        System.out.println(db.execute(STATEMENT_STREAM, params).resultAsString());
+        System.out.println(dB.executeTransactionally(STATEMENT_STREAM, params).resultAsString());
 
-        Result results = db.execute(STATEMENT_STREAM, params);
+        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
         assertSameSource(results, 3, 0L);
         assertSameSource(results, 3, 1L);
         assertSameSource(results, 3, 2L);
@@ -348,7 +348,7 @@ public class EuclideanTest {
     public void simpleEuclideanTest() {
         Map<String, Object> params = map("config", map(), "missingValue", 0);
 
-        Map<String, Object> row = db.execute(STATEMENT, params).next();
+        Map<String, Object> row = dB.executeTransactionally(STATEMENT, params).next();
         assertEquals((double) row.get("p25"), 3.16, 0.01);
         assertEquals((double) row.get("p50"), 4.00, 0.01);
         assertEquals((double) row.get("p75"), 5.10, 0.01);
@@ -359,11 +359,11 @@ public class EuclideanTest {
 
     @Test
     public void simpleEuclideanFromEmbeddingTest() {
-        db.execute(STORE_EMBEDDING_STATEMENT);
+        dB.executeTransactionally(STORE_EMBEDDING_STATEMENT);
 
         Map<String, Object> params = map("config", map());
 
-        Map<String, Object> row = db.execute(EMBEDDING_STATEMENT, params).next();
+        Map<String, Object> row = dB.executeTransactionally(EMBEDDING_STATEMENT, params).next();
         assertEquals((double) row.get("p25"), 3.16, 0.01);
         assertEquals((double) row.get("p50"), 4.00, 0.01);
         assertEquals((double) row.get("p75"), 5.10, 0.01);
@@ -376,14 +376,14 @@ public class EuclideanTest {
     public void simpleEuclideanWriteTest() {
         Map<String, Object> params = map("config", map("write", true, "similarityCutoff", 4.0), "missingValue", 0);
 
-        db.execute(STATEMENT, params).close();
+        dB.executeTransactionally(STATEMENT, params).close();
 
         String checkSimilaritiesQuery = "MATCH (a)-[similar:SIMILAR]-(b)" +
                 "RETURN a.name AS node1, b.name AS node2, similar.score AS score " +
                 "ORDER BY id(a), id(b)";
 
-        System.out.println(db.execute(checkSimilaritiesQuery).resultAsString());
-        Result result = db.execute(checkSimilaritiesQuery);
+        System.out.println(dB.executeTransactionally(checkSimilaritiesQuery).resultAsString());
+        Result result = dB.executeTransactionally(checkSimilaritiesQuery);
 
         // a0 - b1: sqrt(26) = 5.1
         // a0 - c2: sqrt(6) = 2.5
@@ -438,7 +438,7 @@ public class EuclideanTest {
                 "write", true,
                 "similarityCutoff", 0.1));
 
-        Result writeResult = db.execute(STATEMENT, params);
+        Result writeResult = dB.executeTransactionally(STATEMENT, params);
         Map<String, Object> writeRow = writeResult.next();
         assertEquals(-1L, (long) writeRow.get("computations"));
     }
@@ -450,7 +450,7 @@ public class EuclideanTest {
                 "showComputations", true,
                 "similarityCutoff", 0.1));
 
-        Result writeResult = db.execute(STATEMENT, params);
+        Result writeResult = dB.executeTransactionally(STATEMENT, params);
         Map<String, Object> writeRow = writeResult.next();
         assertEquals(6L, (long) writeRow.get("computations"));
     }

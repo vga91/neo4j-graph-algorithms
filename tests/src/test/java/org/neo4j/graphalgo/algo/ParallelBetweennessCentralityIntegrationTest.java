@@ -135,7 +135,7 @@ public class ParallelBetweennessCentralityIntegrationTest {
     }
 
     public void testBetweennessWrite(String cypher) {
-        db.execute(cypher).accept(row -> {
+        dB.executeTransactionally(cypher).accept(row -> {
             assertNotEquals(-1L, row.getNumber("writeMillis").longValue());
             assertEquals(6.0, row.getNumber("minCentrality"));
             assertEquals(25.0, row.getNumber("maxCentrality"));
@@ -143,7 +143,7 @@ public class ParallelBetweennessCentralityIntegrationTest {
             return true;
         });
 
-        db.execute("MATCH (n:Node) WHERE exists(n.bc) RETURN id(n) as id, n.bc as bc").accept(row -> {
+        dB.executeTransactionally("MATCH (n:Node) WHERE exists(n.bc) RETURN id(n) as id, n.bc as bc").accept(row -> {
             consumer.consume(row.getNumber("id").longValue(),
                     row.getNumber("bc").doubleValue());
             return true;

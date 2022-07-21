@@ -18,7 +18,6 @@
  */
 package org.neo4j.graphalgo.api;
 
-import org.neo4j.collection.primitive.PrimitiveLongIterable;
 
 import java.util.Collection;
 

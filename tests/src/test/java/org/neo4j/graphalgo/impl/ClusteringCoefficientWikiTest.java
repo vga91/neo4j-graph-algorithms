@@ -75,8 +75,8 @@ public class ClusteringCoefficientWikiTest {
                         " (b)-[:TYPE]->(d)";
 
         try (Transaction tx = db.beginTx()) {
-            db.execute(cypher);
-            tx.success();
+            dB.executeTransactionally(cypher);
+            tx.commit();
         }
 
         graph = new GraphLoader(db)

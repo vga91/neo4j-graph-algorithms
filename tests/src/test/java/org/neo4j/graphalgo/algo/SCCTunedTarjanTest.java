@@ -94,7 +94,7 @@ public class SCCTunedTarjanTest {
 
         try (Transaction tx = api.beginTx()) {
             api.execute(cypher);
-            tx.success();
+            tx.commit();
         }
 
         graph = new GraphLoader(api)

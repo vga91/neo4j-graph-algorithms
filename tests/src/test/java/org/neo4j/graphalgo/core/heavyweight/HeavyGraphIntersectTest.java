@@ -55,7 +55,7 @@ public class HeavyGraphIntersectTest {
                 "(c)-[:X]->(f) " +
                 "RETURN [id(a),id(b),id(c),id(d),id(e),id(f)] as ids";
         // triangles: a: 2, b: 4, c:4, d: 2, e: 0, f:0
-        List<Long> ids = gdb.execute(statement).<List<Long>>columnAs("ids").next();
+        List<Long> ids = gdB.executeTransactionally(statement).<List<Long>>columnAs("ids").next();
         // System.out.println("ids = " + ids);
         assertEquals(ids.subList(0,4), assertTriangles());
     }
@@ -70,8 +70,8 @@ public class HeavyGraphIntersectTest {
                 " AND id(b) < id(c) " +
                 "WITH [id(a),id(b),id(c)] as ids order by ids[0],ids[1],ids[2]" +
                 "RETURN ids[0] as start, collect(ids) as ids order by start";
-        // System.out.println(gdb.execute(triangleQuery).resultAsString());
-        Result result = gdb.execute(triangleQuery);
+        // System.out.println(gdB.executeTransactionally(triangleQuery).resultAsString());
+        Result result = gdB.executeTransactionally(triangleQuery);
         List<Long> foundIds = new ArrayList<>();
         while (result.hasNext()) {
             Map<String, Object> row = result.next();

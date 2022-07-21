@@ -86,7 +86,7 @@ public class HugeSCCTest {
         api = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = api.beginTx()) {
             api.execute(cypher);
-            tx.success();
+            tx.commit();
         }
 
         graph = (HugeGraph) new GraphLoader(api)

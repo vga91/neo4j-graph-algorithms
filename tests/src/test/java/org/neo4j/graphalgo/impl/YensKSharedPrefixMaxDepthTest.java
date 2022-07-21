@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.neo4j.graphalgo.KShortestPathsProc;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.HashMap;
 import java.util.List;
@@ -65,7 +65,7 @@ public class YensKSharedPrefixMaxDepthTest {
                         " (e)-[:TYPE {cost:1.0}]->(f),\n" +
                         " (f)-[:TYPE {cost:1.0}]->(d)\n";
 
-        db.execute(cypher);
+        dB.executeTransactionally(cypher);
         db.resolveDependency(GlobalProcedures.class).registerProcedure(KShortestPathsProc.class);
     }
 
@@ -80,7 +80,7 @@ public class YensKSharedPrefixMaxDepthTest {
         params.put("from", "d");
         params.put("to", "a");
         params.put("maxDepth", 5);
-        List<Object> paths = db.execute(cypher, params).stream().map(result -> result.get("path"))
+        List<Object> paths = dB.executeTransactionally(cypher, params).stream().map(result -> result.get("path"))
                 .collect(Collectors.toList());
 
         assertEquals("Number of paths to maxDepth=5 should be 1", 1, paths.size());
@@ -89,14 +89,14 @@ public class YensKSharedPrefixMaxDepthTest {
         params.put("from", "a");
         params.put("to", "d");
 
-        List<Object> pathsOtherDirection = db.execute(cypher, params).stream().map(result -> result.get("path"))
+        List<Object> pathsOtherDirection = dB.executeTransactionally(cypher, params).stream().map(result -> result.get("path"))
                 .collect(Collectors.toList());
 
         assertEquals("Number of paths to maxDepth=5 should be 1", 1, pathsOtherDirection.size());
 
         params.put("maxDepth", 6);
 
-        List<Object> pathsDepth6 = db.execute(cypher, params).stream().map(result -> result.get("path"))
+        List<Object> pathsDepth6 = dB.executeTransactionally(cypher, params).stream().map(result -> result.get("path"))
                 .collect(Collectors.toList());
 
         assertEquals("Number of paths to maxDepth=6 should be 2", 2, pathsDepth6.size());

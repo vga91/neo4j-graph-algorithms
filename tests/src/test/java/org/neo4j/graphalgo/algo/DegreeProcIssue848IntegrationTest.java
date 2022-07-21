@@ -55,8 +55,8 @@ public class DegreeProcIssue848IntegrationTest {
     public static void setup() throws KernelException {
         db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            db.execute(DB_CYPHER).close();
-            tx.success();
+            dB.executeTransactionally(DB_CYPHER).close();
+            tx.commit();
         }
 
         db.getDependencyResolver()
@@ -125,7 +125,7 @@ public class DegreeProcIssue848IntegrationTest {
             String query,
             Map<String, Object> params,
             Consumer<Result.ResultRow> check) {
-        try (Result result = db.execute(query, params)) {
+        try (Result result = dB.executeTransactionally(query, params)) {
             result.accept(row -> {
                 check.accept(row);
                 return true;

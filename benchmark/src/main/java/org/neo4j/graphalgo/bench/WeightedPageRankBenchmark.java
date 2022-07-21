@@ -87,8 +87,8 @@ public class WeightedPageRankBenchmark {
                         .newImpermanentDatabaseBuilder()
                         .newGraphDatabase();
         try (Transaction tx = db.beginTx()) {
-            db.execute(createGraph).close();
-            tx.success();
+            dB.executeTransactionally(createGraph).close();
+            tx.commit();
         }
     }
 

@@ -18,20 +18,24 @@
  */
 package org.neo4j.graphalgo.core.huge.loader;
 
+import org.neo4j.exceptions.UnderlyingStorageException;
 import org.neo4j.graphalgo.core.utils.paged.PaddedAtomicLong;
-import org.neo4j.graphdb.DependencyResolver;
-import org.neo4j.graphdb.DependencyResolver.SelectionStrategy;
+import org.neo4j.common.DependencyResolver;
+import org.neo4j.common.DependencyResolver.SelectionStrategy;
+
+// todo - internal...
+import org.neo4j.internal.recordstorage.RecordStorageEngine;
 import org.neo4j.io.pagecache.PageCache;
 import org.neo4j.io.pagecache.PageCursor;
 import org.neo4j.io.pagecache.PagedFile;
-import org.neo4j.kernel.impl.storageengine.impl.recordstorage.RecordStorageEngine;
 import org.neo4j.kernel.impl.store.NeoStores;
 import org.neo4j.kernel.impl.store.RecordStore;
-import org.neo4j.kernel.impl.store.UnderlyingStorageException;
 import org.neo4j.kernel.impl.store.format.RecordFormat;
 import org.neo4j.kernel.impl.store.format.RecordFormats;
 import org.neo4j.kernel.impl.store.record.AbstractBaseRecord;
 import org.neo4j.kernel.impl.store.record.RecordLoad;
+
+// todo - internal...
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.io.IOException;

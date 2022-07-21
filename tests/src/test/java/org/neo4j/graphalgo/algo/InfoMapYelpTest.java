@@ -48,7 +48,7 @@ public class InfoMapYelpTest {
 
     @Test
     public void testWeighted() throws Exception {
-        db.execute("CALL algo.infoMap('MATCH (c:Category) RETURN id(c) AS id',\n" +
+        dB.executeTransactionally("CALL algo.infoMap('MATCH (c:Category) RETURN id(c) AS id',\n" +
                 "  'MATCH (c1:Category)<-[:IN_CATEGORY]-()-[:IN_CATEGORY]->(c2:Category)\n" +
                 "   WHERE id(c1) < id(c2)\n" +
                 "   RETURN id(c1) AS source, id(c2) AS target, count(*) AS w', " +
@@ -63,7 +63,7 @@ public class InfoMapYelpTest {
 
     @Test
     public void testUnweighted() throws Exception {
-        db.execute("CALL algo.infoMap('MATCH (c:Category) RETURN id(c) AS id',\n" +
+        dB.executeTransactionally("CALL algo.infoMap('MATCH (c:Category) RETURN id(c) AS id',\n" +
                 "  'MATCH (c1:Category)<-[:IN_CATEGORY]-()-[:IN_CATEGORY]->(c2:Category)\n" +
                 "   WHERE id(c1) < id(c2)\n" +
                 "   RETURN id(c1) AS source, id(c2) AS target', " +

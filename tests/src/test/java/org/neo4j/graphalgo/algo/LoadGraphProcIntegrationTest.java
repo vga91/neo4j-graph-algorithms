@@ -33,7 +33,7 @@ import org.neo4j.graphdb.QueryExecutionException;
 import org.neo4j.graphdb.Result;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -90,7 +90,7 @@ public class LoadGraphProcIntegrationTest {
         procedures.registerProcedure(LoadGraphProc.class);
         procedures.registerProcedure(PageRankProc.class);
         procedures.registerProcedure(LabelPropagationProc.class);
-        db.execute(DB_CYPHER);
+        dB.executeTransactionally(DB_CYPHER);
     }
 
     @After
@@ -111,7 +111,7 @@ public class LoadGraphProcIntegrationTest {
 
     @Test
     public void shouldUseLoadedGraph() {
-        db.execute("CALL algo.graph.load('foo',null,null,{graph:$graph})", singletonMap("graph",graph)).close();
+        dB.executeTransactionally("CALL algo.graph.load('foo',null,null,{graph:$graph})", singletonMap("graph",graph)).close();
 
         String query = "CALL algo.pageRank(null,null,{graph:$name,write:false})";
         runQuery(query, singletonMap("name","foo"), row -> {
@@ -121,7 +121,7 @@ public class LoadGraphProcIntegrationTest {
 
     @Test
     public void multiUseLoadedGraph() {
-        db.execute("CALL algo.graph.load('foo',null,null,{graph:$graph})", singletonMap("graph",graph)).close();
+        dB.executeTransactionally("CALL algo.graph.load('foo',null,null,{graph:$graph})", singletonMap("graph",graph)).close();
 
         String query = "CALL algo.pageRank(null,null,{graph:$name,write:false})";
         runQuery(query, singletonMap("name","foo"), row -> {
@@ -134,7 +134,7 @@ public class LoadGraphProcIntegrationTest {
 
     @Test
     public void shouldWorkWithLimitedTypes() {
-        db.execute("CALL algo.graph.load('foo',null,null,{graph:$graph})", singletonMap("graph",graph)).close();
+        dB.executeTransactionally("CALL algo.graph.load('foo',null,null,{graph:$graph})", singletonMap("graph",graph)).close();
 
         String query = "CALL algo.labelPropagation(null,null,null,{graph:$name,write:false})";
         try {
@@ -150,13 +150,13 @@ public class LoadGraphProcIntegrationTest {
     public void dontDoubleLoad() {
         String call = "CALL algo.graph.load('foo',null,null,{graph:$graph}) yield alreadyLoaded as loaded RETURN loaded";
         Map<String, Object> params = singletonMap("graph", this.graph);
-        assertFalse(db.execute(call, params).<Boolean>columnAs("loaded").next());
-        assertTrue(db.execute(call, params).<Boolean>columnAs("loaded").next());
+        assertFalse(dB.executeTransactionally(call, params).<Boolean>columnAs("loaded").next());
+        assertTrue(dB.executeTransactionally(call, params).<Boolean>columnAs("loaded").next());
     }
 
     @Test
     public void removeGraph() {
-        db.execute("CALL algo.graph.load('foo',null,null,{graph:$graph})", singletonMap("graph",graph)).close();
+        dB.executeTransactionally("CALL algo.graph.load('foo',null,null,{graph:$graph})", singletonMap("graph",graph)).close();
 
         runQuery("CALL algo.graph.info($name)", singletonMap("name","foo"), row -> {
             assertEquals(12, row.getNumber("nodes").intValue());
@@ -178,7 +178,7 @@ public class LoadGraphProcIntegrationTest {
     }
 
     private void runQuery(String query, Map<String, Object> params, Consumer<Result.ResultRow> check) {
-        try (Result result = db.execute(query, params)) {
+        try (Result result = dB.executeTransactionally(query, params)) {
             result.accept(row -> {
                 check.accept(row);
                 return true;

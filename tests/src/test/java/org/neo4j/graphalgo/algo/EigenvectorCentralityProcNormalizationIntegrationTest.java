@@ -67,22 +67,22 @@ public class EigenvectorCentralityProcNormalizationIntegrationTest {
 
 
         try (Transaction tx = db.beginTx()) {
-            db.execute("CREATE CONSTRAINT ON (c:Character)\n" +
+            dB.executeTransactionally("CREATE CONSTRAINT ON (c:Character)\n" +
                     "ASSERT c.id IS UNIQUE;").close();
         }
 
         try (Transaction tx = db.beginTx()) {
-            db.execute("LOAD CSV WITH HEADERS FROM 'file:///got-s1-nodes.csv' AS row\n" +
+            dB.executeTransactionally("LOAD CSV WITH HEADERS FROM 'file:///got-s1-nodes.csv' AS row\n" +
                     "MERGE (c:Character {id: row.Id})\n" +
                     "SET c.name = row.Label;").close();
 
-            db.execute("LOAD CSV WITH HEADERS FROM 'file:///got-s1-edges.csv' AS row\n" +
+            dB.executeTransactionally("LOAD CSV WITH HEADERS FROM 'file:///got-s1-edges.csv' AS row\n" +
                     "MATCH (source:Character {id: row.Source})\n" +
                     "MATCH (target:Character {id: row.Target})\n" +
                     "MERGE (source)-[rel:INTERACTS_SEASON1]->(target)\n" +
                     "SET rel.weight = toInteger(row.Weight);").close();
 
-            tx.success();
+            tx.commit();
         }
 
         Procedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
@@ -243,7 +243,7 @@ public class EigenvectorCentralityProcNormalizationIntegrationTest {
             String query,
             Map<String, Object> params,
             Consumer<Result.ResultRow> check) {
-        try (Result result = db.execute(query, params)) {
+        try (Result result = dB.executeTransactionally(query, params)) {
             result.accept(row -> {
                 check.accept(row);
                 return true;
@@ -263,7 +263,7 @@ public class EigenvectorCentralityProcNormalizationIntegrationTest {
                         score,
                         0.1);
             }
-            tx.success();
+            tx.commit();
         }
     }
 

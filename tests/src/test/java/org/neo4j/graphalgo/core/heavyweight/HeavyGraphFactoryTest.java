@@ -81,7 +81,7 @@ public class HeavyGraphFactoryTest {
             rel1.setProperty("prop1", 1);
             rel2.setProperty("prop2", 2);
             rel3.setProperty("prop3", 3);
-            transaction.success();
+            transaction.commit();
 
             id1 = node1.getId();
             id2 = node2.getId();

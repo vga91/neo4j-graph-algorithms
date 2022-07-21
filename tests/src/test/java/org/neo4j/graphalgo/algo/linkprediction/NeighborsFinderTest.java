@@ -27,7 +27,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Set;
 
@@ -57,7 +57,7 @@ public class NeighborsFinderTest {
             Node node1 = api.createNode();
             Node node2 = api.createNode();
             node1.createRelationshipTo(node2, FRIEND);
-            tx.success();
+            tx.commit();
         }
 
         NeighborsFinder neighborsFinder = new NeighborsFinder(api);
@@ -77,7 +77,7 @@ public class NeighborsFinderTest {
             Node node1 = api.createNode();
             Node node2 = api.createNode();
             node1.createRelationshipTo(node2, FRIEND);
-            tx.success();
+            tx.commit();
         }
 
         NeighborsFinder neighborsFinder = new NeighborsFinder(api);
@@ -104,7 +104,7 @@ public class NeighborsFinderTest {
             node1.createRelationshipTo(node4, COLLEAGUE);
             node2.createRelationshipTo(node4, COLLEAGUE);
 
-            tx.success();
+            tx.commit();
         }
 
         NeighborsFinder neighborsFinder = new NeighborsFinder(api);
@@ -129,7 +129,7 @@ public class NeighborsFinderTest {
             node1.createRelationshipTo(node3, FOLLOWS);
             node2.createRelationshipTo(node3, FOLLOWS);
 
-            tx.success();
+            tx.commit();
         }
 
         NeighborsFinder neighborsFinder = new NeighborsFinder(api);
@@ -154,7 +154,7 @@ public class NeighborsFinderTest {
             node3.createRelationshipTo(node1, FOLLOWS);
             node3.createRelationshipTo(node2, FOLLOWS);
 
-            tx.success();
+            tx.commit();
         }
 
         NeighborsFinder neighborsFinder = new NeighborsFinder(api);
@@ -182,7 +182,7 @@ public class NeighborsFinderTest {
             node1.createRelationshipTo(node4, COLLEAGUE);
             node2.createRelationshipTo(node4, COLLEAGUE);
 
-            tx.success();
+            tx.commit();
         }
 
         NeighborsFinder neighborsFinder = new NeighborsFinder(api);
@@ -214,7 +214,7 @@ public class NeighborsFinderTest {
             node1.createRelationshipTo(node4, COLLEAGUE);
             node2.createRelationshipTo(node4, COLLEAGUE);
 
-            tx.success();
+            tx.commit();
         }
 
         NeighborsFinder neighborsFinder = new NeighborsFinder(api);
@@ -237,7 +237,7 @@ public class NeighborsFinderTest {
             node2 = api.createNode();
             node1.createRelationshipTo(node2, FRIEND);
 
-            tx.success();
+            tx.commit();
         }
 
         NeighborsFinder neighborsFinder = new NeighborsFinder(api);
@@ -259,7 +259,7 @@ public class NeighborsFinderTest {
             node2 = api.createNode();
             node1.createRelationshipTo(node2, FRIEND);
 
-            tx.success();
+            tx.commit();
         }
 
         NeighborsFinder neighborsFinder = new NeighborsFinder(api);

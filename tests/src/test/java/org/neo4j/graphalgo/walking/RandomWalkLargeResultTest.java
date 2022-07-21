@@ -46,7 +46,7 @@ public class RandomWalkLargeResultTest {
         db = TestDatabaseCreator.createTestDatabase();
         db.getDependencyResolver().resolveDependency(GlobalProcedures.class).registerProcedure(NodeWalkerProc.class);
 
-        db.execute(buildDatabaseQuery(), Collections.singletonMap("count",NODE_COUNT)).close();
+        dB.executeTransactionally(buildDatabaseQuery(), Collections.singletonMap("count",NODE_COUNT)).close();
     }
 
     @AfterClass
@@ -74,7 +74,7 @@ public class RandomWalkLargeResultTest {
 
     @Test
     public void shouldHandleLargeResults() {
-        Result results = db.execute("CALL algo.randomWalk.stream(null, 100, 100000)");
+        Result results = dB.executeTransactionally("CALL algo.randomWalk.stream(null, 100, 100000)");
 
         assertEquals(100000,Iterators.count(results));
     }

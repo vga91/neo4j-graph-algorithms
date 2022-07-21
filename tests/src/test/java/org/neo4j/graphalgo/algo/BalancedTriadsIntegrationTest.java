@@ -26,7 +26,7 @@ import org.neo4j.graphalgo.BalancedTriadsProc;
 import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.anyLong;
@@ -78,14 +78,14 @@ public class BalancedTriadsIntegrationTest {
                         " (f)-[:TYPE {w:-1.0}]->(g),\n" +
                         " (g)-[:TYPE {w:1.0}]->(b)";
 
-        DB.execute(cypher);
+        DB.executeTransactionally(cypher);
         DB.resolveDependency(GlobalProcedures.class).registerProcedure(BalancedTriadsProc.class);
     }
 
     @Test
     public void test() throws Exception {
 
-        DB.execute("CALL algo.balancedTriads('Node', 'TYPE', {weightProperty:'w'}) YIELD loadMillis, computeMillis, writeMillis, nodeCount, balancedTriadCount, unbalancedTriadCount")
+        DB.executeTransactionally("CALL algo.balancedTriads('Node', 'TYPE', {weightProperty:'w'}) YIELD loadMillis, computeMillis, writeMillis, nodeCount, balancedTriadCount, unbalancedTriadCount")
                 .accept(row -> {
                     assertEquals(3L, row.getNumber("balancedTriadCount"));
                     assertEquals(3L, row.getNumber("unbalancedTriadCount"));
@@ -97,7 +97,7 @@ public class BalancedTriadsIntegrationTest {
     @Test
     public void testStream() throws Exception {
         final BalancedTriadsConsumer mock = mock(BalancedTriadsConsumer.class);
-        DB.execute("CALL algo.balancedTriads.stream('Node', 'TYPE', {weightProperty:'w'}) YIELD nodeId, balanced, unbalanced")
+        DB.executeTransactionally("CALL algo.balancedTriads.stream('Node', 'TYPE', {weightProperty:'w'}) YIELD nodeId, balanced, unbalanced")
                 .accept(row -> {
                     final long nodeId = row.getNumber("nodeId").longValue();
                     final double balanced = row.getNumber("balanced").doubleValue();

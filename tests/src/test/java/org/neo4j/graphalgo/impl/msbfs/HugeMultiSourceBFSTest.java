@@ -300,8 +300,8 @@ public final class HugeMultiSourceBFSTest {
 
         try {
             try (Transaction tx = db.beginTx()) {
-                db.execute(cypher).close();
-                tx.success();
+                dB.executeTransactionally(cypher).close();
+                tx.commit();
             }
             block.accept((HugeGraph) new GraphLoader(db).load(HugeGraphFactory.class));
         } finally {
@@ -323,12 +323,12 @@ public final class HugeMultiSourceBFSTest {
                         .setRelationship("BAR");
 
                 build.accept(graphBuilder);
-                tx.success();
+                tx.commit();
             }
             try (Transaction tx = db.beginTx()) {
                 HugeGraph graph = (HugeGraph) new GraphLoader(db).load(HugeGraphFactory.class);
                 block.accept(graph);
-                tx.success();
+                tx.commit();
             }
         } finally {
             db.shutdown();

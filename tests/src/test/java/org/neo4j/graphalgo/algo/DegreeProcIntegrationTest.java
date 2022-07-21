@@ -67,8 +67,8 @@ public class DegreeProcIntegrationTest {
     public static void setup() throws KernelException {
         db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            db.execute(DB_CYPHER).close();
-            tx.success();
+            dB.executeTransactionally(DB_CYPHER).close();
+            tx.commit();
         }
 
         db.getDependencyResolver()
@@ -102,7 +102,7 @@ public class DegreeProcIntegrationTest {
             outgoingWeightedExpected.put(tx.findNode(label, "name", "b").getId(), 5.0);
             outgoingWeightedExpected.put(tx.findNode(label, "name", "c").getId(), 0.0);
 
-            tx.success();
+            tx.commit();
         }
     }
 
@@ -293,7 +293,7 @@ public class DegreeProcIntegrationTest {
             String query,
             Map<String, Object> params,
             Consumer<Result.ResultRow> check) {
-        try (Result result = db.execute(query, params)) {
+        try (Result result = dB.executeTransactionally(query, params)) {
             result.accept(row -> {
                 check.accept(row);
                 return true;
@@ -313,7 +313,7 @@ public class DegreeProcIntegrationTest {
                         score,
                         0.1);
             }
-            tx.success();
+            tx.commit();
         }
     }
 

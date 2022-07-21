@@ -18,9 +18,9 @@
  */
 package org.neo4j.graphalgo.impl;
 
-import org.neo4j.collection.primitive.PrimitiveIntIterator;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.NodeProperties;
+import org.neo4j.graphalgo.api.PrimitiveIntIterator;
 import org.neo4j.graphalgo.api.RelationshipConsumer;
 import org.neo4j.graphalgo.api.WeightMapping;
 import org.neo4j.graphalgo.core.utils.ProgressLogger;

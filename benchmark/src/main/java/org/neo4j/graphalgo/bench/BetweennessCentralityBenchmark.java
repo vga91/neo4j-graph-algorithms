@@ -100,7 +100,7 @@ public class BetweennessCentralityBenchmark {
                 }
                 temp = line;
             }
-            tx.success();
+            tx.commit();
         }
     }
 
@@ -121,7 +121,7 @@ public class BetweennessCentralityBenchmark {
     @Benchmark
     public Object _01_benchmark() {
 
-        return db.execute("CALL algo.betweenness('','', {concurrency: $concurrency, write:false, stats:false}) YIELD " +
+        return dB.executeTransactionally("CALL algo.betweenness('','', {concurrency: $concurrency, write:false, stats:false}) YIELD " +
                 "nodes, minCentrality, maxCentrality, sumCentrality, loadMillis, computeMillis, writeMillis", params)
                 .stream()
                 .count();

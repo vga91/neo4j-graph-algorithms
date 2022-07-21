@@ -33,7 +33,7 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Result;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.*;
@@ -102,7 +102,7 @@ public class HarmonicCentralityIntegrationTest {
     @Test
     public void testHarmonicStream() throws Exception {
 
-        db.execute("CALL algo.closeness.harmonic.stream('Node', 'TYPE') YIELD nodeId, centrality")
+        dB.executeTransactionally("CALL algo.closeness.harmonic.stream('Node', 'TYPE') YIELD nodeId, centrality")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     consumer.accept(
                             row.getNumber("nodeId").longValue(),
@@ -117,7 +117,7 @@ public class HarmonicCentralityIntegrationTest {
     @Test
     public void testHugeHarmonicStream() throws Exception {
 
-        db.execute("CALL algo.closeness.harmonic.stream('Node', 'TYPE', {graph:'huge'}) YIELD nodeId, centrality")
+        dB.executeTransactionally("CALL algo.closeness.harmonic.stream('Node', 'TYPE', {graph:'huge'}) YIELD nodeId, centrality")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     consumer.accept(
                             row.getNumber("nodeId").longValue(),
@@ -131,7 +131,7 @@ public class HarmonicCentralityIntegrationTest {
     @Test
     public void testHarmonicWrite() throws Exception {
 
-        db.execute("CALL algo.closeness.harmonic('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
+        dB.executeTransactionally("CALL algo.closeness.harmonic('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
                 "nodes, loadMillis, computeMillis, writeMillis")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertNotEquals(-1L, row.getNumber("writeMillis"));
@@ -140,7 +140,7 @@ public class HarmonicCentralityIntegrationTest {
                     return true;
                 });
 
-        db.execute("MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality")
+        dB.executeTransactionally("MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality")
                 .accept(row -> {
                     consumer.accept(
                             row.getNumber("id").longValue(),
@@ -154,7 +154,7 @@ public class HarmonicCentralityIntegrationTest {
     @Test
     public void testHugeHarmonicWrite() throws Exception {
 
-        db.execute("CALL algo.closeness.harmonic('','', {write:true, stats:true, writeProperty:'centrality', graph:'huge'}) YIELD " +
+        dB.executeTransactionally("CALL algo.closeness.harmonic('','', {write:true, stats:true, writeProperty:'centrality', graph:'huge'}) YIELD " +
                 "nodes, loadMillis, computeMillis, writeMillis")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertNotEquals(-1L, row.getNumber("writeMillis"));
@@ -163,7 +163,7 @@ public class HarmonicCentralityIntegrationTest {
                     return true;
                 });
 
-        db.execute("MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality")
+        dB.executeTransactionally("MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality")
                 .accept(row -> {
                     consumer.accept(
                             row.getNumber("id").longValue(),

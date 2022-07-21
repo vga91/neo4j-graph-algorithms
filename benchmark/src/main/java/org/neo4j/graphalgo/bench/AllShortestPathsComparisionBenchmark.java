@@ -97,7 +97,7 @@ public class AllShortestPathsComparisionBenchmark {
                 }
                 temp = line;
             }
-            tx.success();
+            tx.commit();
         }
     }
 

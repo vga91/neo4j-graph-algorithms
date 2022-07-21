@@ -54,9 +54,9 @@ public abstract class Neo4JTestCase {
     public static int newNode() {
         try (Transaction transaction = db.beginTx()) {
             final Node node = db.createNode(Label.label(LABEL));
-            transaction.success();
+            transaction.commit();
             final int id = Math.toIntExact(node.getId());
-            transaction.success();
+            transaction.commit();
             return id;
         }
     }
@@ -68,7 +68,7 @@ public abstract class Neo4JTestCase {
             final Relationship relation = source.createRelationshipTo(
                     target,
                     RelationshipType.withName(RELATION));
-            transaction.success();
+            transaction.commit();
             return relation.getId();
         }
     }
@@ -84,7 +84,7 @@ public abstract class Neo4JTestCase {
                     target,
                     RelationshipType.withName(RELATION));
             relation.setProperty(WEIGHT_PROPERTY, weight);
-            transaction.success();
+            transaction.commit();
             return relation.getId();
         }
     }

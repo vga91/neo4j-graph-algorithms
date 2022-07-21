@@ -33,7 +33,7 @@ import org.neo4j.graphalgo.impl.spanningTrees.Prim;
 import org.neo4j.graphalgo.impl.spanningTrees.SpanningTree;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -88,8 +88,8 @@ public class PrimTest {
     @BeforeClass
     public static void setupGraph() {
         try (Transaction tx = DB.beginTx()) {
-            DB.execute(cypher);
-            tx.success();
+            DB.executeTransactionally(cypher);
+            tx.commit();
         }
     }
 
@@ -125,7 +125,7 @@ public class PrimTest {
             e = graph.toMappedNodeId(tx.findNode(label, "name", "e").getId());
             y = graph.toMappedNodeId(tx.findNode(label, "name", "y").getId());
             z = graph.toMappedNodeId(tx.findNode(label, "name", "z").getId());
-            transaction.success();
+            transaction.commit();
         }
     }
 

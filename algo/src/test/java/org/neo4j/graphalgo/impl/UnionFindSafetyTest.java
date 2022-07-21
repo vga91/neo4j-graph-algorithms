@@ -21,20 +21,20 @@ package org.neo4j.graphalgo.impl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.neo4j.collection.primitive.PrimitiveLongIterable;
-import org.neo4j.collection.primitive.PrimitiveLongIterator;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.api.HugeRelationshipConsumer;
 import org.neo4j.graphalgo.api.HugeWeightMapping;
 import org.neo4j.graphalgo.api.HugeWeightedRelationshipConsumer;
+import org.neo4j.graphalgo.api.PrimitiveLongIterable;
+import org.neo4j.graphalgo.api.PrimitiveLongIterator;
 import org.neo4j.graphalgo.api.RelationshipConsumer;
 import org.neo4j.graphalgo.api.RelationshipIntersect;
 import org.neo4j.graphalgo.api.WeightedRelationshipConsumer;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.helpers.Exceptions;
+import org.neo4j.graphalgo.core.utils.ExceptionUtil;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -72,7 +72,7 @@ public final class UnionFindSafetyTest {
                     10
             );
         } catch (Throwable e) {
-            assertSame(error, Exceptions.rootCause(e));
+            assertSame(error, ExceptionUtil.rootCause(e));
         }
     }
 
@@ -89,7 +89,7 @@ public final class UnionFindSafetyTest {
                     10
             );
         } catch (Throwable e) {
-            assertSame(error, Exceptions.rootCause(e));
+            assertSame(error, ExceptionUtil.rootCause(e));
         }
     }
 

@@ -46,7 +46,7 @@ import org.neo4j.graphalgo.ShortestPathProc;
 import org.neo4j.graphdb.Result;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -88,7 +88,7 @@ public class ShortestPathIntegrationTest {
                         "  (nC)-[:TYPE {cost:1.0}]->(nD),\n" +
                         "  (nD)-[:TYPE {cost:1.0}]->(nX)";
 
-        DB.execute(createGraph).close();
+        DB.executeTransactionally(createGraph).close();
         DB.resolveDependency(GlobalProcedures.class).registerProcedure(ShortestPathProc.class);
     }
 
@@ -107,7 +107,7 @@ public class ShortestPathIntegrationTest {
     @Test
     public void noWeightStream() throws Exception {
         PathConsumer consumer = mock(PathConsumer.class);
-        DB.execute(
+        DB.executeTransactionally(
                 "MATCH (start:Node{type:'start'}), (end:Node{type:'end'}) " +
                         "CALL algo.shortestPath.stream(start, end) " +
                         "YIELD nodeId, cost RETURN nodeId, cost")
@@ -122,7 +122,7 @@ public class ShortestPathIntegrationTest {
 
     @Test
     public void noWeightWrite() throws Exception {
-        DB.execute(
+        DB.executeTransactionally(
                 "MATCH (start:Node{type:'start'}), (end:Node{type:'end'}) " +
                         "CALL algo.shortestPath(start, end) " +
                         "YIELD loadMillis, evalMillis, writeMillis, nodeCount, totalCost\n" +
@@ -138,7 +138,7 @@ public class ShortestPathIntegrationTest {
 
         final StepConsumer mock = mock(StepConsumer.class);
 
-        DB.execute("MATCH (n) WHERE exists(n.sssp) RETURN id(n) as id, n.sssp as sssp")
+        DB.executeTransactionally("MATCH (n) WHERE exists(n.sssp) RETURN id(n) as id, n.sssp as sssp")
                 .accept(row -> {
                     mock.accept(
                             row.getNumber("id").longValue(),
@@ -155,7 +155,7 @@ public class ShortestPathIntegrationTest {
     @Test
     public void testDijkstraStream() throws Exception {
         PathConsumer consumer = mock(PathConsumer.class);
-        DB.execute(
+        DB.executeTransactionally(
                 "MATCH (start:Node{type:'start'}), (end:Node{type:'end'}) " +
                         "CALL algo.shortestPath.stream(start, end, 'cost',{graph:'" + graphImpl + "'}) " +
                         "YIELD nodeId, cost RETURN nodeId, cost")
@@ -172,7 +172,7 @@ public class ShortestPathIntegrationTest {
 
     @Test
     public void testDijkstra() throws Exception {
-        DB.execute(
+        DB.executeTransactionally(
                 "MATCH (start:Node{type:'start'}), (end:Node{type:'end'}) " +
                         "CALL algo.shortestPath(start, end, 'cost',{graph:'" + graphImpl + "', write:true, writeProperty:'step'}) " +
                         "YIELD loadMillis, evalMillis, writeMillis, nodeCount, totalCost\n" +
@@ -188,7 +188,7 @@ public class ShortestPathIntegrationTest {
 
         final StepConsumer mock = mock(StepConsumer.class);
 
-        DB.execute("MATCH (n) WHERE exists(n.step) RETURN id(n) as id, n.step as step")
+        DB.executeTransactionally("MATCH (n) WHERE exists(n.step) RETURN id(n) as id, n.step as step")
                 .accept(row -> {
                     mock.accept(
                             row.getNumber("id").longValue(),

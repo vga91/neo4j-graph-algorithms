@@ -47,7 +47,7 @@ public class HeavyCypherGraphParallelFactoryTest {
 
         db = new TestGraphDatabaseFactory().newImpermanentDatabase();
 
-        Iterators.count(db.execute("UNWIND range(1," + COUNT + ") AS id CREATE (n {id:id})-[:REL {prop:id%10}]->(n)"));
+        Iterators.count(dB.executeTransactionally("UNWIND range(1," + COUNT + ") AS id CREATE (n {id:id})-[:REL {prop:id%10}]->(n)"));
     }
 
     @AfterClass

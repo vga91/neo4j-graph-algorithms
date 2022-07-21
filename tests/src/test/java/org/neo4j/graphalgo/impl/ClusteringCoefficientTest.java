@@ -94,8 +94,8 @@ public class ClusteringCoefficientTest {
         db = TestDatabaseCreator.createTestDatabase();
 
         try (Transaction tx = db.beginTx()) {
-            db.execute(setupCypher);
-            tx.success();
+            dB.executeTransactionally(setupCypher);
+            tx.commit();
         }
 
         graph = new GraphLoader(db)

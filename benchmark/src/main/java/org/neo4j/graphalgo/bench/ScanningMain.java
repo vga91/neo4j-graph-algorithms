@@ -23,7 +23,7 @@ import org.neo4j.function.Predicates;
 import org.neo4j.graphalgo.core.huge.loader.AbstractStorePageCacheScanner;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.helper.ldbc.LdbcDownloader;
-import org.neo4j.graphdb.DependencyResolver;
+import org.neo4j.common.DependencyResolver;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.io.pagecache.PageCache;
@@ -494,7 +494,7 @@ class ScanningMain<Record extends AbstractBaseRecord> extends BaseMain {
                 long imported;
                 try (Transaction tx = db.beginTx()) {
                     imported = loader.applyAsLong(submitted);
-                    tx.success();
+                    tx.commit();
                 }
                 return imported;
             });

@@ -20,8 +20,6 @@ package org.neo4j.graphalgo.impl.louvain;
 
 import com.carrotsearch.hppc.*;
 import com.carrotsearch.hppc.procedures.IntProcedure;
-import org.neo4j.collection.primitive.PrimitiveIntIterable;
-import org.neo4j.collection.primitive.PrimitiveIntIterator;
 import org.neo4j.graphalgo.api.*;
 import org.neo4j.graphalgo.core.IdMap;
 import org.neo4j.graphalgo.core.utils.ParallelUtil;

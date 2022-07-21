@@ -67,7 +67,7 @@ public class ResourceAllocationSimilarityIntegrationTest {
                 .resolveDependency(GlobalProcedures.class)
                 .registerFunction(LinkPrediction.class);
 
-        db.execute(SETUP).close();
+        dB.executeTransactionally(SETUP).close();
     }
 
     @AfterClass
@@ -84,7 +84,7 @@ public class ResourceAllocationSimilarityIntegrationTest {
                 "       1/3.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+            Result result = dB.executeTransactionally(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -100,7 +100,7 @@ public class ResourceAllocationSimilarityIntegrationTest {
                         "1/2.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+            Result result = dB.executeTransactionally(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -115,7 +115,7 @@ public class ResourceAllocationSimilarityIntegrationTest {
                         "       1/2.0 + 1/2.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+            Result result = dB.executeTransactionally(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -130,7 +130,7 @@ public class ResourceAllocationSimilarityIntegrationTest {
                         "       0.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+            Result result = dB.executeTransactionally(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -145,7 +145,7 @@ public class ResourceAllocationSimilarityIntegrationTest {
                         "       0.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+            Result result = dB.executeTransactionally(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }

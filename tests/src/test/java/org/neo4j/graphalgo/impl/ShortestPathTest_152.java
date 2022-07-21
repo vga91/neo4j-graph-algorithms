@@ -30,7 +30,7 @@ import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.function.DoubleConsumer;
 
@@ -71,14 +71,14 @@ public class ShortestPathTest_152 {
                 " (e)-[:RAIL {d:20}]->(f);";
 
         DB.resolveDependency(GlobalProcedures.class).registerProcedure(ShortestPathProc.class);
-        DB.execute(cypher).close();
+        DB.executeTransactionally(cypher).close();
 
         try (Transaction tx = DB.beginTx()) {
 
             startNodeId = tx.findNode(Label.label("Loc"), "name", "A").getId();
             endNodeId = tx.findNode(Label.label("Loc"), "name", "F").getId();
 
-            tx.success();
+            tx.commit();
         }
     }
 
@@ -139,7 +139,7 @@ public class ShortestPathTest_152 {
                 "CALL algo.shortestPath.stream(from, to, 'd', {relationshipQuery:'ROAD', defaultValue:999999.0}) " +
                 "YIELD nodeId, cost with nodeId, cost MATCH(n) WHERE id(n) = nodeId RETURN n.name as name, cost;";
 
-        DB.execute(cypher).accept(row -> {
+        DB.executeTransactionally(cypher).accept(row -> {
             System.out.println(row.get("name") + ":" + row.get("cost"));
             mock.accept(row.getNumber("cost").doubleValue());
             return true;

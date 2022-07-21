@@ -29,7 +29,7 @@ import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.helpers.Exceptions;
+import org.neo4j.graphalgo.core.utils.ExceptionUtil;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
 import org.neo4j.logging.NullLog;
@@ -500,7 +500,7 @@ public class GraphLoader {
         try {
             return (GraphFactory) constructor.invoke(api, setup);
         } catch (Throwable throwable) {
-            throw Exceptions.launderedException(
+            throw ExceptionUtil.launderedException(
                     throwable.getMessage(),
                     throwable);
         }

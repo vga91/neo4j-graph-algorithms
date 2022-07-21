@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.neo4j.graphalgo.TriangleProc;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 /**
  *
@@ -43,7 +43,7 @@ public class TriangleStreamTest_451 {
 
     @Test
     public void testEmptySet() throws Exception {
-        DB.execute("CALL algo.triangleCount.stream('Foo', 'Bar') YIELD nodeId, triangles");
+        DB.executeTransactionally("CALL algo.triangleCount.stream('Foo', 'Bar') YIELD nodeId, triangles");
 
     }
 

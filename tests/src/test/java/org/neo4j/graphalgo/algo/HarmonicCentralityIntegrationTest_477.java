@@ -26,7 +26,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.neo4j.graphalgo.HarmonicCentralityProc;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.assertNotEquals;
 
@@ -45,7 +45,7 @@ public class HarmonicCentralityIntegrationTest_477 {
     @BeforeClass
     public static void setupGraph() throws KernelException {
 
-        db.execute(
+        dB.executeTransactionally(
                 "CREATE (alice:Person{id:\"Alice\"}),\n" +
                         "       (michael:Person{id:\"Michael\"}),\n" +
                         "       (karin:Person{id:\"Karin\"}),\n" +
@@ -78,6 +78,6 @@ public class HarmonicCentralityIntegrationTest_477 {
                 "',{graph:'cypher'}) YIELD nodeId,centrality";
 
 
-        db.execute(cypher);
+        dB.executeTransactionally(cypher);
     }
 }

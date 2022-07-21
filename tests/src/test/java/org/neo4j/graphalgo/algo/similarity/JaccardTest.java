@@ -67,7 +67,7 @@ public class JaccardTest {
     public static void beforeClass() throws KernelException {
         db = TestDatabaseCreator.createTestDatabase();
         db.getDependencyResolver().resolveDependency(GlobalProcedures.class).registerProcedure(JaccardProc.class);
-        db.execute(buildDatabaseQuery()).close();
+        dB.executeTransactionally(buildDatabaseQuery()).close();
     }
 
     @AfterClass
@@ -86,15 +86,15 @@ public class JaccardTest {
     }
 
     private static void buildRandomDB(int size) {
-        db.execute("MATCH (n) DETACH DELETE n").close();
-        db.execute("UNWIND range(1,$size/10) as _ CREATE (:Person) CREATE (:Item) ",singletonMap("size",size)).close();
+        dB.executeTransactionally("MATCH (n) DETACH DELETE n").close();
+        dB.executeTransactionally("UNWIND range(1,$size/10) as _ CREATE (:Person) CREATE (:Item) ",singletonMap("size",size)).close();
         String statement =
                 "MATCH (p:Person) WITH collect(p) as people " +
                 "MATCH (i:Item) WITH people, collect(i) as items " +
                 "UNWIND range(1,$size) as _ " +
                 "WITH people[toInteger(rand()*size(people))] as p, items[toInteger(rand()*size(items))] as i " +
                 "MERGE (p)-[:LIKES]->(i) RETURN count(*) ";
-        db.execute(statement,singletonMap("size",size)).close();
+        dB.executeTransactionally(statement,singletonMap("size",size)).close();
     }
     private static String buildDatabaseQuery() {
         return  "CREATE (a:Person {name:'Alice'})\n" +
@@ -124,10 +124,10 @@ public class JaccardTest {
     public void jaccardSingleMultiThreadComparision() {
         int size = 333;
         buildRandomDB(size);
-        Result result1 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"concurrency", 1)));
-        Result result2 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"concurrency", 2)));
-        Result result4 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"concurrency", 4)));
-        Result result8 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"concurrency", 8)));
+        Result result1 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"concurrency", 1)));
+        Result result2 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"concurrency", 2)));
+        Result result4 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"concurrency", 4)));
+        Result result8 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"concurrency", 8)));
         int count=0;
         while (result1.hasNext()) {
             Map<String, Object> row1 = result1.next();
@@ -145,10 +145,10 @@ public class JaccardTest {
         int size = 333;
         buildRandomDB(size);
 
-        Result result1 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 1)));
-        Result result2 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 2)));
-        Result result4 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 4)));
-        Result result8 = db.execute(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 8)));
+        Result result1 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 1)));
+        Result result2 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 2)));
+        Result result4 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 4)));
+        Result result8 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 8)));
         int count=0;
         while (result1.hasNext()) {
             Map<String, Object> row1 = result1.next();
@@ -163,7 +163,7 @@ public class JaccardTest {
 
     @Test
     public void topNjaccardStreamTest() {
-        Result results = db.execute(STATEMENT_STREAM, map("config",map("top",2)));
+        Result results = dB.executeTransactionally(STATEMENT_STREAM, map("config",map("top",2)));
         assert01(results.next());
         assert02(results.next());
         assertFalse(results.hasNext());
@@ -171,7 +171,7 @@ public class JaccardTest {
 
     @Test
     public void jaccardStreamTest() {
-        Result results = db.execute(STATEMENT_STREAM, map("config",map("concurrency",1)));
+        Result results = dB.executeTransactionally(STATEMENT_STREAM, map("config",map("concurrency",1)));
         assertTrue(results.hasNext());
         assert01(results.next());
         assert02(results.next());
@@ -181,7 +181,7 @@ public class JaccardTest {
 
     @Test
     public void jaccardStreamSourceTargetIdsTest() {
-        Result results = db.execute(STATEMENT_STREAM, map("config",map(
+        Result results = dB.executeTransactionally(STATEMENT_STREAM, map("config",map(
                 "concurrency",1,
                 "targetIds", Collections.singletonList(1L),
                 "sourceIds", Collections.singletonList(0L))));
@@ -193,7 +193,7 @@ public class JaccardTest {
 
     @Test
     public void jaccardStreamSourceTargetIdsTopKTest() {
-        Result results = db.execute(STATEMENT_STREAM, map("config",map(
+        Result results = dB.executeTransactionally(STATEMENT_STREAM, map("config",map(
                 "concurrency",1,
                 "topK", 1,
                 "sourceIds", Collections.singletonList(0L))));
@@ -206,9 +206,9 @@ public class JaccardTest {
     @Test
     public void topKJaccardStreamTest() {
         Map<String, Object> params = map("config", map( "concurrency", 1,"topK", 1));
-        System.out.println(db.execute(STATEMENT_STREAM, params).resultAsString());
+        System.out.println(dB.executeTransactionally(STATEMENT_STREAM, params).resultAsString());
 
-        Result results = db.execute(STATEMENT_STREAM, params);
+        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
         assertTrue(results.hasNext());
         assert01(results.next());
         assert01(flip(results.next()));
@@ -239,9 +239,9 @@ public class JaccardTest {
     @Test
     public void topK4jaccardStreamTest() {
         Map<String, Object> params = map("config", map("topK", 4, "concurrency", 4, "similarityCutoff", -0.1));
-        System.out.println(db.execute(STATEMENT_STREAM,params).resultAsString());
+        System.out.println(dB.executeTransactionally(STATEMENT_STREAM,params).resultAsString());
 
-        Result results = db.execute(STATEMENT_STREAM,params);
+        Result results = dB.executeTransactionally(STATEMENT_STREAM,params);
         assertSameSource(results, 2, 0L);
         assertSameSource(results, 2, 1L);
         assertSameSource(results, 2, 2L);
@@ -252,9 +252,9 @@ public class JaccardTest {
     public void topK3jaccardStreamTest() {
         Map<String, Object> params = map("config", map("concurrency", 3, "topK", 3));
 
-        System.out.println(db.execute(STATEMENT_STREAM, params).resultAsString());
+        System.out.println(dB.executeTransactionally(STATEMENT_STREAM, params).resultAsString());
 
-        Result results = db.execute(STATEMENT_STREAM, params);
+        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
         assertSameSource(results, 2, 0L);
         assertSameSource(results, 2, 1L);
         assertSameSource(results, 2, 2L);
@@ -265,7 +265,7 @@ public class JaccardTest {
     public void simpleJaccardTest() {
         Map<String, Object> params = map("config", map("similarityCutoff", 0.0));
 
-        Map<String, Object> row = db.execute(STATEMENT,params).next();
+        Map<String, Object> row = dB.executeTransactionally(STATEMENT,params).next();
         assertEquals((double) row.get("p25"), 0.33, 0.01);
         assertEquals((double) row.get("p50"), 0.33, 0.01);
         assertEquals((double) row.get("p75"), 0.66, 0.01);
@@ -276,11 +276,11 @@ public class JaccardTest {
 
     @Test
     public void simpleJaccardFromEmbeddingTest() {
-        db.execute(STORE_EMBEDDING_STATEMENT);
+        dB.executeTransactionally(STORE_EMBEDDING_STATEMENT);
 
         Map<String, Object> params = map("config", map("similarityCutoff", 0.0));
 
-        Map<String, Object> row = db.execute(EMBEDDING_STATEMENT,params).next();
+        Map<String, Object> row = dB.executeTransactionally(EMBEDDING_STATEMENT,params).next();
         assertEquals((double) row.get("p25"), 0.33, 0.01);
         assertEquals((double) row.get("p50"), 0.33, 0.01);
         assertEquals((double) row.get("p75"), 0.66, 0.01);
@@ -294,14 +294,14 @@ public class JaccardTest {
     public void simpleJaccardWriteTest() {
         Map<String, Object> params = map("config", map( "write",true, "similarityCutoff", 0.1));
 
-        db.execute(STATEMENT,params).close();
+        dB.executeTransactionally(STATEMENT,params).close();
 
         String checkSimilaritiesQuery = "MATCH (a)-[similar:SIMILAR]-(b)" +
                 "RETURN a.name AS node1, b.name as node2, similar.score AS score " +
                 "ORDER BY id(a), id(b)";
 
-        System.out.println(db.execute(checkSimilaritiesQuery).resultAsString());
-        Result result = db.execute(checkSimilaritiesQuery);
+        System.out.println(dB.executeTransactionally(checkSimilaritiesQuery).resultAsString());
+        Result result = dB.executeTransactionally(checkSimilaritiesQuery);
 
         assertTrue(result.hasNext());
         Map<String, Object> row = result.next();
@@ -336,7 +336,7 @@ public class JaccardTest {
                 "write", true,
                 "similarityCutoff", 0.1));
 
-        Result writeResult = db.execute(STATEMENT, params);
+        Result writeResult = dB.executeTransactionally(STATEMENT, params);
         Map<String, Object> writeRow = writeResult.next();
         assertEquals(-1L, (long) writeRow.get("computations"));
     }
@@ -348,7 +348,7 @@ public class JaccardTest {
                 "showComputations", true,
                 "similarityCutoff", 0.1));
 
-        Result writeResult = db.execute(STATEMENT, params);
+        Result writeResult = dB.executeTransactionally(STATEMENT, params);
         Map<String, Object> writeRow = writeResult.next();
         assertEquals(3L, (long) writeRow.get("computations"));
     }

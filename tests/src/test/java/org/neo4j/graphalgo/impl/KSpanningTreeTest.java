@@ -32,7 +32,7 @@ import org.neo4j.graphalgo.impl.spanningTrees.SpanningTree;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -83,7 +83,7 @@ public class KSpanningTreeTest {
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
-        DB.execute(cypher);
+        DB.executeTransactionally(cypher);
     }
 
     private Graph graph;
@@ -104,7 +104,7 @@ public class KSpanningTreeTest {
             c = graph.toMappedNodeId(tx.findNode(Label.label("Node"), "name", "c").getId());
             d = graph.toMappedNodeId(tx.findNode(Label.label("Node"), "name", "d").getId());
             x = graph.toMappedNodeId(tx.findNode(Label.label("Node"), "name", "x").getId());
-            tx.success();
+            tx.commit();
         };
     }
 

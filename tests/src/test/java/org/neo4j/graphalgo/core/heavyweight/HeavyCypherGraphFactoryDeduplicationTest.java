@@ -46,7 +46,7 @@ public class HeavyCypherGraphFactoryDeduplicationTest {
 
         db = TestDatabaseCreator.createTestDatabase();
 
-        db.execute(
+        dB.executeTransactionally(
                 "MERGE (n1 {id: 1}) " + "" +
                    "MERGE (n2 {id: 2}) " +
                    "CREATE (n1)-[:REL {weight: 4}]->(n2) " +

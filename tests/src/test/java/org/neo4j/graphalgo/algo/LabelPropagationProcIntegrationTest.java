@@ -29,7 +29,7 @@ import org.neo4j.graphdb.Result;
 import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -87,7 +87,7 @@ public class LabelPropagationProcIntegrationTest {
     @Before
     public void setup() throws KernelException {
         db.resolveDependency(GlobalProcedures.class).registerProcedure(LabelPropagationProc.class);
-        db.execute(DB_CYPHER);
+        dB.executeTransactionally(DB_CYPHER);
     }
 
     @Test
@@ -226,7 +226,7 @@ public class LabelPropagationProcIntegrationTest {
             String query,
             Map<String, Object> params,
             Consumer<Result.ResultRow> check) {
-        try (Result result = db.execute(query, params)) {
+        try (Result result = dB.executeTransactionally(query, params)) {
             result.accept(row -> {
                 check.accept(row);
                 return true;

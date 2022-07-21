@@ -105,8 +105,8 @@ public class PageRankProcIntegrationTest {
     public static void setup() throws KernelException {
         db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            db.execute(DB_CYPHER).close();
-            tx.success();
+            dB.executeTransactionally(DB_CYPHER).close();
+            tx.commit();
         }
 
         db.getDependencyResolver()
@@ -137,7 +137,7 @@ public class PageRankProcIntegrationTest {
             weightedExpected.put(tx.findNode(label, "name", "h").getId(), 0.150);
             weightedExpected.put(tx.findNode(label, "name", "i").getId(), 0.150);
             weightedExpected.put(tx.findNode(label, "name", "j").getId(), 0.150);
-            tx.success();
+            tx.commit();
         }
     }
 
@@ -281,7 +281,7 @@ public class PageRankProcIntegrationTest {
             String query,
             Map<String, Object> params,
             Consumer<Result.ResultRow> check) {
-        try (Result result = db.execute(query, params)) {
+        try (Result result = dB.executeTransactionally(query, params)) {
             result.accept(row -> {
                 check.accept(row);
                 return true;
@@ -301,7 +301,7 @@ public class PageRankProcIntegrationTest {
                         score,
                         0.1);
             }
-            tx.success();
+            tx.commit();
         }
     }
 

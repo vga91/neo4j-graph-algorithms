@@ -18,7 +18,8 @@
  */
 package org.neo4j.graphalgo.core.utils;
 
-import org.neo4j.collection.primitive.PrimitiveLongIterable;
+
+import org.neo4j.graphalgo.api.PrimitiveLongIterable;
 
 public interface HugeParallelGraphImporter<T extends Runnable> {
 

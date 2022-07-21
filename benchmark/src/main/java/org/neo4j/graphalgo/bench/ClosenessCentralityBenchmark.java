@@ -100,7 +100,7 @@ public class ClosenessCentralityBenchmark {
                 }
                 temp = line;
             }
-            tx.success();
+            tx.commit();
         }
     }
 
@@ -119,7 +119,7 @@ public class ClosenessCentralityBenchmark {
 
     @Benchmark
     public Object _01_benchmark() {
-        return db.execute("CALL algo.closeness('','', {write:false, stats:false, graph: $graph}) YIELD " +
+        return dB.executeTransactionally("CALL algo.closeness('','', {write:false, stats:false, graph: $graph}) YIELD " +
                 "nodes, loadMillis, computeMillis, writeMillis", params)
                 .stream()
                 .count();

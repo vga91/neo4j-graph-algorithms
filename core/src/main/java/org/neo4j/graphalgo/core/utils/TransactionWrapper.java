@@ -20,7 +20,8 @@ package org.neo4j.graphalgo.core.utils;
 
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.KernelTransaction;
-import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
+//import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
+import org.neo4j.kernel.availability.AvailabilityGuard;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.function.Consumer;
@@ -45,7 +46,10 @@ public final class TransactionWrapper {
 
     public TransactionWrapper(
             final GraphDatabaseAPI db) {
-        this(db, db.getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class));
+        // todo - not sure about that... db.getDependencyResolver().resolveDependency(AvailabilityGuard.class)
+//        final AvailabilityGuard availabilityGuard = ;
+//        this(db, db.getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class));
+        this(db, new ThreadToStatementContextBridge(db.getDependencyResolver().resolveDependency(AvailabilityGuard.class)));
     }
 
     public TransactionWrapper(
@@ -59,7 +63,7 @@ public final class TransactionWrapper {
         try (final Transaction tx = db.beginTx()) {
             final KernelTransaction transaction = bridge.getKernelTransactionBoundToThisThread(true);
             block.accept(transaction);
-            tx.success();
+            tx.commit();
         }
     }
 
@@ -67,7 +71,7 @@ public final class TransactionWrapper {
         try (final Transaction tx = db.beginTx()) {
             final KernelTransaction transaction = bridge.getKernelTransactionBoundToThisThread(true);
             T result = block.apply(transaction);
-            tx.success();
+            tx.commit();
             return result;
         }
     }
@@ -76,7 +80,7 @@ public final class TransactionWrapper {
         try (final Transaction tx = db.beginTx()) {
             final KernelTransaction transaction = bridge.getKernelTransactionBoundToThisThread(true);
             int result = block.applyAsInt(transaction);
-            tx.success();
+            tx.commit();
             return result;
         }
     }
@@ -85,7 +89,7 @@ public final class TransactionWrapper {
         try (final Transaction tx = db.beginTx()) {
             final KernelTransaction transaction = bridge.getKernelTransactionBoundToThisThread(true);
             double result = block.applyAsDouble(transaction);
-            tx.success();
+            tx.commit();
             return result;
         }
     }

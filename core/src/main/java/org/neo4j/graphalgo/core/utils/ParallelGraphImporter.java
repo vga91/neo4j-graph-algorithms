@@ -18,7 +18,8 @@
  */
 package org.neo4j.graphalgo.core.utils;
 
-import org.neo4j.collection.primitive.PrimitiveIntIterable;
+
+import org.neo4j.graphalgo.api.PrimitiveIntIterable;
 
 public interface ParallelGraphImporter<T extends Runnable> {
 

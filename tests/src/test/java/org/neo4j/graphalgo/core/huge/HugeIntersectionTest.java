@@ -29,7 +29,7 @@ import org.neo4j.internal.kernel.api.TokenWrite;
 import org.neo4j.internal.kernel.api.Write;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.exceptions.KernelException;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.PrimitiveIterator;
@@ -74,7 +74,7 @@ public final class HugeIntersectionTest {
                         targets[some++] = target;
                     }
                 }
-                st.success();
+                st.commit();
                 return Arrays.copyOf(targets, some);
             } catch (KernelException e) {
                 throw new RuntimeException(e);

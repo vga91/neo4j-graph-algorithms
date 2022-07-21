@@ -31,7 +31,7 @@ import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.TerminationFlag;
 import org.neo4j.graphalgo.impl.infomap.InfoMap;
 import org.neo4j.exceptions.KernelException;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -126,8 +126,8 @@ public class InfoMapTest {
     @Before
     public void setupGraph() throws KernelException {
 
-        db.execute("MATCH (n) detach delete n");
-        db.execute(cypher);
+        dB.executeTransactionally("MATCH (n) detach delete n");
+        dB.executeTransactionally(cypher);
 
         graph = new GraphLoader(db)
                 .withAnyRelationshipType()

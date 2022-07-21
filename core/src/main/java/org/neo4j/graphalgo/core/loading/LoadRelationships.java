@@ -19,18 +19,21 @@
 package org.neo4j.graphalgo.core.loading;
 
 import org.neo4j.graphdb.Direction;
-import org.neo4j.helpers.collection.Pair;
+import org.neo4j.internal.helpers.collection.Pair;
 import org.neo4j.internal.kernel.api.CursorFactory;
 import org.neo4j.internal.kernel.api.NodeCursor;
-import org.neo4j.internal.kernel.api.RelationshipGroupCursor;
 import org.neo4j.internal.kernel.api.RelationshipTraversalCursor;
 import org.neo4j.internal.kernel.api.helpers.Nodes;
-import org.neo4j.internal.kernel.api.helpers.RelationshipSelectionCursor;
+import org.neo4j.internal.kernel.api.RelationshipTraversalCursor;
 import org.neo4j.internal.kernel.api.helpers.RelationshipSelections;
+import org.neo4j.io.pagecache.context.CursorContext;
+import org.neo4j.kernel.api.KernelTransaction;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import static org.neo4j.storageengine.api.RelationshipSelection.ALL_RELATIONSHIPS;
 
 public interface LoadRelationships {
 
@@ -45,13 +48,13 @@ public interface LoadRelationships {
      */
     int degreeUndirected(NodeCursor cursor);
 
-    RelationshipSelectionCursor relationshipsOut(NodeCursor cursor);
+    RelationshipTraversalCursor relationshipsOut(NodeCursor cursor);
 
-    RelationshipSelectionCursor relationshipsIn(NodeCursor cursor);
+    RelationshipTraversalCursor relationshipsIn(NodeCursor cursor);
 
-    RelationshipSelectionCursor relationshipsBoth(NodeCursor cursor);
+    RelationshipTraversalCursor relationshipsBoth(NodeCursor cursor);
 
-    default RelationshipSelectionCursor relationshipsOf(Direction direction, NodeCursor cursor) {
+    default RelationshipTraversalCursor relationshipsOf(Direction direction, NodeCursor cursor) {
         switch (direction) {
             case OUTGOING:
                 return relationshipsOut(cursor);
@@ -64,51 +67,56 @@ public interface LoadRelationships {
         }
     }
 
-    static void consumeRelationships(RelationshipSelectionCursor cursor, Consumer<RelationshipSelectionCursor> action) {
-        try (RelationshipSelectionCursor rels = cursor) {
+    static void consumeRelationships(RelationshipTraversalCursor cursor, Consumer<RelationshipTraversalCursor> action) {
+        try (RelationshipTraversalCursor rels = cursor) {
             while (rels.next()) {
                 action.accept(rels);
             }
         }
     }
 
-    static LoadRelationships of(CursorFactory cursors, int[] relationshipType) {
+    static LoadRelationships of(KernelTransaction transaction, int[] relationshipType) {
+//    static LoadRelationships of(CursorFactory cursors, int[] relationshipType) {
         if (relationshipType == null || relationshipType.length == 0) {
-            return new LoadAllRelationships(cursors);
+            return new LoadAllRelationships(transaction);
         }
-        return new LoadRelationshipsOfSingleType(cursors, relationshipType);
+        return new LoadRelationshipsOfSingleType(transaction, relationshipType);
     }
 }
 
 
 final class LoadAllRelationships implements LoadRelationships {
     private final CursorFactory cursors;
+    private final CursorContext cursorContext;
+//    private final RelationshipTraversalCursor traversalCursor;
 
-    LoadAllRelationships(final CursorFactory cursors) {
-        this.cursors = cursors;
+    LoadAllRelationships(final KernelTransaction transaction) {
+        this.cursors = transaction.cursors();
+        this.cursorContext = transaction.cursorContext();
+//        this.traversalCursor = transaction.();
     }
 
     @Override
     public int degreeOut(final NodeCursor cursor) {
-        return Nodes.countOutgoing(cursor, cursors);
+        return Nodes.countOutgoing(cursor);
     }
 
     @Override
     public int degreeIn(final NodeCursor cursor) {
-        return Nodes.countIncoming(cursor, cursors);
+        return Nodes.countIncoming(cursor);
     }
 
     @Override
     public int degreeBoth(final NodeCursor cursor) {
 //        return Nodes.countAll(cursor, cursors);
-        return countAll(cursor, cursors);
+        return countAll(cursor, cursors, cursorContext);
     }
 
-    private static int countAll(NodeCursor nodeCursor, CursorFactory cursors) {
+    private static int countAll(NodeCursor nodeCursor, CursorFactory cursors, CursorContext cursorContext) {
         Set<Pair<Long, Long>> sourceTargetPairs = new HashSet<>();
 
-        try (RelationshipTraversalCursor traversal = cursors.allocateRelationshipTraversalCursor()) {
-            nodeCursor.allRelationships(traversal);
+        try (RelationshipTraversalCursor traversal = cursors.allocateRelationshipTraversalCursor(cursorContext)) {
+            nodeCursor.relationships(traversal, ALL_RELATIONSHIPS);
             while (traversal.next()) {
                 long low = Math.min(traversal.sourceNodeReference(), traversal.targetNodeReference());
                 long high = Math.max(traversal.sourceNodeReference(), traversal.targetNodeReference());
@@ -125,53 +133,55 @@ final class LoadAllRelationships implements LoadRelationships {
     }
 
     @Override
-    public RelationshipSelectionCursor relationshipsOut(final NodeCursor cursor) {
-        return RelationshipSelections.outgoingCursor(cursors, cursor, null);
+    public RelationshipTraversalCursor relationshipsOut(final NodeCursor cursor) {
+        return RelationshipSelections.outgoingCursor(cursors, cursor, null, cursorContext);
     }
 
     @Override
-    public RelationshipSelectionCursor relationshipsIn(final NodeCursor cursor) {
-        return RelationshipSelections.incomingCursor(cursors, cursor, null);
+    public RelationshipTraversalCursor relationshipsIn(final NodeCursor cursor) {
+        return RelationshipSelections.incomingCursor(cursors, cursor, null, cursorContext);
     }
 
     @Override
-    public RelationshipSelectionCursor relationshipsBoth(final NodeCursor cursor) {
-        return RelationshipSelections.allCursor(cursors, cursor, null);
+    public RelationshipTraversalCursor relationshipsBoth(final NodeCursor cursor) {
+        return RelationshipSelections.allCursor(cursors, cursor, null, cursorContext);
     }
 }
 
 final class LoadRelationshipsOfSingleType implements LoadRelationships {
     private final CursorFactory cursors;
+    private final CursorContext cursorContext;
     private final int type;
     private final int[] types;
 
-    LoadRelationshipsOfSingleType(final CursorFactory cursors, final int[] types) {
-        this.cursors = cursors;
+    LoadRelationshipsOfSingleType(final KernelTransaction transaction, final int[] types) {
+        this.cursors = transaction.cursors();
+        this.cursorContext = transaction.cursorContext();
         this.type = types[0];
         this.types = types;
     }
 
     @Override
     public int degreeOut(final NodeCursor cursor) {
-        return Nodes.countOutgoing(cursor, cursors, type);
+        return Nodes.countOutgoing(cursor, type);
     }
 
     @Override
     public int degreeIn(final NodeCursor cursor) {
-        return Nodes.countIncoming(cursor, cursors, type);
+        return Nodes.countIncoming(cursor, type);
     }
 
     @Override
     public int degreeBoth(final NodeCursor cursor) {
-        return countAll(cursor, cursors, type);
+        return countAll(cursor, cursors, type, cursorContext);
     }
 
-    public static int countAll( NodeCursor nodeCursor, CursorFactory cursors, int type )
+    public static int countAll( NodeCursor nodeCursor, CursorFactory cursors, int type, CursorContext cursorContext)
     {
         Set<Pair<Long, Long>> sourceTargetPairs = new HashSet<>();
 
-        try (RelationshipTraversalCursor traversal = cursors.allocateRelationshipTraversalCursor()) {
-            nodeCursor.allRelationships(traversal);
+        try (RelationshipTraversalCursor traversal = cursors.allocateRelationshipTraversalCursor(cursorContext)) {
+            nodeCursor.relationships(traversal, ALL_RELATIONSHIPS);
             while (traversal.next()) {
                 if (traversal.type() == type) {
                     long low = Math.min(traversal.sourceNodeReference(), traversal.targetNodeReference());
@@ -189,17 +199,17 @@ final class LoadRelationshipsOfSingleType implements LoadRelationships {
     }
 
     @Override
-    public RelationshipSelectionCursor relationshipsOut(final NodeCursor cursor) {
-        return RelationshipSelections.outgoingCursor(cursors, cursor, types);
+    public RelationshipTraversalCursor relationshipsOut(final NodeCursor cursor) {
+        return RelationshipSelections.outgoingCursor(cursors, cursor, types, cursorContext);
     }
 
     @Override
-    public RelationshipSelectionCursor relationshipsIn(final NodeCursor cursor) {
-        return RelationshipSelections.incomingCursor(cursors, cursor, types);
+    public RelationshipTraversalCursor relationshipsIn(final NodeCursor cursor) {
+        return RelationshipSelections.incomingCursor(cursors, cursor, types, cursorContext);
     }
 
     @Override
-    public RelationshipSelectionCursor relationshipsBoth(final NodeCursor cursor) {
-        return RelationshipSelections.allCursor(cursors, cursor, types);
+    public RelationshipTraversalCursor relationshipsBoth(final NodeCursor cursor) {
+        return RelationshipSelections.allCursor(cursors, cursor, types, cursorContext);
     }
 }

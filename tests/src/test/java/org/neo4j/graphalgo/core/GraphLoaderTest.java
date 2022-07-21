@@ -29,7 +29,7 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -65,7 +65,7 @@ public class GraphLoaderTest {
 
     @Test
     public void both() {
-        db.execute("" +
+        dB.executeTransactionally("" +
                 "CREATE (a:Node),(b:Node),(c:Node),(d:Node) " +
                 "CREATE" +
                 " (a)-[:REL]->(a)," +
@@ -88,7 +88,7 @@ public class GraphLoaderTest {
 
     @Test
     public void outgoing() {
-        db.execute("" +
+        dB.executeTransactionally("" +
                 "CREATE (a:Node),(b:Node),(c:Node),(d:Node) " +
                 "CREATE" +
                 " (a)-[:REL]->(a)," +
@@ -111,7 +111,7 @@ public class GraphLoaderTest {
 
     @Test
     public void incoming() {
-        db.execute("" +
+        dB.executeTransactionally("" +
                 "CREATE (a:Node),(b:Node),(c:Node),(d:Node) " +
                 "CREATE" +
                 " (a)-[:REL]->(a)," +
@@ -134,8 +134,8 @@ public class GraphLoaderTest {
 
     @Test
     public void testLargerGraphWithDeletions() {
-        db.execute("FOREACH (x IN range(1, 4098) | CREATE (:Node {index:x}))");
-        db.execute("MATCH (n) WHERE n.index IN [1, 2, 3] DELETE n");
+        dB.executeTransactionally("FOREACH (x IN range(1, 4098) | CREATE (:Node {index:x}))");
+        dB.executeTransactionally("MATCH (n) WHERE n.index IN [1, 2, 3] DELETE n");
         new GraphLoader(db, Pools.DEFAULT)
                 .withLabel("Node")
                 .withAnyRelationshipType()
@@ -163,7 +163,7 @@ public class GraphLoaderTest {
     }
 
     private void runUndirectedNodeWithSelfReference(String cypher) {
-        db.execute(cypher);
+        dB.executeTransactionally(cypher);
         final Graph graph = new GraphLoader(db)
                 .withAnyLabel()
                 .withAnyRelationshipType()
@@ -202,7 +202,7 @@ public class GraphLoaderTest {
     }
 
     private void runUndirectedNodesWithMultipleSelfReferences(String cypher) {
-        db.execute(cypher);
+        dB.executeTransactionally(cypher);
         final Graph graph = new GraphLoader(db)
                 .withAnyLabel()
                 .withAnyRelationshipType()

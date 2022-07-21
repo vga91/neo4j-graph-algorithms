@@ -75,8 +75,8 @@ public class BetweennessCentralityIntegrationTest_148 {
 
         try (ProgressTimer timer = ProgressTimer.start(l -> System.out.printf("Setup took %d ms%n", l))) {
             try (Transaction tx = db.beginTx()) {
-                db.execute(importQuery);
-                tx.success();
+                dB.executeTransactionally(importQuery);
+                tx.commit();
             }
         }
 
@@ -89,7 +89,7 @@ public class BetweennessCentralityIntegrationTest_148 {
 
     private String name(long id) {
         String[] name = {""};
-        db.execute("MATCH (n) WHERE id(n) = " + id + " RETURN n.name as name")
+        dB.executeTransactionally("MATCH (n) WHERE id(n) = " + id + " RETURN n.name as name")
                 .accept(row -> {
                     name[0] = row.getString("name");
                     return false;
@@ -105,7 +105,7 @@ public class BetweennessCentralityIntegrationTest_148 {
 
         final Consumer mock = mock(Consumer.class);
         final String evalQuery = "CALL algo.betweenness.stream('User', 'FRIEND', {direction:'B'}) YIELD nodeId, centrality";
-        db.execute(evalQuery).accept(row -> {
+        dB.executeTransactionally(evalQuery).accept(row -> {
             final long nodeId = row.getNumber("nodeId").longValue();
             final double centrality = row.getNumber("centrality").doubleValue();
             mock.consume(name(nodeId), centrality);

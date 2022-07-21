@@ -18,8 +18,9 @@
  */
 package org.neo4j.graphalgo.core.utils;
 
-import org.neo4j.collection.primitive.PrimitiveLongIterable;
-import org.neo4j.collection.primitive.PrimitiveLongIterator;
+
+import org.neo4j.graphalgo.api.PrimitiveLongIterable;
+import org.neo4j.graphalgo.api.PrimitiveLongIterator;
 
 import java.util.Random;
 

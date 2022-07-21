@@ -68,8 +68,8 @@ public class StronglyConnectedComponentsProcIntegrationTest {
         db = TestDatabaseCreator.createTestDatabase();
 
         try (Transaction tx = db.beginTx()) {
-            db.execute(cypher);
-            tx.success();
+            dB.executeTransactionally(cypher);
+            tx.commit();
         }
 
         db.getDependencyResolver()
@@ -96,7 +96,7 @@ public class StronglyConnectedComponentsProcIntegrationTest {
 
     @Test
     public void testScc() throws Exception {
-        db.execute("CALL algo.scc('Node', 'TYPE', {write:true, graph:'"+graphImpl+"'}) YIELD loadMillis, computeMillis, writeMillis, setCount, maxSetSize, minSetSize, partitionProperty, writeProperty")
+        dB.executeTransactionally("CALL algo.scc('Node', 'TYPE', {write:true, graph:'"+graphImpl+"'}) YIELD loadMillis, computeMillis, writeMillis, setCount, maxSetSize, minSetSize, partitionProperty, writeProperty")
                 .accept(row -> {
                     assertNotEquals(-1L, row.getNumber("computeMillis").longValue());
                     assertNotEquals(-1L, row.getNumber("writeMillis").longValue());
@@ -112,7 +112,7 @@ public class StronglyConnectedComponentsProcIntegrationTest {
 
     @Test
     public void explicitWriteProperty() throws Exception {
-        db.execute("CALL algo.scc('Node', 'TYPE', {write:true, graph:'"+graphImpl+"', writeProperty: 'scc'}) YIELD loadMillis, computeMillis, writeMillis, setCount, maxSetSize, minSetSize, partitionProperty, writeProperty")
+        dB.executeTransactionally("CALL algo.scc('Node', 'TYPE', {write:true, graph:'"+graphImpl+"', writeProperty: 'scc'}) YIELD loadMillis, computeMillis, writeMillis, setCount, maxSetSize, minSetSize, partitionProperty, writeProperty")
                 .accept(row -> {
                     assertNotEquals(-1L, row.getNumber("computeMillis").longValue());
                     assertNotEquals(-1L, row.getNumber("writeMillis").longValue());

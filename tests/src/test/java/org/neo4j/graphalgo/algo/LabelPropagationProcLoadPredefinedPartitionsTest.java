@@ -93,7 +93,7 @@ public class LabelPropagationProcLoadPredefinedPartitionsTest {
         proceduresService.registerProcedure(LabelPropagationProc.class, true);
         proceduresService.registerFunction(GetNodeFunc.class, true);
 
-        DB.execute(DB_CYPHER);
+        DB.executeTransactionally(DB_CYPHER);
     }
 
     @AfterClass
@@ -108,7 +108,7 @@ public class LabelPropagationProcLoadPredefinedPartitionsTest {
                 "RETURN algo.asNode(nodeId) AS id, label " +
                 "ORDER BY id";
 
-        Result result = DB.execute(query, parParams());
+        Result result = DB.executeTransactionally(query, parParams());
 
         List<Integer> labels = result.columnAs("label").stream()
                 .mapToInt(value -> ((Long)value).intValue()).boxed().collect(Collectors.toList());

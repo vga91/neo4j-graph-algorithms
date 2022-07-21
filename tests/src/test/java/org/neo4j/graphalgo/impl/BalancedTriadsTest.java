@@ -27,7 +27,7 @@ import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.impl.triangle.HugeBalancedTriads;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
@@ -78,7 +78,7 @@ public class BalancedTriadsTest {
                         " (f)-[:TYPE {w:-1.0}]->(g),\n" +
                         " (g)-[:TYPE {w:1.0}]->(b)";
 
-        DB.execute(cypher);
+        DB.executeTransactionally(cypher);
 
         graph = (HugeGraph) new GraphLoader(DB, Pools.DEFAULT)
                 .withLabel("Node")

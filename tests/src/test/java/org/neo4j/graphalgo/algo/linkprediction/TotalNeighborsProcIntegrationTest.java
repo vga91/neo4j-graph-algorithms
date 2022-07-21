@@ -59,7 +59,7 @@ public class TotalNeighborsProcIntegrationTest {
                 .resolveDependency(GlobalProcedures.class)
                 .registerFunction(LinkPrediction.class);
 
-        db.execute(SETUP).close();
+        dB.executeTransactionally(SETUP).close();
     }
 
     @AfterClass
@@ -76,7 +76,7 @@ public class TotalNeighborsProcIntegrationTest {
                         "       2.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+            Result result = dB.executeTransactionally(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -91,7 +91,7 @@ public class TotalNeighborsProcIntegrationTest {
                         "       3.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+            Result result = dB.executeTransactionally(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -106,7 +106,7 @@ public class TotalNeighborsProcIntegrationTest {
                         "       4.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+            Result result = dB.executeTransactionally(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }

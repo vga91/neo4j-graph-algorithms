@@ -26,7 +26,7 @@ import org.neo4j.internal.kernel.api.CursorFactory;
 import org.neo4j.internal.kernel.api.PropertyCursor;
 import org.neo4j.internal.kernel.api.Read;
 import org.neo4j.internal.kernel.api.RelationshipScanCursor;
-import org.neo4j.internal.kernel.api.helpers.RelationshipSelectionCursor;
+import org.neo4j.internal.kernel.api.RelationshipTraversalCursor;
 
 import java.util.Arrays;
 
@@ -52,7 +52,7 @@ abstract class VisitRelationship {
         }
     }
 
-    abstract void visit(RelationshipSelectionCursor cursor);
+    abstract void visit(RelationshipTraversalCursor cursor);
 
     final void prepareNextNode(final int sourceGraphId, final int[] targets) {
         this.sourceGraphId = sourceGraphId;
@@ -178,7 +178,7 @@ final class VisitOutgoingNoWeight extends VisitRelationship {
     }
 
     @Override
-    void visit(final RelationshipSelectionCursor cursor) {
+    void visit(final RelationshipTraversalCursor cursor) {
         addNode(cursor.targetNodeReference());
     }
 }
@@ -190,7 +190,7 @@ final class VisitIncomingNoWeight extends VisitRelationship {
     }
 
     @Override
-    void visit(final RelationshipSelectionCursor cursor) {
+    void visit(final RelationshipTraversalCursor cursor) {
         addNode(cursor.sourceNodeReference());
     }
 }
@@ -214,7 +214,7 @@ final class VisitOutgoingWithWeight extends VisitRelationship {
     }
 
     @Override
-    void visit(final RelationshipSelectionCursor cursor) {
+    void visit(final RelationshipTraversalCursor cursor) {
         if (addNode(cursor.targetNodeReference())) {
             visitWeight(readOp, cursors, sourceGraphId, prevTarget, weights, cursor.relationshipReference());
         }
@@ -240,7 +240,7 @@ final class VisitIncomingWithWeight extends VisitRelationship {
     }
 
     @Override
-    void visit(final RelationshipSelectionCursor cursor) {
+    void visit(final RelationshipTraversalCursor cursor) {
         if (addNode(cursor.sourceNodeReference())) {
             visitWeight(readOp, cursors, prevTarget, sourceGraphId, weights, cursor.relationshipReference());
         }
@@ -266,7 +266,7 @@ final class VisitUndirectedOutgoingWithWeight extends VisitRelationship {
     }
 
     @Override
-    void visit(final RelationshipSelectionCursor cursor) {
+    void visit(final RelationshipTraversalCursor cursor) {
         if (addNode(cursor.targetNodeReference())) {
             visitUndirectedWeight(readOp, cursors, sourceGraphId, prevTarget, weights, cursor.relationshipReference());
         }

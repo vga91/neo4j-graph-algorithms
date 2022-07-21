@@ -34,7 +34,7 @@ import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -121,9 +121,9 @@ public final class ShortestPathDijkstraTest {
 
     @BeforeClass
     public static void setupGraph() {
-        DB.execute(DB_CYPHER).close();
-        DB.execute(DB_CYPHER2).close();
-        DB.execute(DB_CYPHER_599).close();
+        DB.executeTransactionally(DB_CYPHER).close();
+        DB.executeTransactionally(DB_CYPHER2).close();
+        DB.executeTransactionally(DB_CYPHER_599).close();
     }
 
     private Class<? extends GraphFactory> graphImpl;

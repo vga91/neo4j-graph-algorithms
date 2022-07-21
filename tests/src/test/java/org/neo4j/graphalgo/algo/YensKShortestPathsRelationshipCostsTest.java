@@ -25,7 +25,7 @@ import org.neo4j.graphalgo.KShortestPathsProc;
 import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.assertEquals;
 
@@ -56,7 +56,7 @@ public class YensKShortestPathsRelationshipCostsTest {
                         " (a)-[:TYPE {cost:3.0}]->(b),\n" +
                         " (b)-[:TYPE {cost:2.0}]->(c)";
 
-        DB.execute(cypher);
+        DB.executeTransactionally(cypher);
         DB.resolveDependency(GlobalProcedures.class).registerProcedure(KShortestPathsProc.class);
     }
 
@@ -67,7 +67,7 @@ public class YensKShortestPathsRelationshipCostsTest {
                 "CALL algo.kShortestPaths(c, a, 1, 'cost') " +
                 "YIELD resultCount RETURN resultCount";
 
-        DB.execute(cypher).accept(row -> {
+        DB.executeTransactionally(cypher).accept(row -> {
             assertEquals(1, row.getNumber("resultCount").intValue());
             return true;
         });
@@ -76,7 +76,7 @@ public class YensKShortestPathsRelationshipCostsTest {
                 "UNWIND relationships(p) AS pair\n" +
                 "return sum(pair.weight) AS distance";
 
-        DB.execute(shortestPathsQuery, MapUtil.map("one", "c", "two", "a")).accept(row -> {
+        DB.executeTransactionally(shortestPathsQuery, MapUtil.map("one", "c", "two", "a")).accept(row -> {
             assertEquals(5.0, row.getNumber("distance").doubleValue(), 0.01);
             return true;
         });

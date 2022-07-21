@@ -41,7 +41,7 @@ final class CypherExporter {
                     .forEach(rel -> rel(rel, s).append(',').append(System.lineSeparator())));
             s.append(System.lineSeparator());
             out.println(s.toString());
-            tx.success();
+            tx.commit();
         }
         out.flush();
     }

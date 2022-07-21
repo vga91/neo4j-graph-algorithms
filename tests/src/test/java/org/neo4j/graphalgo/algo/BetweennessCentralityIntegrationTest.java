@@ -152,7 +152,7 @@ public class BetweennessCentralityIntegrationTest {
     @Test
     public void testBetweennessStream() throws Exception {
 
-        db.execute("CALL algo.betweenness.stream('Node', 'TYPE') YIELD nodeId, centrality")
+        dB.executeTransactionally("CALL algo.betweenness.stream('Node', 'TYPE') YIELD nodeId, centrality")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     consumer.consume(
                             (long) row.getNumber("nodeId"),
@@ -167,7 +167,7 @@ public class BetweennessCentralityIntegrationTest {
     @Test
     public void testParallelBetweennessStream() throws Exception {
 
-        db.execute("CALL algo.betweenness.stream('Node', 'TYPE', {concurrency:4}) YIELD nodeId, centrality")
+        dB.executeTransactionally("CALL algo.betweenness.stream('Node', 'TYPE', {concurrency:4}) YIELD nodeId, centrality")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     consumer.consume(
                             row.getNumber("nodeId").intValue(),
@@ -182,7 +182,7 @@ public class BetweennessCentralityIntegrationTest {
     @Test
     public void testParallelBetweennessWrite() throws Exception {
 
-        db.execute("CALL algo.betweenness('','', {concurrency:4, write:true, stats:true, writeProperty:'centrality'}) YIELD " +
+        dB.executeTransactionally("CALL algo.betweenness('','', {concurrency:4, write:true, stats:true, writeProperty:'centrality'}) YIELD " +
                 "nodes, minCentrality, maxCentrality, sumCentrality, loadMillis, computeMillis, writeMillis")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(85.0, (double) row.getNumber("sumCentrality"), 0.01);
@@ -198,7 +198,7 @@ public class BetweennessCentralityIntegrationTest {
     @Test
     public void testParallelBetweennessWriteWithDirection() throws Exception {
 
-        db.execute("CALL algo.betweenness('','', {direction:'<>', concurrency:4, write:true, stats:true, writeProperty:'centrality'}) YIELD " +
+        dB.executeTransactionally("CALL algo.betweenness('','', {direction:'<>', concurrency:4, write:true, stats:true, writeProperty:'centrality'}) YIELD " +
                 "nodes, minCentrality, maxCentrality, sumCentrality, loadMillis, computeMillis, writeMillis")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(35.0, (double) row.getNumber("sumCentrality"), 0.01);
@@ -214,7 +214,7 @@ public class BetweennessCentralityIntegrationTest {
     @Test
     public void testBetweennessWrite() throws Exception {
 
-        db.execute("CALL algo.betweenness('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
+        dB.executeTransactionally("CALL algo.betweenness('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
                 "nodes, minCentrality, maxCentrality, sumCentrality, loadMillis, computeMillis, writeMillis")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(85.0, (double) row.getNumber("sumCentrality"), 0.01);
@@ -230,7 +230,7 @@ public class BetweennessCentralityIntegrationTest {
     @Test
     public void testBetweennessWriteWithDirection() throws Exception {
 
-        db.execute("CALL algo.betweenness('','', {direction:'both', write:true, stats:true, writeProperty:'centrality'}) " +
+        dB.executeTransactionally("CALL algo.betweenness('','', {direction:'both', write:true, stats:true, writeProperty:'centrality'}) " +
                 "YIELD nodes, minCentrality, maxCentrality, sumCentrality, loadMillis, computeMillis, writeMillis")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(35.0, (double) row.getNumber("sumCentrality"), 0.01);
@@ -246,7 +246,7 @@ public class BetweennessCentralityIntegrationTest {
     @Test
     public void testRABrandesHighProbability() throws Exception {
 
-        db.execute("CALL algo.betweenness.sampled('','', {strategy:'random', probability:1.0, write:true, " +
+        dB.executeTransactionally("CALL algo.betweenness.sampled('','', {strategy:'random', probability:1.0, write:true, " +
                 "stats:true, writeProperty:'centrality'}) YIELD " +
                 "nodes, minCentrality, maxCentrality, sumCentrality, loadMillis, computeMillis, writeMillis")
                 .accept((Result.ResultVisitor<Exception>) row -> {
@@ -263,7 +263,7 @@ public class BetweennessCentralityIntegrationTest {
     @Test
     public void testRABrandesNoProbability() throws Exception {
 
-        db.execute("CALL algo.betweenness.sampled('','', {strategy:'random', write:true, stats:true, " +
+        dB.executeTransactionally("CALL algo.betweenness.sampled('','', {strategy:'random', write:true, stats:true, " +
                 "writeProperty:'centrality'}) YIELD " +
                 "nodes, minCentrality, maxCentrality, sumCentrality, loadMillis, computeMillis, writeMillis")
                 .accept((Result.ResultVisitor<Exception>) row -> {
@@ -277,7 +277,7 @@ public class BetweennessCentralityIntegrationTest {
     @Test
     public void testRABrandeseWrite() throws Exception {
 
-        db.execute("CALL algo.betweenness.sampled('','', {strategy:'random', probability:1.0, " +
+        dB.executeTransactionally("CALL algo.betweenness.sampled('','', {strategy:'random', probability:1.0, " +
                 "write:true, stats:true, writeProperty:'centrality'}) YIELD " +
                 "nodes, minCentrality, maxCentrality, sumCentrality, loadMillis, computeMillis, writeMillis")
                 .accept((Result.ResultVisitor<Exception>) row -> {
@@ -291,7 +291,7 @@ public class BetweennessCentralityIntegrationTest {
     @Test
     public void testRABrandesStream() throws Exception {
 
-        db.execute("CALL algo.betweenness.sampled.stream('','', {strategy:'random', probability:1.0, " +
+        dB.executeTransactionally("CALL algo.betweenness.sampled.stream('','', {strategy:'random', probability:1.0, " +
                 "write:true, stats:true, writeProperty:'centrality'}) YIELD nodeId, centrality")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     consumer.consume(

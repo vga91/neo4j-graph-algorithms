@@ -18,11 +18,11 @@
  */
 package org.neo4j.graphalgo.core.huge.loader;
 
-import org.neo4j.collection.primitive.PrimitiveLongIterable;
-import org.neo4j.collection.primitive.PrimitiveLongIterator;
 import org.neo4j.graphalgo.api.HugeBatchNodeIterable;
 import org.neo4j.graphalgo.api.HugeIdMapping;
 import org.neo4j.graphalgo.api.HugeNodeIterator;
+import org.neo4j.graphalgo.api.PrimitiveLongIterable;
+import org.neo4j.graphalgo.api.PrimitiveLongIterator;
 import org.neo4j.graphalgo.core.utils.LazyBatchCollection;
 import org.neo4j.graphalgo.core.utils.paged.HugeLongArray;
 import org.neo4j.graphalgo.core.utils.paged.SparseLongArray;

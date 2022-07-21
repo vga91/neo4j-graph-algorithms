@@ -26,7 +26,7 @@ import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.stream.DoubleStream;
@@ -46,7 +46,7 @@ public class HugeGraphFactoryTest {
 
     @BeforeClass
     public static void setup() {
-        DB.execute("CREATE " +
+        DB.executeTransactionally("CREATE " +
                 "(n1:Node1 {prop1: 1})," +
                 "(n2:Node2 {prop2: 2})," +
                 "(n3:Node3 {prop3: 3})" +
@@ -54,9 +54,9 @@ public class HugeGraphFactoryTest {
                 "(n1)-[:REL1 {prop1: 1}]->(n2)," +
                 "(n1)-[:REL2 {prop2: 2}]->(n3)," +
                 "(n2)-[:REL3 {prop3: 3}]->(n3);");
-        id1 = DB.execute("MATCH (n:Node1) RETURN id(n) AS id").<Long>columnAs("id").next();
-        id2 = DB.execute("MATCH (n:Node2) RETURN id(n) AS id").<Long>columnAs("id").next();
-        id3 = DB.execute("MATCH (n:Node3) RETURN id(n) AS id").<Long>columnAs("id").next();
+        id1 = DB.executeTransactionally("MATCH (n:Node1) RETURN id(n) AS id").<Long>columnAs("id").next();
+        id2 = DB.executeTransactionally("MATCH (n:Node2) RETURN id(n) AS id").<Long>columnAs("id").next();
+        id3 = DB.executeTransactionally("MATCH (n:Node3) RETURN id(n) AS id").<Long>columnAs("id").next();
     }
 
     @Test

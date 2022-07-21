@@ -402,7 +402,7 @@ public class AllShortestPaths427Test {
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
-        DB.execute(GRAPH).close();
+        DB.executeTransactionally(GRAPH).close();
     }
 
     @Rule

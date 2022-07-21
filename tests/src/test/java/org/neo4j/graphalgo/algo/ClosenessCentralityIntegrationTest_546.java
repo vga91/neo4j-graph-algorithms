@@ -26,7 +26,7 @@ import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.impl.closeness.MSClosenessCentrality;
 import org.neo4j.graphalgo.impl.DangalchevClosenessCentrality;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 /**
  *
@@ -39,7 +39,7 @@ public class ClosenessCentralityIntegrationTest_546 {
 
     private String name(long id) {
         String[] name = {""};
-        db.execute("MATCH (n) WHERE id(n) = " + id + " RETURN n.id as name")
+        dB.executeTransactionally("MATCH (n) WHERE id(n) = " + id + " RETURN n.id as name")
                 .accept(row -> {
                     name[0] = row.getString("name");
                     return false;
@@ -69,7 +69,7 @@ public class ClosenessCentralityIntegrationTest_546 {
                         "       (will)-[:KNOWS]->(chris),\n" +
                         "       (chris)-[:KNOWS]->(karin);";
 
-        db.execute(importQuery);
+        dB.executeTransactionally(importQuery);
 
         final Graph graph = new GraphLoader(db, Pools.DEFAULT)
                 .withLabel("Person")
@@ -104,7 +104,7 @@ public class ClosenessCentralityIntegrationTest_546 {
                         "       (will)-[:KNOWS]->(chris),\n" +
                         "       (chris)-[:KNOWS]->(karin);";
 
-        db.execute(importQuery);
+        dB.executeTransactionally(importQuery);
 
         final Graph graph = new GraphLoader(db, Pools.DEFAULT)
                 .withLabel("Person")
@@ -136,7 +136,7 @@ public class ClosenessCentralityIntegrationTest_546 {
                         ",(nMark)-[:FRIEND]->(nMichael)\n" +
                         ",(nMark)<-[:FRIEND]-(nMichael);";
 
-        db.execute(importQuery);
+        dB.executeTransactionally(importQuery);
 
         final Graph graph = new GraphLoader(db, Pools.DEFAULT)
                 .withLabel("Person")
@@ -168,7 +168,7 @@ public class ClosenessCentralityIntegrationTest_546 {
                         ",(nMark)-[:FRIEND]->(nMichael)\n" +
                         ",(nMark)<-[:FRIEND]-(nMichael);";
 
-        db.execute(importQuery);
+        dB.executeTransactionally(importQuery);
 
         final Graph graph = new GraphLoader(db, Pools.DEFAULT)
                 .withLabel("Person")

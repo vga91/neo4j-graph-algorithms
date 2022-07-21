@@ -66,22 +66,22 @@ public class EigenvectorCentralityProcIntegrationTest {
                 .newGraphDatabase();
 
         try (Transaction tx = db.beginTx()) {
-            db.execute("CREATE CONSTRAINT ON (c:Character)\n" +
+            dB.executeTransactionally("CREATE CONSTRAINT ON (c:Character)\n" +
                     "ASSERT c.id IS UNIQUE;").close();
         }
 
         try (Transaction tx = db.beginTx()) {
-            db.execute("LOAD CSV WITH HEADERS FROM 'file:///got-s1-nodes.csv' AS row\n" +
+            dB.executeTransactionally("LOAD CSV WITH HEADERS FROM 'file:///got-s1-nodes.csv' AS row\n" +
                     "MERGE (c:Character {id: row.Id})\n" +
                     "SET c.name = row.Label;").close();
 
-            db.execute("LOAD CSV WITH HEADERS FROM 'file:///got-s1-edges.csv' AS row\n" +
+            dB.executeTransactionally("LOAD CSV WITH HEADERS FROM 'file:///got-s1-edges.csv' AS row\n" +
                     "MATCH (source:Character {id: row.Source})\n" +
                     "MATCH (target:Character {id: row.Target})\n" +
                     "MERGE (source)-[rel:INTERACTS_SEASON1]->(target)\n" +
                     "SET rel.weight = toInteger(row.Weight);").close();
 
-            tx.success();
+            tx.commit();
         }
 
         Procedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
@@ -101,7 +101,7 @@ public class EigenvectorCentralityProcIntegrationTest {
             expected.put(tx.findNode(label, "name", "Arya").getId(), 73.32532401574804	);
             expected.put(tx.findNode(label, "name", "Petyr").getId(), 72.26733401574802);
             expected.put(tx.findNode(label, "name", "Sansa").getId(), 71.56470401574803);
-            tx.success();
+            tx.commit();
         }
     }
 
@@ -255,7 +255,7 @@ public class EigenvectorCentralityProcIntegrationTest {
             String query,
             Map<String, Object> params,
             Consumer<Result.ResultRow> check) {
-        try (Result result = db.execute(query, params)) {
+        try (Result result = dB.executeTransactionally(query, params)) {
             result.accept(row -> {
                 check.accept(row);
                 return true;
@@ -275,7 +275,7 @@ public class EigenvectorCentralityProcIntegrationTest {
                         score,
                         0.1);
             }
-            tx.success();
+            tx.commit();
         }
     }
 

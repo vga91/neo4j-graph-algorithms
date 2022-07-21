@@ -34,7 +34,7 @@ import org.neo4j.graphalgo.core.utils.TerminationFlag;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.impl.louvain.Louvain;
 import org.neo4j.graphdb.Label;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -112,7 +112,7 @@ public class LouvainMultiLevelTest {
     }
 
     private void setup(String cypher) {
-        DB.execute(cypher);
+        DB.executeTransactionally(cypher);
         graph = new GraphLoader(DB)
                 .withAnyRelationshipType()
                 .withAnyLabel()

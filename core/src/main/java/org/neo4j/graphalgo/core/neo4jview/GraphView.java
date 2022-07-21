@@ -18,10 +18,10 @@
  */
 package org.neo4j.graphalgo.core.neo4jview;
 
-import org.neo4j.collection.primitive.PrimitiveIntCollections;
-import org.neo4j.collection.primitive.PrimitiveIntIterable;
-import org.neo4j.collection.primitive.PrimitiveIntIterator;
 import org.neo4j.graphalgo.api.Graph;
+import org.neo4j.graphalgo.api.PrimitiveIntBaseIterator;
+import org.neo4j.graphalgo.api.PrimitiveIntIterable;
+import org.neo4j.graphalgo.api.PrimitiveIntIterator;
 import org.neo4j.graphalgo.api.RelationshipConsumer;
 import org.neo4j.graphalgo.api.RelationshipIntersect;
 import org.neo4j.graphalgo.api.WeightedRelationshipConsumer;
@@ -37,7 +37,8 @@ import org.neo4j.internal.kernel.api.NodeCursor;
 import org.neo4j.internal.kernel.api.PropertyCursor;
 import org.neo4j.internal.kernel.api.Read;
 import org.neo4j.internal.kernel.api.RelationshipScanCursor;
-import org.neo4j.internal.kernel.api.helpers.RelationshipSelectionCursor;
+import org.neo4j.internal.kernel.api.RelationshipTraversalCursor;
+import org.neo4j.io.pagecache.context.CursorContext;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
@@ -100,9 +101,11 @@ public class GraphView implements Graph {
             withinTransaction(transaction -> {
                 CursorFactory cursors = transaction.cursors();
                 Read read = transaction.dataRead();
-                try (NodeCursor nc = cursors.allocateNodeCursor();
-                     RelationshipScanCursor rc = cursors.allocateRelationshipScanCursor();
-                     PropertyCursor pc = cursors.allocatePropertyCursor()) {
+                // todo - test and investigate
+                final CursorContext cursorContext = transaction.cursorContext();
+                try (NodeCursor nc = cursors.allocateNodeCursor(cursorContext);
+                     RelationshipScanCursor rc = cursors.allocateRelationshipScanCursor(cursorContext);
+                     PropertyCursor pc = cursors.allocatePropertyCursor(cursorContext, transaction.memoryTracker())) {
 
                     read.singleNode(originalNodeId, nc);
                     if (!nc.next()) {
@@ -110,7 +113,7 @@ public class GraphView implements Graph {
                     }
 
                     final double defaultWeight = this.propertyDefaultWeight;
-                    Consumer<RelationshipSelectionCursor> visitor = (cursor) -> {
+                    Consumer<RelationshipTraversalCursor> visitor = (cursor) -> {
                         if (!idMapping.contains(cursor.otherNodeReference())) {
                             return;
                         }
@@ -135,12 +138,12 @@ public class GraphView implements Graph {
                     if (direction == Direction.BOTH || (direction == Direction.OUTGOING && loadAsUndirected) ) {
                         // can't use relationshipsBoth here, b/c we want to be consistent with the other graph impls
                         // that are iteration first over outgoing, then over incoming relationships
-                        RelationshipSelectionCursor cursor = loader.relationshipsOut(nc);
+                        RelationshipTraversalCursor cursor = loader.relationshipsOut(nc);
                         LoadRelationships.consumeRelationships(cursor, visitor);
                         cursor = loader.relationshipsIn(nc);
                         LoadRelationships.consumeRelationships(cursor, visitor);
                     } else {
-                        RelationshipSelectionCursor cursor = loader.relationshipsOf(direction, nc);
+                        RelationshipTraversalCursor cursor = loader.relationshipsOf(direction, nc);
                         LoadRelationships.consumeRelationships(cursor, visitor);
                     }
                 }
@@ -178,7 +181,8 @@ public class GraphView implements Graph {
     @Override
     public int degree(int nodeId, Direction direction) {
         return withinTransactionInt(transaction -> {
-            try (NodeCursor nc = transaction.cursors().allocateNodeCursor()) {
+            // todo - investigate... maybe with common method?, allocateNodeCursor
+            try (NodeCursor nc = transaction.cursors().allocateNodeCursor(transaction.cursorContext())) {
                 transaction.dataRead().singleNode(toOriginalNodeId(nodeId), nc);
                 if (nc.next()) {
                     LoadRelationships relationships = rels(transaction);
@@ -220,16 +224,18 @@ public class GraphView implements Graph {
             withBreaker(breaker -> {
                 CursorFactory cursors = transaction.cursors();
                 Read read = transaction.dataRead();
-                try (NodeCursor nc = cursors.allocateNodeCursor();
-                     RelationshipScanCursor rc = cursors.allocateRelationshipScanCursor();
-                     PropertyCursor pc = cursors.allocatePropertyCursor()) {
+                // todo - investigate... maybe with common method?
+                final CursorContext cursorCxt = transaction.cursorContext();
+                try (NodeCursor nc = cursors.allocateNodeCursor(cursorCxt);
+                     RelationshipScanCursor rc = cursors.allocateRelationshipScanCursor(cursorCxt);
+                     PropertyCursor pc = cursors.allocatePropertyCursor(cursorCxt, transaction.memoryTracker())) {
 
                     read.singleNode(sourceId, nc);
                     if (!nc.next()) {
                         breaker.run();
                     }
 
-                    Consumer<RelationshipSelectionCursor> visitor = (cursor) -> {
+                    Consumer<RelationshipTraversalCursor> visitor = (cursor) -> {
                         if (targetId == cursor.otherNodeReference()) {
                             read.singleRelationship(cursor.relationshipReference(), rc);
                             if (rc.next()) {
@@ -244,7 +250,7 @@ public class GraphView implements Graph {
                     };
 
                     LoadRelationships loader = rels(transaction);
-                    RelationshipSelectionCursor cursor = loader.relationshipsOut(nc);
+                    RelationshipTraversalCursor cursor = loader.relationshipsOut(nc);
                     LoadRelationships.consumeRelationships(cursor, visitor);
                 }
             });
@@ -324,7 +330,7 @@ public class GraphView implements Graph {
         }
     }
 
-    private static class PrimitiveIntRangeIterator extends PrimitiveIntCollections.PrimitiveIntBaseIterator {
+    private static class PrimitiveIntRangeIterator extends PrimitiveIntBaseIterator {
         private int current;
         private final int end;
 

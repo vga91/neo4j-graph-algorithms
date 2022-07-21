@@ -131,8 +131,8 @@ public final class WeightedDegreeCentralityTest {
     public static void setupGraph() {
         db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            db.execute(DB_CYPHER).close();
-            tx.success();
+            dB.executeTransactionally(DB_CYPHER).close();
+            tx.commit();
         }
     }
 

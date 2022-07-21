@@ -38,7 +38,7 @@ import org.neo4j.graphalgo.core.utils.paged.HugeLongArray;
 import org.neo4j.graphalgo.impl.louvain.Louvain;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -98,7 +98,7 @@ public class LouvainTest1 {
     }
 
     private void setup(String cypher) {
-        DB.execute(cypher);
+        DB.executeTransactionally(cypher);
         graph = new GraphLoader(DB)
                 .withAnyRelationshipType()
                 .withAnyLabel()
@@ -114,7 +114,7 @@ public class LouvainTest1 {
                 final int id = graph.toMappedNodeId(tx.findNode(LABEL, "name", value).getId());
                 nameMap.put(value, id);
             }
-            transaction.success();
+            transaction.commit();
         }
     }
 
@@ -124,7 +124,7 @@ public class LouvainTest1 {
                     .forEach(r -> {
                         System.out.println(DB.getNodeById(r.nodeId).getProperty("name") + ":" + r.community);
                     });
-            transaction.success();
+            transaction.commit();
         }
     }
 

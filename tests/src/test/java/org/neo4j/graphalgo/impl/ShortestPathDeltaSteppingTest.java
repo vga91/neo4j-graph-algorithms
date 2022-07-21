@@ -96,7 +96,7 @@ public final class ShortestPathDeltaSteppingTest {
         api = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = api.beginTx()) {
             api.execute(cypher);
-            tx.success();
+            tx.commit();
         }
 
         head = getNode("s").getId();

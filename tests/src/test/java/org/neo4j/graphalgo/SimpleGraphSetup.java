@@ -78,7 +78,7 @@ public class SimpleGraphSetup {
             r1 = rel1.getId();
             r2 = rel2.getId();
 
-            transaction.success();
+            transaction.commit();
         }
     }
 

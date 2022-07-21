@@ -31,7 +31,7 @@ import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.List;
@@ -68,7 +68,7 @@ public class UtilityProcsTest {
                         "CREATE (e:Node {name:'e'})\n" +
                         "CREATE (f:Node {name:'f'})\n";
 
-        DB.execute(cypher);
+        DB.executeTransactionally(cypher);
         DB.resolveDependency(GlobalProcedures.class).registerProcedure(UtilityProc.class);
     }
 
@@ -80,7 +80,7 @@ public class UtilityProcsTest {
         List<Node> expectedNodes = getNodes("a", "b", "c");
 
 
-        DB.execute(cypher).accept(row -> {
+        DB.executeTransactionally(cypher).accept(row -> {
             Path path = (Path) row.get("path");
 
             List<Node> actualNodes = StreamSupport.stream(path.nodes().spliterator(), false).collect(toList());
@@ -98,7 +98,7 @@ public class UtilityProcsTest {
         List<Node> expectedNodes = getNodes("a", "b", "c");
         List<Double> expectedCosts = Arrays.asList(0.1, 0.2);
 
-        DB.execute(cypher).accept(row -> {
+        DB.executeTransactionally(cypher).accept(row -> {
             Path path = (Path) row.get("path");
 
             List<Node> actualNodes = StreamSupport.stream(path.nodes().spliterator(), false).collect(toList());
@@ -121,7 +121,7 @@ public class UtilityProcsTest {
         exception.expect(RuntimeException.class);
         exception.expectMessage(CoreMatchers.containsString("'weights' contains 1 values, but 2 values were expected"));
 
-        DB.execute(cypher).close();
+        DB.executeTransactionally(cypher).close();
     }
 
     @Test
@@ -131,7 +131,7 @@ public class UtilityProcsTest {
         List<Node> expectedNodes = getNodes("a", "b", "c");
         List<Double> expectedCosts = Arrays.asList(40.0, 30.0);
 
-        DB.execute(cypher).accept(row -> {
+        DB.executeTransactionally(cypher).accept(row -> {
             Path path = (Path) row.get("path");
 
             List<Node> actualNodes = StreamSupport.stream(path.nodes().spliterator(), false).collect(toList());
@@ -152,7 +152,7 @@ public class UtilityProcsTest {
         exception.expect(RuntimeException.class);
         exception.expectMessage(CoreMatchers.containsString("'weights' contains 2 values, but 3 values were expected"));
 
-        DB.execute(cypher).close();
+        DB.executeTransactionally(cypher).close();
     }
 
     private List<Node> getNodes(String... nodes) {

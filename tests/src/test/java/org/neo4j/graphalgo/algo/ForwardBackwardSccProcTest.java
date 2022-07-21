@@ -75,7 +75,7 @@ public class ForwardBackwardSccProcTest {
         api = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = api.beginTx()) {
             api.execute(cypher);
-            tx.success();
+            tx.commit();
         }
 
 
@@ -99,7 +99,7 @@ public class ForwardBackwardSccProcTest {
 
         try (Transaction tx = api.beginTx()) {
             final long id = api.findNode(Label.label("Node"), "name", name).getId();
-            tx.success();
+            tx.commit();
             return id;
         }
     }

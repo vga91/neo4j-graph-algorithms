@@ -194,7 +194,7 @@ public final class GraphNegativeTest extends RandomGraphTestCase {
                 );
             }
             iterator.close();
-            tx.success();
+            tx.commit();
         }
     }
 

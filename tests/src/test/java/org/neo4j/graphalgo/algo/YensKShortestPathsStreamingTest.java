@@ -29,7 +29,7 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.*;
 import java.util.stream.StreamSupport;
@@ -72,8 +72,8 @@ public class YensKShortestPathsStreamingTest {
                         "CREATE (f)-[:TYPE {cost:4.0}]->(d)\n" +
                         "CREATE (b)-[:TYPE {cost:2.0}]->(d)\n";
 
-        DB.execute(cypher);
-        DB.execute("MATCH (c:Node {name: 'c'}) DELETE c");
+        DB.executeTransactionally(cypher);
+        DB.executeTransactionally("MATCH (c:Node {name: 'c'}) DELETE c");
         DB.resolveDependency(GlobalProcedures.class).registerProcedure(KShortestPathsProc.class);
     }
 
@@ -96,7 +96,7 @@ public class YensKShortestPathsStreamingTest {
         expectedCosts.put(2L, Arrays.asList(7.0d, 3.0, 4.0));
 
         // 9 possible paths without loop
-        DB.execute(cypher).accept(row -> {
+        DB.executeTransactionally(cypher).accept(row -> {
             long rowIndex = row.getNumber("index").longValue();
             assertEquals(expectedNodes.get(rowIndex), row.get("nodeIds"));
             assertEquals(expectedCosts.get(rowIndex), row.get("costs"));
@@ -123,7 +123,7 @@ public class YensKShortestPathsStreamingTest {
         expectedCosts.put(1L, Arrays.asList(5.0d));
         expectedCosts.put(2L, Arrays.asList(7.0d, 3.0, 4.0));
 
-        DB.execute(cypher).accept(row -> {
+        DB.executeTransactionally(cypher).accept(row -> {
             Path path = (Path) row.get("path");
 
             List<Node> actualNodes = StreamSupport.stream(path.nodes().spliterator(), false).collect(toList());
@@ -156,7 +156,7 @@ public class YensKShortestPathsStreamingTest {
         expectedCosts.put(1L, Arrays.asList(5.0d));
         expectedCosts.put(2L, Arrays.asList(7.0d, 3.0, 4.0));
 
-        DB.execute(cypher).accept(row -> {
+        DB.executeTransactionally(cypher).accept(row -> {
             Path path = (Path) row.get("path");
 
             List<Node> actualNodes = StreamSupport.stream(path.nodes().spliterator(), false).collect(toList());

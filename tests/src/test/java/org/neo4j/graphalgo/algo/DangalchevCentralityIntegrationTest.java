@@ -106,7 +106,7 @@ public class DangalchevCentralityIntegrationTest {
     @Test
     public void testClosenessStream() throws Exception {
 
-        db.execute("CALL algo.closeness.dangalchev.stream('Node', 'TYPE') YIELD nodeId, centrality")
+        dB.executeTransactionally("CALL algo.closeness.dangalchev.stream('Node', 'TYPE') YIELD nodeId, centrality")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     consumer.accept(
                             row.getNumber("nodeId").longValue(),
@@ -120,7 +120,7 @@ public class DangalchevCentralityIntegrationTest {
     @Test
     public void testClosenessWrite() throws Exception {
 
-        db.execute("CALL algo.closeness.dangalchev('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
+        dB.executeTransactionally("CALL algo.closeness.dangalchev('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
                 "nodes, loadMillis, computeMillis, writeMillis")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertNotEquals(-1L, row.getNumber("writeMillis"));
@@ -129,7 +129,7 @@ public class DangalchevCentralityIntegrationTest {
                     return true;
                 });
 
-        db.execute("MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality")
+        dB.executeTransactionally("MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality")
                 .accept(row -> {
                     consumer.accept(
                             row.getNumber("id").longValue(),

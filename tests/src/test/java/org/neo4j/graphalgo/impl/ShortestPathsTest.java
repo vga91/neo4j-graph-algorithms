@@ -95,7 +95,7 @@ public final class ShortestPathsTest {
         api = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = api.beginTx()) {
             api.execute(cypher);
-            tx.success();
+            tx.commit();
         }
 
         head = getNode("s").getId();

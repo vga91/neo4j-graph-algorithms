@@ -114,7 +114,7 @@ public class ParallelGraphLoadingTest extends RandomGraphTestCase {
                     long neoId = sparseGraph.toOriginalNodeId(graphId);
                     assertEquals(n + " mapped wrongly", n.getId(), neoId);
                 });
-                tx.success();
+                tx.commit();
             }
         } finally {
             largerGraph.shutdown();
@@ -136,7 +136,7 @@ public class ParallelGraphLoadingTest extends RandomGraphTestCase {
                 nodeIds = db.getAllNodes().stream()
                         .map(Node::getId)
                         .collect(Collectors.toSet());
-                tx.success();
+                tx.commit();
             }
 
             graph.forEachNode(nodeId -> {
@@ -155,7 +155,7 @@ public class ParallelGraphLoadingTest extends RandomGraphTestCase {
     public void shouldLoadAllRelationships() throws Exception {
         try (Transaction tx = db.beginTx()) {
             graph.forEachNode(this::testRelationships);
-            tx.success();
+            tx.commit();
         }
     }
 

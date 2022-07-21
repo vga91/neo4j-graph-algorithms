@@ -72,13 +72,13 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testUnionFindStream() {
-        Result result = db.execute("CALL algo.unionFind.stream('', '',{graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.unionFind.stream('', '',{graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testUnionFind() throws Exception {
-        db.execute("CALL algo.unionFind('', '',{graph:'" + graphImpl + "'}) YIELD nodes")
+        dB.executeTransactionally("CALL algo.unionFind('', '',{graph:'" + graphImpl + "'}) YIELD nodes")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("nodes"));
                     return true;
@@ -87,13 +87,13 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testUnionFindMSColoringStream() {
-        Result result = db.execute("CALL algo.unionFind.mscoloring.stream('', '',{graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.unionFind.mscoloring.stream('', '',{graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testUnionFindMSColoring() throws Exception {
-        db.execute("CALL algo.unionFind.mscoloring('', '',{graph:'" + graphImpl + "'}) YIELD nodes")
+        dB.executeTransactionally("CALL algo.unionFind.mscoloring('', '',{graph:'" + graphImpl + "'}) YIELD nodes")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("nodes"));
                     return true;
@@ -102,13 +102,13 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testStronglyConnectedComponentsStream() {
-        Result result = db.execute("CALL algo.scc.stream('', '',{graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.scc.stream('', '',{graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testStronglyConnectedComponents() throws Exception {
-        db.execute("CALL algo.scc('', '',{graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.scc('', '',{graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("setCount"));
                     return true;
@@ -117,13 +117,13 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testStronglyConnectedComponentsMultiStepStream() {
-        Result result = db.execute("CALL algo.scc.stream('', '',{graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.scc.stream('', '',{graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testStronglyConnectedComponentsMultiStep() throws Exception {
-        db.execute("CALL algo.scc('', '',{graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.scc('', '',{graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("setCount"));
                     return true;
@@ -132,7 +132,7 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testStronglyConnectedComponentsTunedTarjan() throws Exception {
-        db.execute("CALL algo.scc.recursive.tunedTarjan('', '',{graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.scc.recursive.tunedTarjan('', '',{graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("setCount"));
                     return true;
@@ -141,31 +141,31 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testStronglyConnectedComponentsTunedTarjanStream() {
-        Result result = db.execute("CALL algo.scc.recursive.tunedTarjan.stream('', '', {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.scc.recursive.tunedTarjan.stream('', '', {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testForwardBackwardStronglyConnectedComponentsStream() {
-        Result result = db.execute("CALL algo.scc.forwardBackward.stream(0, '', '', {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.scc.forwardBackward.stream(0, '', '', {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testAllShortestPathsStream() {
-        Result result = db.execute("CALL algo.allShortestPaths.stream('',{graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.allShortestPaths.stream('',{graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testBetweennessCentralityStream() {
-        Result result = db.execute("CALL algo.betweenness.stream('', '', {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.betweenness.stream('', '', {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testBetweennessCentrality() throws Exception {
-        db.execute("CALL algo.betweenness('', '',{graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.betweenness('', '',{graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("nodes"));
                     return true;
@@ -174,13 +174,13 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testSampledBetweennessCentralityStream() {
-        Result result = db.execute("CALL algo.betweenness.sampled.stream('', '', {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.betweenness.sampled.stream('', '', {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testSampledBetweennessCentrality() throws Exception {
-        db.execute("CALL algo.betweenness.sampled('', '',{graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.betweenness.sampled('', '',{graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("nodes"));
                     return true;
@@ -189,13 +189,13 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testClosenessCentralityStream() {
-        Result result = db.execute("CALL algo.closeness.stream('', '', {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.closeness.stream('', '', {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testClosenessCentrality() throws Exception {
-        db.execute("CALL algo.closeness('', '',{graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.closeness('', '',{graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("nodes"));
                     return true;
@@ -204,13 +204,13 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testTriangleCountStream() {
-        Result result = db.execute("CALL algo.triangleCount.stream('', '', {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.triangleCount.stream('', '', {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testTriangleCount() throws Exception {
-        db.execute("CALL algo.triangleCount('', '',{graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.triangleCount('', '',{graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("nodeCount"));
                     return true;
@@ -219,19 +219,19 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testTriangleStream() {
-        Result result = db.execute("CALL algo.triangle.stream('', '', {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.triangle.stream('', '', {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testDangelchevCentralityStream() {
-        Result result = db.execute("CALL algo.closeness.dangalchev.stream('', '', {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.closeness.dangalchev.stream('', '', {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testDangelchevCentrality() throws Exception {
-        db.execute("CALL algo.closeness.dangalchev('', '',{graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.closeness.dangalchev('', '',{graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("nodes"));
                     return true;
@@ -240,13 +240,13 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testHarmonicCentralityStream() {
-        Result result = db.execute("CALL algo.closeness.harmonic.stream('', '', {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.closeness.harmonic.stream('', '', {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testHarmonicCentrality() throws Exception {
-        db.execute("CALL algo.closeness.harmonic('', '',{graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.closeness.harmonic('', '',{graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("nodes"));
                     return true;
@@ -255,7 +255,7 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testKSpanningTreeKMax() throws Exception {
-        db.execute("CALL algo.spanningTree.kmax('', '', '', 0, 3, {graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.spanningTree.kmax('', '', '', 0, 3, {graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("effectiveNodeCount"));
                     return true;
@@ -264,7 +264,7 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testKSpanningTreeKMin() throws Exception {
-        db.execute("CALL algo.spanningTree.kmin('', '', '', 0, 3, {graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.spanningTree.kmin('', '', '', 0, 3, {graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("effectiveNodeCount"));
                     return true;
@@ -273,13 +273,13 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testLabelPropagationStream() {
-        Result result = db.execute("CALL algo.labelPropagation.stream('', '', {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.labelPropagation.stream('', '', {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testLabelPropagationCentrality() throws Exception {
-        db.execute("CALL algo.labelPropagation('', '', '', {graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.labelPropagation('', '', '', {graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("nodes"));
                     return true;
@@ -288,13 +288,13 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testLouvainStream() {
-        Result result = db.execute("CALL algo.louvain.stream('', '', {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.louvain.stream('', '', {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testLouvain() throws Exception {
-        db.execute("CALL algo.louvain('', '', {graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.louvain('', '', {graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("nodes"));
                     return true;
@@ -303,13 +303,13 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testPageRankStream() {
-        Result result = db.execute("CALL algo.pageRank.stream('', '', {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.pageRank.stream('', '', {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testPageRank() throws Exception {
-        db.execute("CALL algo.pageRank('', '', {graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.pageRank('', '', {graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("nodes"));
                     return true;
@@ -318,7 +318,7 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testMST() throws Exception {
-        db.execute("CALL algo.mst('', '', '', 0, {graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.mst('', '', '', 0, {graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("effectiveNodeCount"));
                     return true;
@@ -327,7 +327,7 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testSpanningTree() throws Exception {
-        db.execute("CALL algo.spanningTree('', '', '', 0, {graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.spanningTree('', '', '', 0, {graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("effectiveNodeCount"));
                     return true;
@@ -336,7 +336,7 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testSpanningTreeMinimum() throws Exception {
-        db.execute("CALL algo.spanningTree.minimum('', '', '', 0, {graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.spanningTree.minimum('', '', '', 0, {graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("effectiveNodeCount"));
                     return true;
@@ -345,7 +345,7 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testSpanningTreeMaximum() throws Exception {
-        db.execute("CALL algo.spanningTree.maximum('', '', '', 0, {graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.spanningTree.maximum('', '', '', 0, {graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("effectiveNodeCount"));
                     return true;
@@ -354,19 +354,19 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testShortestPathAStarStream() throws Exception {
-        Result result = db.execute("CALL algo.shortestPath.astar.stream(null, null, '', '', '', {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.shortestPath.astar.stream(null, null, '', '', '', {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testShortestPathStream() throws Exception {
-        Result result = db.execute("CALL algo.shortestPath.stream(null, null, '', {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.shortestPath.stream(null, null, '', {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testShortestPath() throws Exception {
-        db.execute("CALL algo.shortestPath(null, null, '', {graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.shortestPath(null, null, '', {graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("nodeCount"));
                     return true;
@@ -375,13 +375,13 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testShortestPathsStream() throws Exception {
-        Result result = db.execute("CALL algo.shortestPaths.stream(null, '', {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.shortestPaths.stream(null, '', {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testShortestPaths() throws Exception {
-        db.execute("CALL algo.shortestPaths(null, '', {graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.shortestPaths(null, '', {graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("nodeCount"));
                     return true;
@@ -390,7 +390,7 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testKShortestPaths() throws Exception {
-        db.execute("CALL algo.kShortestPaths(null, null, 3, '', {graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.kShortestPaths(null, null, 3, '', {graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("resultCount"));
                     return true;
@@ -399,13 +399,13 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testShortestPathsDeltaSteppingStream() throws Exception {
-        Result result = db.execute("CALL algo.shortestPath.deltaStepping.stream(null, '', 0, {graph:'" + graphImpl + "'})");
+        Result result = dB.executeTransactionally("CALL algo.shortestPath.deltaStepping.stream(null, '', 0, {graph:'" + graphImpl + "'})");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testShortestPathsDeltaStepping() throws Exception {
-        db.execute("CALL algo.shortestPath.deltaStepping(null, '', 0, {graph:'" + graphImpl + "'})")
+        dB.executeTransactionally("CALL algo.shortestPath.deltaStepping(null, '', 0, {graph:'" + graphImpl + "'})")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertEquals(0L, row.getNumber("nodeCount"));
                     return true;

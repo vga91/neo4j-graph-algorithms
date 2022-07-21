@@ -33,7 +33,7 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Result;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
-import org.neo4j.graphalgo.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.anyLong;
@@ -97,7 +97,7 @@ public class ClosenessCentralityIntegrationTest {
 
     @Test
     public void testClosenessStream() throws Exception {
-        DB.execute("CALL algo.closeness.stream('Node', 'TYPE') YIELD nodeId, centrality")
+        DB.executeTransactionally("CALL algo.closeness.stream('Node', 'TYPE') YIELD nodeId, centrality")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     consumer.accept(
                             row.getNumber("nodeId").longValue(),
@@ -110,7 +110,7 @@ public class ClosenessCentralityIntegrationTest {
 
     @Test
     public void testClosenessWrite() throws Exception {
-        DB.execute("CALL algo.closeness('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
+        DB.executeTransactionally("CALL algo.closeness('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
                 "nodes, loadMillis, computeMillis, writeMillis")
                 .accept((Result.ResultVisitor<Exception>) row -> {
                     assertNotEquals(-1L, row.getNumber("writeMillis"));
@@ -119,7 +119,7 @@ public class ClosenessCentralityIntegrationTest {
                     return true;
                 });
 
-        DB.execute("MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality")
+        DB.executeTransactionally("MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality")
                 .accept(row -> {
                     System.out.println(
                             row.getNumber("id").longValue() + " " +

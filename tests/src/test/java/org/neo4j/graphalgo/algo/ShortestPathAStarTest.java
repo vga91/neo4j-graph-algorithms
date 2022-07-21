@@ -85,8 +85,8 @@ public class ShortestPathAStarTest {
 
         db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            db.execute(createGraph).close();
-            tx.success();
+            dB.executeTransactionally(createGraph).close();
+            tx.commit();
         }
         
         db.getDependencyResolver()
@@ -107,7 +107,7 @@ public class ShortestPathAStarTest {
 				1652.0, 2392.0, 2979.0);
 		final List<String> actualNode = new ArrayList<String>();
 		final List<Double> actualDistance = new ArrayList<Double>(); 
-        db.execute(
+        dB.executeTransactionally(
                 "MATCH (start:Node{name:'SINGAPORE'}), (end:Node{name:'CHIBA'}) " +
                         "CALL algo.shortestPath.astar.stream(start, end, 'cost') " +
                         "YIELD nodeId, cost RETURN nodeId, cost ")
