@@ -131,14 +131,9 @@ public final class WeightedDegreeCentralityTest {
     public static void setupGraph() {
         db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            dB.executeTransactionally(DB_CYPHER).close();
+            db.executeTransactionally(DB_CYPHER);
             tx.commit();
         }
-    }
-
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        if (db!=null) db.shutdown();
     }
 
     public WeightedDegreeCentralityTest(
@@ -163,7 +158,7 @@ public final class WeightedDegreeCentralityTest {
             expected.put(tx.findNode(label, "name", "h").getId(), new double[] {});
             expected.put(tx.findNode(label, "name", "i").getId(), new double[] {});
             expected.put(tx.findNode(label, "name", "j").getId(), new double[] {});
-            tx.close();
+            tx.commit();
         }
 
         final Graph graph;

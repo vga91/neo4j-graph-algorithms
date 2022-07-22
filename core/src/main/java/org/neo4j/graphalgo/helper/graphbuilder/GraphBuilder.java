@@ -33,6 +33,8 @@ import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withTx;
+
 /**
  * The GraphBuilder intends to ease the creation
  * of test graphs with well known properties
@@ -114,12 +116,14 @@ public abstract class GraphBuilder<ME extends GraphBuilder<ME>> {
      * @return the created node
      */
     public Node createNode() {
-        Node node = api.createNode();
-        if (null != label) {
-            node.addLabel(label);
-        }
-        nodes.add(node);
-        return node;
+        return withTx(api, tx -> {
+            Node node = tx.createNode();
+            if (null != label) {
+                node.addLabel(label);
+            }
+            nodes.add(node);
+            return node;
+        });
     }
 
     /**

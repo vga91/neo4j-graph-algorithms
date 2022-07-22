@@ -38,6 +38,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * @author mknblch
@@ -71,7 +72,7 @@ public class ShortestPathTest_152 {
                 " (e)-[:RAIL {d:20}]->(f);";
 
         DB.resolveDependency(GlobalProcedures.class).registerProcedure(ShortestPathProc.class);
-        DB.executeTransactionally(cypher).close();
+        DB.executeTransactionally(cypher);
 
         try (Transaction tx = DB.beginTx()) {
 
@@ -139,7 +140,7 @@ public class ShortestPathTest_152 {
                 "CALL algo.shortestPath.stream(from, to, 'd', {relationshipQuery:'ROAD', defaultValue:999999.0}) " +
                 "YIELD nodeId, cost with nodeId, cost MATCH(n) WHERE id(n) = nodeId RETURN n.name as name, cost;";
 
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             System.out.println(row.get("name") + ":" + row.get("cost"));
             mock.accept(row.getNumber("cost").doubleValue());
             return true;

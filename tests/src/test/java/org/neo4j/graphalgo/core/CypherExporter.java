@@ -22,7 +22,7 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.Transaction;
@@ -33,7 +33,7 @@ final class CypherExporter {
     static void export(PrintWriter out, GraphDatabaseService db) {
         try (Transaction tx = db.beginTx()) {
             StringBuilder s = new StringBuilder();
-            final ResourceIterable<Node> nodes = db.getAllNodes();
+            final ResourceIterable<Node> nodes = tx.getAllNodes();
             nodes.forEach(node -> node(node, s).append(System.lineSeparator()));
             s.append("CREATE").append(System.lineSeparator());
             nodes.forEach(node -> node
@@ -67,7 +67,7 @@ final class CypherExporter {
                 .append(')');
     }
 
-    private static String props(PropertyContainer prop, StringBuilder s) {
+    private static String props(Entity prop, StringBuilder s) {
         int length = s.length();
         s.append(" {");
         for (String propKey : prop.getPropertyKeys()) {

@@ -96,16 +96,12 @@ public class PageRankProcIntegrationTest {
             "  (j)-[:TYPE2{foo:9.5}]->(e),\n" +
             "  (k)-[:TYPE2{foo:4.2}]->(e)\n";
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
 
     @BeforeClass
     public static void setup() throws KernelException {
         db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            dB.executeTransactionally(DB_CYPHER).close();
+            db.executeTransactionally(DB_CYPHER);
             tx.commit();
         }
 
@@ -281,7 +277,7 @@ public class PageRankProcIntegrationTest {
             String query,
             Map<String, Object> params,
             Consumer<Result.ResultRow> check) {
-        try (Result result = dB.executeTransactionally(query, params)) {
+        try (Result result = db.executeTransactionally(query, params, r -> r)) {
             result.accept(row -> {
                 check.accept(row);
                 return true;
@@ -292,7 +288,7 @@ public class PageRankProcIntegrationTest {
     private void assertResult(final String scoreProperty, Map<Long, Double> expected) {
         try (Transaction tx = db.beginTx()) {
             for (Map.Entry<Long, Double> entry : expected.entrySet()) {
-                double score = ((Number) db
+                double score = ((Number) tx
                         .getNodeById(entry.getKey())
                         .getProperty(scoreProperty)).doubleValue();
                 assertEquals(

@@ -19,9 +19,10 @@
 package org.neo4j.graphalgo;
 
 import org.junit.Ignore;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.graphalgo.TestDatabaseCreator;
-import org.neo4j.test.TestGraphDatabaseFactory;
+import org.neo4j.test.TestDatabaseManagementServiceBuilder;
 
 import java.io.File;
 import java.util.UUID;
@@ -34,8 +35,13 @@ import java.util.UUID;
 public class TestDatabaseCreator {
 
     public static GraphDatabaseAPI createTestDatabase() {
-        return (GraphDatabaseAPI)new TestGraphDatabaseFactory()
-                .newImpermanentDatabaseBuilder(new File(UUID.randomUUID().toString()))
-                .newGraphDatabase();
+        // 
+        // 
+        // TODO - QUESTO PER TUTTI NON ANDREBBE BENE?
+        // 
+        // 
+        
+        return (GraphDatabaseAPI)new TestDatabaseManagementServiceBuilder(new File(UUID.randomUUID().toString()).toPath())
+                .build();
     }
 }

@@ -34,6 +34,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**        _______
  *        /       \
@@ -83,15 +84,15 @@ public class ClusteringCoefficientIntegrationTest {
                 .registerProcedure(TriangleProc.class);
 
         try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
+            tx.execute(cypher);
             tx.commit();
         }
     }
 
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        api.shutdown();
-    }
+//    @AfterClass
+//    public static void shutdownGraph() throws Exception {
+//        api.shutdown();
+//    }
 
     @Test
     public void testTriangleCountWriteCypher() throws Exception {
@@ -117,7 +118,7 @@ public class ClusteringCoefficientIntegrationTest {
         });
 
         final String request = "MATCH (n) WHERE exists(n.clusteringCoefficient) RETURN n.clusteringCoefficient as c";
-        api.execute(request).accept(row -> {
+        executeAndAccept(api, request, row -> {
             final double triangles = row.getNumber("c").doubleValue();
             System.out.println("triangles = " + triangles);
             return true;

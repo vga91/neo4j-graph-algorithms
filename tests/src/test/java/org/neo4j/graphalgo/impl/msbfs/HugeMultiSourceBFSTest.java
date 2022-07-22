@@ -32,9 +32,9 @@ import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.helpers.collection.Pair;
+import org.neo4j.internal.helpers.collection.Pair;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.test.TestGraphDatabaseFactory;
+import org.neo4j.test.TestDatabaseManagementServiceBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -294,29 +294,27 @@ public final class HugeMultiSourceBFSTest {
             String cypher,
             Consumer<? super HugeGraph> block) {
         GraphDatabaseAPI db = (GraphDatabaseAPI)
-                new TestGraphDatabaseFactory()
-                        .newImpermanentDatabaseBuilder()
-                        .newGraphDatabase();
+                new TestDatabaseManagementServiceBuilder()
+                        .build();
 
-        try {
+//        try {
             try (Transaction tx = db.beginTx()) {
-                dB.executeTransactionally(cypher).close();
+                db.executeTransactionally(cypher);
                 tx.commit();
             }
             block.accept((HugeGraph) new GraphLoader(db).load(HugeGraphFactory.class));
-        } finally {
-            db.shutdown();
-        }
+//        } finally {
+//            db.shutdown();
+//        }
     }
 
     private static void withGrid(
             Consumer<? super GraphBuilder<?>> build,
             Consumer<? super HugeGraph> block) {
         GraphDatabaseAPI db = (GraphDatabaseAPI)
-                new TestGraphDatabaseFactory()
-                        .newImpermanentDatabaseBuilder()
-                        .newGraphDatabase();
-        try {
+                new TestDatabaseManagementServiceBuilder()
+                        .build();
+//        try {
             try (Transaction tx = db.beginTx()) {
                 DefaultBuilder graphBuilder = GraphBuilder.create(db)
                         .setLabel("Foo")
@@ -330,9 +328,9 @@ public final class HugeMultiSourceBFSTest {
                 block.accept(graph);
                 tx.commit();
             }
-        } finally {
-            db.shutdown();
-        }
+//        } finally {
+//            db.shutdown();
+//        }
     }
 
     private static HugeBfsSources toList(

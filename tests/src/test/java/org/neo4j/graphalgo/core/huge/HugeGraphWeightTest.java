@@ -28,6 +28,7 @@ import org.neo4j.graphalgo.core.utils.paged.MemoryUsage;
 import org.neo4j.graphalgo.core.utils.paged.PageUtil;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.internal.kernel.api.TokenWrite;
 import org.neo4j.internal.kernel.api.Write;
 import org.neo4j.kernel.api.KernelTransaction;
@@ -72,8 +73,8 @@ public final class HugeGraphWeightTest {
     }
 
     private void mkDb(final int nodes, final int relsPerNode) {
-        db.executeAndCommit((GraphDatabaseService __) -> {
-            try (KernelTransaction st = db.transaction()) {
+        db.executeAndCommit((Transaction __) -> {
+            try (KernelTransaction st = db.resolveDependency(KernelTransaction.class)) {
                 TokenWrite token = st.tokenWrite();
                 int type = token.relationshipTypeGetOrCreateForName("TYPE");
                 int key = token.propertyKeyGetOrCreateForName("weight");

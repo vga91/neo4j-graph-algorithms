@@ -98,7 +98,7 @@ final class RelationshipImporter extends StatementAction {
         CursorFactory cursors = transaction.cursors();
         final RelationshipLoader loader = prepare(transaction, readOp, cursors);
         PrimitiveIntIterator iterator = nodes.iterator();
-        try (NodeCursor nodeCursor = cursors.allocateNodeCursor()) {
+        try (NodeCursor nodeCursor = cursors.allocateNodeCursor(transaction.cursorContext())) {
             while (iterator.hasNext()) {
                 final int nodeId = iterator.next();
                 final long sourceNodeId = idMap.toOriginalNodeId(nodeId);

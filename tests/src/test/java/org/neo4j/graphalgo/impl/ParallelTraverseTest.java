@@ -92,11 +92,6 @@ public class ParallelTraverseTest {
         }
     }
 
-    @AfterClass
-    public static void tearDown() {
-        db.shutdown();
-    }
-
 
     @Test
     public void testTraverseLocal() throws Exception {

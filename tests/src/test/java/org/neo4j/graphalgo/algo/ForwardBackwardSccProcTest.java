@@ -34,6 +34,7 @@ import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * @author mknblch
@@ -73,10 +74,7 @@ public class ForwardBackwardSccProcTest {
                         " (i)-[:TYPE {cost:3}]->(g)";
 
         api = TestDatabaseCreator.createTestDatabase();
-        try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
-            tx.commit();
-        }
+        api.executeTransactionally(cypher);
 
 
         api.getDependencyResolver()
@@ -90,15 +88,15 @@ public class ForwardBackwardSccProcTest {
                 .load(HeavyGraphFactory.class);
     }
 
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        api.shutdown();
-    }
+//    @AfterClass
+//    public static void shutdownGraph() throws Exception {
+//        api.shutdown();
+//    }
 
     private long getNodeId(String name) {
 
         try (Transaction tx = api.beginTx()) {
-            final long id = api.findNode(Label.label("Node"), "name", name).getId();
+            final long id = tx.findNode(Label.label("Node"), "name", name).getId();
             tx.commit();
             return id;
         }

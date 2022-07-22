@@ -33,6 +33,7 @@ import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
 /**
@@ -85,8 +86,8 @@ public class BalancedTriadsIntegrationTest {
     @Test
     public void test() throws Exception {
 
-        DB.executeTransactionally("CALL algo.balancedTriads('Node', 'TYPE', {weightProperty:'w'}) YIELD loadMillis, computeMillis, writeMillis, nodeCount, balancedTriadCount, unbalancedTriadCount")
-                .accept(row -> {
+        executeAndAccept(DB, "CALL algo.balancedTriads('Node', 'TYPE', {weightProperty:'w'}) YIELD loadMillis, computeMillis, writeMillis, nodeCount, balancedTriadCount, unbalancedTriadCount",
+                row -> {
                     assertEquals(3L, row.getNumber("balancedTriadCount"));
                     assertEquals(3L, row.getNumber("unbalancedTriadCount"));
                     return true;
@@ -97,8 +98,8 @@ public class BalancedTriadsIntegrationTest {
     @Test
     public void testStream() throws Exception {
         final BalancedTriadsConsumer mock = mock(BalancedTriadsConsumer.class);
-        DB.executeTransactionally("CALL algo.balancedTriads.stream('Node', 'TYPE', {weightProperty:'w'}) YIELD nodeId, balanced, unbalanced")
-                .accept(row -> {
+        executeAndAccept(DB, "CALL algo.balancedTriads.stream('Node', 'TYPE', {weightProperty:'w'}) YIELD nodeId, balanced, unbalanced",
+                row -> {
                     final long nodeId = row.getNumber("nodeId").longValue();
                     final double balanced = row.getNumber("balanced").doubleValue();
                     final double unbalanced = row.getNumber("unbalanced").doubleValue();

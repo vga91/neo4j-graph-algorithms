@@ -94,7 +94,7 @@ public class ClusteringCoefficientTest {
         db = TestDatabaseCreator.createTestDatabase();
 
         try (Transaction tx = db.beginTx()) {
-            dB.executeTransactionally(setupCypher);
+            db.executeTransactionally(setupCypher);
             tx.commit();
         }
 
@@ -108,7 +108,6 @@ public class ClusteringCoefficientTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
         graph = null;
     }
 

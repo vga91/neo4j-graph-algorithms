@@ -41,6 +41,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
 /**
@@ -75,25 +76,24 @@ public class BetweennessCentralityIntegrationTest_148 {
 
         try (ProgressTimer timer = ProgressTimer.start(l -> System.out.printf("Setup took %d ms%n", l))) {
             try (Transaction tx = db.beginTx()) {
-                dB.executeTransactionally(importQuery);
+                db.executeTransactionally(importQuery);
                 tx.commit();
             }
         }
 
     }
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
+//    @AfterClass
+//    public static void tearDown() throws Exception {
+//        if (db != null) db.shutdown();
+//    }
 
     private String name(long id) {
         String[] name = {""};
-        dB.executeTransactionally("MATCH (n) WHERE id(n) = " + id + " RETURN n.name as name")
-                .accept(row -> {
-                    name[0] = row.getString("name");
-                    return false;
-                });
+        executeAndAccept(db, "MATCH (n) WHERE id(n) = " + id + " RETURN n.name as name", row -> {
+            name[0] = row.getString("name");
+            return false;
+        });
         if (name[0].isEmpty()) {
             throw new IllegalArgumentException("unknown id " + id);
         }
@@ -105,7 +105,7 @@ public class BetweennessCentralityIntegrationTest_148 {
 
         final Consumer mock = mock(Consumer.class);
         final String evalQuery = "CALL algo.betweenness.stream('User', 'FRIEND', {direction:'B'}) YIELD nodeId, centrality";
-        dB.executeTransactionally(evalQuery).accept(row -> {
+        executeAndAccept(db, evalQuery, row -> {
             final long nodeId = row.getNumber("nodeId").longValue();
             final double centrality = row.getNumber("centrality").doubleValue();
             mock.consume(name(nodeId), centrality);

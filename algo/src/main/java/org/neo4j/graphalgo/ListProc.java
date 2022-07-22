@@ -19,6 +19,7 @@
 package org.neo4j.graphalgo;
 
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.procedure.Context;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
@@ -49,7 +50,7 @@ public class ListProc {
     @Procedure("algo.list")
     @Description("CALL algo.list - lists all algorithm procedures, their description and signature")
     public Stream<ListResult> list(@Name(value = "name", defaultValue = "") String name) {
-        return dB.executeTransactionally(QUERY, singletonMap("name", name)).stream().map(ListResult::new);
+        return db.executeTransactionally(QUERY, singletonMap("name", name), res -> res.stream().map(ListResult::new));
     }
 
     public static class ListResult {

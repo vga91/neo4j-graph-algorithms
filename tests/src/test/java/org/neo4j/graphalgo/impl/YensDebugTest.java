@@ -37,6 +37,7 @@ import java.util.function.DoubleConsumer;
 
 import static org.mockito.AdditionalMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * Graph:
@@ -79,7 +80,7 @@ public class YensDebugTest {
                         " (e)-[:TYPE {cost:2.0}]->(g),\n" +
                         " (f)-[:TYPE {cost:1.0}]->(g)";
 
-        dB.executeTransactionally(cypher);
+        db.executeTransactionally(cypher);
 
         graph = (HeavyGraph) new GraphLoader(db)
                 .withAnyRelationshipType()
@@ -112,7 +113,7 @@ public class YensDebugTest {
 
     private static Node getNode(String name) {
         final Node[] node = new Node[1];
-        dB.executeTransactionally("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
+        executeAndAccept(db, "MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n", row -> {
             node[0] = row.getNode("n");
             return false;
         });

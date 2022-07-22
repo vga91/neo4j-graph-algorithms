@@ -402,7 +402,7 @@ public class AllShortestPaths427Test {
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
-        DB.executeTransactionally(GRAPH).close();
+        DB.executeTransactionally(GRAPH);
     }
 
     @Rule
@@ -494,6 +494,7 @@ public class AllShortestPaths427Test {
 
                 return true;
             });
+            return true;
         });
 
         expected.sort(Comparator.naturalOrder());

@@ -24,7 +24,6 @@ import org.neo4j.graphalgo.core.utils.ProgressTimer;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
@@ -74,7 +73,7 @@ public class ClosenessCentralityBenchmark {
             createNet(netSize); // size^2 nodes; size^3 edges
         }
 
-        params = MapUtil.map("graph", graph.name());
+        params = Map.of("graph", graph.name());
     }
 
     @TearDown
@@ -119,7 +118,7 @@ public class ClosenessCentralityBenchmark {
 
     @Benchmark
     public Object _01_benchmark() {
-        return dB.executeTransactionally("CALL algo.closeness('','', {write:false, stats:false, graph: $graph}) YIELD " +
+        return db.executeTransactionally("CALL algo.closeness('','', {write:false, stats:false, graph: $graph}) YIELD " +
                 "nodes, loadMillis, computeMillis, writeMillis", params)
                 .stream()
                 .count();

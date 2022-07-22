@@ -157,7 +157,7 @@ public final class GraphNegativeTest extends RandomGraphTestCase {
             Graph graph,
             BiConsumer<Double, Relationship> tester) {
         try (Transaction tx = db.beginTx()) {
-            ResourceIterable<Relationship> rels = db.getAllRelationships();
+            ResourceIterable<Relationship> rels = tx.getAllRelationships();
             ResourceIterator<Relationship> iterator = rels.iterator();
             while (iterator.hasNext()) {
                 Relationship rel = iterator.next();

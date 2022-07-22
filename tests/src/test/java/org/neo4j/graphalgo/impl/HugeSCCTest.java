@@ -37,6 +37,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**        _______
  *        /       \
@@ -84,10 +85,7 @@ public class HugeSCCTest {
                         " (i)-[:TYPE {cost:3}]->(g)";
 
         api = TestDatabaseCreator.createTestDatabase();
-        try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
-            tx.commit();
-        }
+        api.executeTransactionally(cypher);
 
         graph = (HugeGraph) new GraphLoader(api)
                 .withLabel("Node")
@@ -98,13 +96,12 @@ public class HugeSCCTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if (api != null) api.shutdown();
         graph = null;
     }
 
     public static int getMappedNodeId(String name) {
         final Node[] node = new Node[1];
-        api.execute("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
+        executeAndAccept(api, "MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n", row -> {
             node[0] = row.getNode("n");
             return false;
         });

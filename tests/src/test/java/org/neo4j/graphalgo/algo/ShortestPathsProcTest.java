@@ -28,6 +28,7 @@ import org.mockito.Matchers;
 import org.neo4j.graphalgo.ShortestPathsProc;
 import org.neo4j.graphdb.Label;
 import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
@@ -42,6 +43,7 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
 /**         5     5      5
@@ -97,17 +99,17 @@ public final class ShortestPathsProcTest {
         api.resolveDependency(GlobalProcedures.class)
                 .registerProcedure(ShortestPathsProc.class);
 
-        api.executeAndCommit(__ -> {
-            api.execute(cypher);
-            startNode = api.findNode(Label.label("Node"), "name", "s").getId();
-            endNode = api.findNode(Label.label("Node"), "name", "x").getId();
+        api.executeAndCommit((Transaction tx) -> {
+            tx.execute(cypher);
+            startNode = tx.findNode(Label.label("Node"), "name", "s").getId();
+            endNode = tx.findNode(Label.label("Node"), "name", "x").getId();
         });
     }
 
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        if (api != null) api.shutdown();
-    }
+//    @AfterClass
+//    public static void shutdownGraph() throws Exception {
+//        if (api != null) api.shutdown();
+//    }
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() {
@@ -152,7 +154,7 @@ public final class ShortestPathsProcTest {
         final String matchCypher = "MATCH(n:Node {name:'s'}) WITH n CALL algo.shortestPaths(n, 'cost', {write:true, writeProperty:'sp',graph:'" + graphImpl + "'}) " +
                 "YIELD nodeCount, loadDuration, evalDuration, writeDuration RETURN nodeCount, loadDuration, evalDuration, writeDuration";
 
-        api.execute(matchCypher).accept(row -> {
+        executeAndAccept(api, matchCypher, row -> {
             System.out.println("loadDuration = " + row.getNumber("loadDuration").longValue());
             System.out.println("evalDuration = " + row.getNumber("evalDuration").longValue());
             long writeDuration = row.getNumber("writeDuration").longValue();
@@ -166,7 +168,7 @@ public final class ShortestPathsProcTest {
 
         final String testCypher = "MATCH(n:Node) WHERE exists(n.sp) WITH n RETURN id(n) as id, n.sp as sp";
 
-        api.execute(testCypher).accept(row -> {
+        executeAndAccept(api, testCypher, row -> {
             double sp = row.getNumber("sp").doubleValue();
             consumer.accept(sp);
             return true;

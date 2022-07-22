@@ -38,6 +38,7 @@ import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * @author mknblch
@@ -78,10 +79,7 @@ public class MultistepSCCProcTest {
                         " (i)-[:TYPE {cost:3}]->(g)";
 
         api = TestDatabaseCreator.createTestDatabase();
-        try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
-            tx.commit();
-        }
+        api.executeTransactionally(cypher);
 
 
         api.getDependencyResolver()
@@ -95,10 +93,10 @@ public class MultistepSCCProcTest {
                 .load(HeavyGraphFactory.class);
     }
 
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        api.shutdown();
-    }
+//    @AfterClass
+//    public static void shutdownGraph() throws Exception {
+//        api.shutdown();
+//    }
 
     @Test
     public void testWrite() throws Exception {

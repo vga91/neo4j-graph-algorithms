@@ -38,6 +38,7 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
 /**
@@ -98,17 +99,17 @@ public class BetweennessCentralityIntegrationTest_282 {
 
         try (ProgressTimer timer = ProgressTimer.start(l -> System.out.printf("Setup took %d ms%n", l))) {
             try (Transaction tx = db.beginTx()) {
-                dB.executeTransactionally(importQuery);
+                db.executeTransactionally(importQuery);
                 tx.commit();
             }
         }
 
     }
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
+//    @AfterClass
+//    public static void tearDown() throws Exception {
+//        if (db != null) db.shutdown();
+//    }
 
     /**
      * test org.neo4j.graphalgo.impl.BetweennessCentrality
@@ -121,7 +122,7 @@ public class BetweennessCentralityIntegrationTest_282 {
         final String evalQuery = "CALL algo.betweenness('Node', 'EDGE', {write:true, stats:true, writeProperty:'centrality'})\n" +
                 "YIELD nodes, minCentrality, maxCentrality, sumCentrality";
 
-        dB.executeTransactionally(evalQuery).accept(row -> {
+        executeAndAccept(db, evalQuery, row -> {
             final long nodes = row.getNumber("nodes").longValue();
             final double minCentrality = row.getNumber("minCentrality").doubleValue();
             final double maxCentrality = row.getNumber("maxCentrality").doubleValue();
@@ -136,7 +137,7 @@ public class BetweennessCentralityIntegrationTest_282 {
 
         final String checkQuery = "MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as c";
         final double[] result = new double[EXPECTED.length];
-        dB.executeTransactionally(checkQuery).accept(row -> {
+        executeAndAccept(db, checkQuery, row -> {
             final int id = row.getNumber("id").intValue();
             final double c = row.getNumber("c").doubleValue();
             result[id] = c;
@@ -160,7 +161,7 @@ public class BetweennessCentralityIntegrationTest_282 {
         final String evalQuery = "CALL algo.betweenness('Node', 'EDGE', {write:true, stats:true, writeProperty:'centrality', concurrency:4})\n" +
                 "YIELD nodes, minCentrality, maxCentrality, sumCentrality";
 
-        dB.executeTransactionally(evalQuery).accept(row -> {
+        executeAndAccept(db, evalQuery, row -> {
             final long nodes = row.getNumber("nodes").longValue();
             final double minCentrality = row.getNumber("minCentrality").doubleValue();
             final double maxCentrality = row.getNumber("maxCentrality").doubleValue();
@@ -175,7 +176,7 @@ public class BetweennessCentralityIntegrationTest_282 {
 
         final String checkQuery = "MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as c";
         final double[] result = new double[EXPECTED.length];
-        dB.executeTransactionally(checkQuery).accept(row -> {
+        executeAndAccept(db, checkQuery, row -> {
             final int id = row.getNumber("id").intValue();
             final double c = row.getNumber("c").doubleValue();
             result[id] = c;

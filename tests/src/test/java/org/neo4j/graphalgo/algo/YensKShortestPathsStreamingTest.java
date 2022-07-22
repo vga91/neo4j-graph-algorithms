@@ -26,7 +26,6 @@ import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
@@ -38,6 +37,7 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * Graph:
@@ -96,7 +96,7 @@ public class YensKShortestPathsStreamingTest {
         expectedCosts.put(2L, Arrays.asList(7.0d, 3.0, 4.0));
 
         // 9 possible paths without loop
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             long rowIndex = row.getNumber("index").longValue();
             assertEquals(expectedNodes.get(rowIndex), row.get("nodeIds"));
             assertEquals(expectedCosts.get(rowIndex), row.get("costs"));
@@ -123,7 +123,7 @@ public class YensKShortestPathsStreamingTest {
         expectedCosts.put(1L, Arrays.asList(5.0d));
         expectedCosts.put(2L, Arrays.asList(7.0d, 3.0, 4.0));
 
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             Path path = (Path) row.get("path");
 
             List<Node> actualNodes = StreamSupport.stream(path.nodes().spliterator(), false).collect(toList());
@@ -156,7 +156,7 @@ public class YensKShortestPathsStreamingTest {
         expectedCosts.put(1L, Arrays.asList(5.0d));
         expectedCosts.put(2L, Arrays.asList(7.0d, 3.0, 4.0));
 
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             Path path = (Path) row.get("path");
 
             List<Node> actualNodes = StreamSupport.stream(path.nodes().spliterator(), false).collect(toList());

@@ -27,6 +27,7 @@ import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertArrayEquals;
@@ -79,12 +80,12 @@ public class IsFiniteFuncTest {
     @Test
     public void testInfinityAndNaN() throws Exception {
         double[] actual = DB.executeTransactionally(
-                "WITH [42, algo.Infinity(), 13.37, 0, algo.NaN(), 1.7976931348623157e308, -13] AS values RETURN filter(x IN values WHERE algo.isFinite(x)) as xs")
-                .<List<Number>>columnAs("xs")
+                "WITH [42, algo.Infinity(), 13.37, 0, algo.NaN(), 1.7976931348623157e308, -13] AS values RETURN filter(x IN values WHERE algo.isFinite(x)) as xs", Map.of(),
+                r -> r.<List<Number>>columnAs("xs")
                 .stream()
                 .flatMap(Collection::stream)
                 .mapToDouble(Number::doubleValue)
-                .toArray();
+                .toArray());
         assertArrayEquals(new double[]{42, 13.37, 0, Double.MAX_VALUE, -13}, actual, 0.001);
     }
 
@@ -98,9 +99,9 @@ public class IsFiniteFuncTest {
 
     private boolean call(Number value, String fun) {
         String query = "RETURN " + fun + "($value) as x";
-        return DB.executeTransactionally(query, singletonMap("value", value))
-                .<Boolean>columnAs("x")
+        return DB.executeTransactionally(query, singletonMap("value", value),
+                r -> r.<Boolean>columnAs("x")
                 .stream()
-                .allMatch(Boolean::valueOf);
+                .allMatch(Boolean::valueOf));
     }
 }

@@ -30,6 +30,7 @@ import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  *
@@ -61,7 +62,7 @@ public class LouvainClusteringPreDefinedCommunitiesIntegrationTest {
         final String cypher = "CALL algo.louvain.stream('', '', {concurrency:1, community: 'community', randomNeighbor:false}) " +
                 "YIELD nodeId, community, communities";
         final IntIntScatterMap testMap = new IntIntScatterMap();
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             final long nodeId = (long) row.get("nodeId");
             final long community = (long) row.get("community");
             testMap.addTo((int) community, 1);

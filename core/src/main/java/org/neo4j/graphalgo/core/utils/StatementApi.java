@@ -19,10 +19,27 @@
 package org.neo4j.graphalgo.core.utils;
 
 import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Result;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
+import java.util.Map;
+
 public abstract class StatementApi {
+
+    public static void executeAndAccept(GraphDatabaseService db, String cypher, Result.ResultVisitor<RuntimeException> visitor) {
+        executeAndAccept(db, cypher, Map.of(), visitor);
+    }
+    
+    public static void executeAndAccept(GraphDatabaseService db, String cypher, Map<String, Object> params, Result.ResultVisitor<RuntimeException> visitor) {
+        try (Transaction tx = db.beginTx()) {
+            final Result execute = tx.execute(cypher, params);
+            execute.accept(visitor);
+            tx.commit();
+        }
+    }
 
     public interface TxConsumer {
         void accept(KernelTransaction transaction) throws KernelException;
@@ -37,6 +54,7 @@ public abstract class StatementApi {
     private final TransactionWrapper tx;
 
     protected StatementApi(GraphDatabaseAPI api) {
+        // todo - capire veramente a cosa serve..
         this.api = api;
         this.tx = new TransactionWrapper(api);
     }

@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * Graph:
@@ -99,7 +100,7 @@ public class LouvainClusteringIntegrationTest {
         final String cypher = "CALL algo.louvain('', '', {concurrency:1}) " +
                 "YIELD nodes, communityCount, loadMillis, computeMillis, writeMillis, postProcessingMillis, p99";
 
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             final long nodes = row.getNumber("nodes").longValue();
             final long communityCount = row.getNumber("communityCount").longValue();
             final long loadMillis = row.getNumber("loadMillis").longValue();
@@ -123,7 +124,7 @@ public class LouvainClusteringIntegrationTest {
         final String cypher = "CALL algo.louvain('', '', {concurrency:1, innerIterations:100}) " +
                 "YIELD nodes, communityCount, loadMillis, computeMillis, writeMillis, postProcessingMillis, p99";
 
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             final long nodes = row.getNumber("nodes").longValue();
             final long communityCount = row.getNumber("communityCount").longValue();
             final long loadMillis = row.getNumber("loadMillis").longValue();
@@ -148,7 +149,7 @@ public class LouvainClusteringIntegrationTest {
         final String cypher = "CALL algo.louvain('', '', {concurrency:1, randomNeighbor:true}) " +
                 "YIELD nodes, communityCount, loadMillis, computeMillis, writeMillis, postProcessingMillis, p99";
 
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             final long nodes = row.getNumber("nodes").longValue();
             final long communityCount = row.getNumber("communityCount").longValue();
             final long loadMillis = row.getNumber("loadMillis").longValue();
@@ -173,7 +174,7 @@ public class LouvainClusteringIntegrationTest {
         final String cypher = "CALL algo.louvain.stream('', '', {concurrency:1, innerIterations:10, randomNeighbor:false}) " +
                 "YIELD nodeId, community, communities";
         final IntIntScatterMap testMap = new IntIntScatterMap();
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             final long nodeId = (long) row.get("nodeId");
             final long community = (long) row.get("community");
             System.out.println(nodeId + ": " + community);
@@ -188,7 +189,7 @@ public class LouvainClusteringIntegrationTest {
         final String cypher = "CALL algo.louvain.stream('', '', {concurrency:1, communityProperty:'c'}) " +
                 "YIELD nodeId, community, communities";
         final IntIntScatterMap testMap = new IntIntScatterMap();
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             final long nodeId = (long) row.get("nodeId");
             final long community = (long) row.get("community");
             System.out.println(nodeId + ": " + community);
@@ -203,7 +204,7 @@ public class LouvainClusteringIntegrationTest {
         final String cypher = "CALL algo.louvain.stream('', '', {concurrency:1, communityProperty:'c'}) " +
                 "YIELD nodeId, community, communities";
         final IntIntScatterMap testMap = new IntIntScatterMap();
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             Object communities = row.get("communities");
             assertNull(communities);
             return false;
@@ -215,7 +216,7 @@ public class LouvainClusteringIntegrationTest {
         final String cypher = "CALL algo.louvain.stream('', '', {concurrency:1, includeIntermediateCommunities: true}) " +
                 "YIELD nodeId, communities";
         final IntIntScatterMap testMap = new IntIntScatterMap();
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             final long community = ((List<Long>) row.get("communities")).get(0);
             System.out.println(community);
             testMap.addTo((int) community, 1);
@@ -228,11 +229,11 @@ public class LouvainClusteringIntegrationTest {
     public void testWrite() {
         final String cypher = "CALL algo.louvain('', '', {concurrency:1})";
         final IntIntScatterMap testMap = new IntIntScatterMap();
-        DB.executeTransactionally(cypher).close();
+        DB.executeTransactionally(cypher);
 
         String readQuery = "MATCH (n) RETURN n.community AS community";
 
-        DB.executeTransactionally(readQuery).accept(row -> {
+        executeAndAccept(DB, readQuery, row -> {
             final int community = (int) row.get("community");
             testMap.addTo(community, 1);
             return true;
@@ -245,11 +246,11 @@ public class LouvainClusteringIntegrationTest {
     public void testWriteIncludingIntermediateCommunities() {
         final String cypher = "CALL algo.louvain('', '', {concurrency:1, includeIntermediateCommunities: true})";
         final IntIntScatterMap testMap = new IntIntScatterMap();
-        DB.executeTransactionally(cypher).close();
+        DB.executeTransactionally(cypher);
 
         String readQuery = "MATCH (n) RETURN n.communities AS communities";
 
-        DB.executeTransactionally(readQuery).accept(row -> {
+        executeAndAccept(DB, readQuery, row -> {
             final long community = ((int[]) row.get("communities"))[0];
             testMap.addTo((int) community, 1);
             return true;
@@ -261,11 +262,11 @@ public class LouvainClusteringIntegrationTest {
     @Test
     public void testWriteNoIntermediateCommunitiesByDefault() {
         final String cypher = "CALL algo.louvain('', '', {concurrency:1})";
-        DB.executeTransactionally(cypher).close();
+        DB.executeTransactionally(cypher);
 
         final AtomicLong testInteger = new AtomicLong(0);
         String readQuery = "MATCH (n) WHERE not(exists(n.communities)) RETURN count(*) AS count";
-        DB.executeTransactionally(readQuery).accept(row -> {
+        executeAndAccept(DB, readQuery, row -> {
             long count = (long) row.get("count");
             testInteger.set(count);
             return false;
@@ -279,7 +280,7 @@ public class LouvainClusteringIntegrationTest {
         final String cypher = "CALL algo.louvain('Node', 'TYPE', {concurrency:1}) " +
                 "YIELD nodes, communityCount, iterations, loadMillis, computeMillis, writeMillis";
 
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             final long nodes = row.getNumber("nodes").longValue();
             final long communityCount = row.getNumber("communityCount").longValue();
             final long iterations = row.getNumber("iterations").longValue();
@@ -305,7 +306,7 @@ public class LouvainClusteringIntegrationTest {
         final String cypher = "CALL algo.louvain('Node', 'TYPE', {weightProperty:'w', defaultValue:1.0, concurrency:1}) " +
                 "YIELD nodes, communityCount, iterations, loadMillis, computeMillis, writeMillis";
 
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             final long nodes = row.getNumber("nodes").longValue();
             final long communityCount = row.getNumber("communityCount").longValue();
             final long iterations = row.getNumber("iterations").longValue();
@@ -331,7 +332,7 @@ public class LouvainClusteringIntegrationTest {
     public void shouldAllowHeavyGraph() {
         final String cypher = "CALL algo.louvain('', '', {graph:'heavy'}) YIELD nodes, communityCount";
 
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             assertEquals("invalid node count",9, row.getNumber("nodes").longValue());
             assertEquals("wrong community count", 3, row.getNumber("communityCount").longValue());
             return true;
@@ -342,7 +343,7 @@ public class LouvainClusteringIntegrationTest {
     public void shouldAllowHugeGraph() {
         final String cypher = "CALL algo.louvain('', '', {graph:'huge'}) YIELD nodes, communityCount";
 
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             assertEquals("invalid node count",9, row.getNumber("nodes").longValue());
             assertEquals("wrong community count", 3, row.getNumber("communityCount").longValue());
             return true;
@@ -353,7 +354,7 @@ public class LouvainClusteringIntegrationTest {
     public void shouldAllowCypherGraph() {
         final String cypher = "CALL algo.louvain('MATCH (n) RETURN id(n) as id', 'MATCH (s)-->(t) RETURN id(s) as source, id(t) as target', {graph:'cypher'}) YIELD nodes, communityCount";
 
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             assertEquals("invalid node count",9, row.getNumber("nodes").longValue());
             assertEquals("wrong community count", 3, row.getNumber("communityCount").longValue());
             return true;
@@ -375,7 +376,7 @@ public class LouvainClusteringIntegrationTest {
     public int[] getClusterId(String nodeName) {
 
         int id[] = {0};
-        DB.executeTransactionally("MATCH (n) WHERE n.name = '" + nodeName + "' RETURN n").accept(row -> {
+        executeAndAccept(DB, "MATCH (n) WHERE n.name = '" + nodeName + "' RETURN n", row -> {
             id[0] = (int) row.getNode("n").getProperty("community");
             return true;
         });

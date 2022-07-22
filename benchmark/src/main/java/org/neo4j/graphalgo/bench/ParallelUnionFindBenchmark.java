@@ -111,7 +111,7 @@ public class ParallelUnionFindBenchmark {
             createTestGraph(numSets, 100_000);
         }
 
-        dB.executeTransactionally("MATCH (n) RETURN n");
+        db.executeTransactionally("MATCH (n) RETURN n");
 
         graph = new GraphLoader(db)
                 .withExecutorService(Pools.DEFAULT)

@@ -52,7 +52,7 @@ public final class HugeIntersectionTest {
     public static void setup() {
         long[] neoStarts = new long[2];
         long[] neoTargets = DB.executeAndCommit(db -> {
-            try (KernelTransaction st = DB.transaction()) {
+            try (KernelTransaction st = DB.resolveDependency(KernelTransaction.class)) {
                 TokenWrite token = st.tokenWrite();
                 int type = token.relationshipTypeGetOrCreateForName("TYPE");
                 Write write = st.dataWrite();

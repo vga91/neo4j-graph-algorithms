@@ -38,6 +38,7 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
 /**
@@ -98,16 +99,11 @@ public class DangalchevCentralityIntegrationTest {
                 .registerProcedure(DangalchevCentralityProc.class);
     }
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
-
     @Test
     public void testClosenessStream() throws Exception {
 
-        dB.executeTransactionally("CALL algo.closeness.dangalchev.stream('Node', 'TYPE') YIELD nodeId, centrality")
-                .accept((Result.ResultVisitor<Exception>) row -> {
+        executeAndAccept(db, "CALL algo.closeness.dangalchev.stream('Node', 'TYPE') YIELD nodeId, centrality",
+                row -> {
                     consumer.accept(
                             row.getNumber("nodeId").longValue(),
                             row.getNumber("centrality").doubleValue());
@@ -120,17 +116,16 @@ public class DangalchevCentralityIntegrationTest {
     @Test
     public void testClosenessWrite() throws Exception {
 
-        dB.executeTransactionally("CALL algo.closeness.dangalchev('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
-                "nodes, loadMillis, computeMillis, writeMillis")
-                .accept((Result.ResultVisitor<Exception>) row -> {
+        executeAndAccept(db, "CALL algo.closeness.dangalchev('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
+                "nodes, loadMillis, computeMillis, writeMillis", row -> {
                     assertNotEquals(-1L, row.getNumber("writeMillis"));
                     assertNotEquals(-1L, row.getNumber("computeMillis"));
                     assertNotEquals(-1L, row.getNumber("nodes"));
                     return true;
                 });
 
-        dB.executeTransactionally("MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality")
-                .accept(row -> {
+        executeAndAccept(db, "MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality",
+                row -> {
                     consumer.accept(
                             row.getNumber("id").longValue(),
                             row.getNumber("centrality").doubleValue());

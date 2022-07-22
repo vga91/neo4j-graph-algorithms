@@ -42,6 +42,7 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
 /**
@@ -112,7 +113,7 @@ public class ParallelBetweennessCentralityIntegrationTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
+//        if (db != null) db.shutdown();
         graph = null;
     }
 
@@ -135,7 +136,7 @@ public class ParallelBetweennessCentralityIntegrationTest {
     }
 
     public void testBetweennessWrite(String cypher) {
-        dB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(db, cypher, row -> {
             assertNotEquals(-1L, row.getNumber("writeMillis").longValue());
             assertEquals(6.0, row.getNumber("minCentrality"));
             assertEquals(25.0, row.getNumber("maxCentrality"));
@@ -143,7 +144,7 @@ public class ParallelBetweennessCentralityIntegrationTest {
             return true;
         });
 
-        dB.executeTransactionally("MATCH (n:Node) WHERE exists(n.bc) RETURN id(n) as id, n.bc as bc").accept(row -> {
+        executeAndAccept(db, "MATCH (n:Node) WHERE exists(n.bc) RETURN id(n) as id, n.bc as bc", row -> {
             consumer.consume(row.getNumber("id").longValue(),
                     row.getNumber("bc").doubleValue());
             return true;

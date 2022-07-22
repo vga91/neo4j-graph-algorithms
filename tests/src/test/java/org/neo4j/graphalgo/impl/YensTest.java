@@ -47,6 +47,7 @@ import static org.mockito.AdditionalMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * Graph:
@@ -91,7 +92,7 @@ public class YensTest {
                         " (d)-[:TYPE {cost:1.0}]->(f),\n" +
                         " (e)-[:TYPE {cost:4.0}]->(f)";
 
-        dB.executeTransactionally(cypher);
+        db.executeTransactionally(cypher);
 
         graph = new GraphLoader(db)
                 .withAnyRelationshipType()
@@ -171,7 +172,7 @@ public class YensTest {
 
     private int id(String name) {
         final Node[] node = new Node[1];
-        dB.executeTransactionally("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
+        executeAndAccept(db, "MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n", row -> {
             node[0] = row.getNode("n");
             return false;
         });

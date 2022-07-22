@@ -34,7 +34,6 @@ import java.util.Map;
 
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.*;
-import static org.neo4j.helpers.collection.MapUtil.map;
 
 public class PearsonTest {
 
@@ -77,16 +76,16 @@ public class PearsonTest {
     @BeforeClass
     public static void beforeClass() throws KernelException {
         db = TestDatabaseCreator.createTestDatabase();
-        Procedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
+        GlobalProcedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(PearsonProc.class);
         procedures.registerFunction(IsFiniteFunc.class);
-        dB.executeTransactionally(buildDatabaseQuery()).close();
+        db.executeTransactionally(buildDatabaseQuery());
     }
-
-    @AfterClass
-    public static void AfterClass() {
-        db.shutdown();
-    }
+//
+//    @AfterClass
+//    public static void AfterClass() {
+//        db.shutdown();
+//    }
 
     @Before
     public void setUp() throws Exception {
@@ -99,15 +98,15 @@ public class PearsonTest {
     }
 
     private static void buildRandomDB(int size) {
-        dB.executeTransactionally("MATCH (n) DETACH DELETE n").close();
-        dB.executeTransactionally("UNWIND range(1,$size/10) as _ CREATE (:Person) CREATE (:Item) ",singletonMap("size",size)).close();
+        db.executeTransactionally("MATCH (n) DETACH DELETE n");
+        db.executeTransactionally("UNWIND range(1,$size/10) as _ CREATE (:Person) CREATE (:Item) ",singletonMap("size",size));
         String statement =
                 "MATCH (p:Person) WITH collect(p) as people " +
                 "MATCH (i:Item) WITH people, collect(i) as items " +
                 "UNWIND range(1,$size) as _ " +
                 "WITH people[toInteger(rand()*size(people))] as p, items[toInteger(rand()*size(items))] as i " +
                 "MERGE (p)-[likes:LIKES]->(i) SET likes.stars = toInteger(rand()*$size)  RETURN count(*) ";
-        dB.executeTransactionally(statement,singletonMap("size",size)).close();
+        db.executeTransactionally(statement,singletonMap("size",size));
     }
     private static String buildDatabaseQuery() {
         return  "CREATE (a:Person {name:'Alice'})\n" +
@@ -177,10 +176,10 @@ public class PearsonTest {
         buildRandomDB(size);
 
         // This is probably creating all NaN values and they're getting filtered out
-//        String text = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff", -1.0, "concurrency", 1), "missingValue", 0)).resultAsString();
+//        String text = db.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff", -1.0, "concurrency", 1), "missingValue", 0)).resultAsString();
 //        System.out.println(text);
 //
-//        text = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff", -1.0, "concurrency", 1), "missingValue", 0)).resultAsString();
+//        text = db.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff", -1.0, "concurrency", 1), "missingValue", 0)).resultAsString();
 //        System.out.println(text);
 
         // these can give different results because the arrays of item ids are being built in different orders
@@ -188,10 +187,10 @@ public class PearsonTest {
 
         System.out.println(STATEMENT_STREAM);
 
-        Result result1 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-1.0,"concurrency", 1), "missingValue", 0));
-        Result result2 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-1.0,"concurrency", 1), "missingValue", 0));
-        Result result4 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-1.0,"concurrency", 1), "missingValue", 0));
-        Result result8 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-1.0,"concurrency", 1), "missingValue", 0));
+        Result result1 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-1.0,"concurrency", 1), "missingValue", 0), r -> r);
+        Result result2 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-1.0,"concurrency", 1), "missingValue", 0), r -> r);
+        Result result4 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-1.0,"concurrency", 1), "missingValue", 0), r -> r);
+        Result result8 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-1.0,"concurrency", 1), "missingValue", 0), r -> r);
         int count=0;
         while (result1.hasNext()) {
             Map<String, Object> row1 = result1.next();
@@ -209,10 +208,10 @@ public class PearsonTest {
         int size = 333;
         buildRandomDB(size);
 
-        Result result1 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 1), "missingValue", 0));
-        Result result2 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 2), "missingValue", 0));
-        Result result4 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 4), "missingValue", 0));
-        Result result8 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 8), "missingValue", 0));
+        Result result1 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 1), "missingValue", 0), r -> r);
+        Result result2 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 2), "missingValue", 0), r -> r);
+        Result result4 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 4), "missingValue", 0), r -> r);
+        Result result8 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 8), "missingValue", 0), r -> r);
         int count=0;
         while (result1.hasNext()) {
             Map<String, Object> row1 = result1.next();
@@ -227,11 +226,11 @@ public class PearsonTest {
 
     @Test
     public void topNpearsonStreamTest() {
-        Map<String, Object> params = map("config", map("top", 2), "missingValue", 0);
+        Map<String, Object> params = Map.of("config", Map.of("top", 2), "missingValue", 0);
 
-        System.out.println(dB.executeTransactionally(STATEMENT_STREAM, params).resultAsString());
+        System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
-        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
+        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
         assert01(results.next());
         assert23(results.next());
         assertFalse(results.hasNext());
@@ -239,11 +238,11 @@ public class PearsonTest {
 
     @Test
     public void pearsonStreamTest() {
-        Map<String, Object> params = map("config", map("concurrency", 1), "missingValue", 0);
+        Map<String, Object> params = Map.of("config", Map.of("concurrency", 1), "missingValue", 0);
 
-        System.out.println(dB.executeTransactionally(STATEMENT_STREAM, params).resultAsString());
+        System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
-        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
+        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
         assertTrue(results.hasNext());
         assert01(results.next());
         assert02(results.next());
@@ -256,16 +255,16 @@ public class PearsonTest {
 
     @Test
     public void pearsonStreamSourceTargetIdsTest() {
-        Map<String, Object> config = map(
+        Map<String, Object> config = Map.of(
                 "concurrency", 1,
                 "sourceIds", Collections.singletonList(0L),
                 "targetIds", Collections.singletonList(1L)
         );
-        Map<String, Object> params = map("config", config, "missingValue", 0);
+        Map<String, Object> params = Map.of("config", config, "missingValue", 0);
 
-        System.out.println(dB.executeTransactionally(STATEMENT_STREAM, params).resultAsString());
+        System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
-        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
+        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
         assertTrue(results.hasNext());
         assert01(results.next());
         assertFalse(results.hasNext());
@@ -273,11 +272,11 @@ public class PearsonTest {
 
     @Test
     public void pearsonSkipStreamTest() {
-        Map<String, Object> params = map("config", map("concurrency", 1, "skipValue", Double.NaN), "missingValue", Double.NaN);
+        Map<String, Object> params = Map.of("config", Map.of("concurrency", 1, "skipValue", Double.NaN), "missingValue", Double.NaN);
 
-        System.out.println(dB.executeTransactionally(STATEMENT_STREAM, params).resultAsString());
+        System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
-        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
+        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
 
         assertTrue(results.hasNext());
         assert01Skip(results.next());
@@ -292,11 +291,11 @@ public class PearsonTest {
     @Test
     public void pearsonCypherLoadingStreamTest() {
         String query = "MATCH (p:Person)-[r:LIKES]->(i) RETURN id(p) AS item, id(i) AS category, r.stars AS weight";
-        Map<String, Object> params = map("config", map("concurrency", 1, "graph", "cypher", "skipValue", 0.0), "query", query);
+        Map<String, Object> params = Map.of("config", Map.of("concurrency", 1, "graph", "cypher", "skipValue", 0.0), "query", query);
 
-        System.out.println(dB.executeTransactionally(STATEMENT_CYPHER_STREAM, params).resultAsString());
+        System.out.println(db.executeTransactionally(STATEMENT_CYPHER_STREAM, params, Result::resultAsString));
 
-        Result results = dB.executeTransactionally(STATEMENT_CYPHER_STREAM, params);
+        Result results = db.executeTransactionally(STATEMENT_CYPHER_STREAM, params, r -> r);
 
         assertTrue(results.hasNext());
         assert01Skip(results.next());
@@ -310,11 +309,11 @@ public class PearsonTest {
 
     @Test
     public void topKPearsonStreamTest() {
-        Map<String, Object> params = map("config", map( "concurrency", 1,"topK", 1), "missingValue", 0);
+        Map<String, Object> params = Map.of("config", Map.of( "concurrency", 1,"topK", 1), "missingValue", 0);
 
-        System.out.println(dB.executeTransactionally(STATEMENT_STREAM, params).resultAsString());
+        System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
-        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
+        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
         assertTrue(results.hasNext());
         assert01(results.next());
         assert01(flip(results.next()));
@@ -325,24 +324,24 @@ public class PearsonTest {
 
     @Test
     public void topKPearsonSourceTargetIdStreamTest() {
-        Map<String, Object> config = map(
+        Map<String, Object> config = Map.of(
                 "concurrency", 1,
                 "topK", 1,
                 "sourceIds", Collections.singletonList(0L)
 
         );
-        Map<String, Object> params = map("config", config, "missingValue", 0);
+        Map<String, Object> params = Map.of("config", config, "missingValue", 0);
 
-        System.out.println(dB.executeTransactionally(STATEMENT_STREAM, params).resultAsString());
+        System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
-        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
+        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
         assertTrue(results.hasNext());
         assert01(results.next());
         assertFalse(results.hasNext());
     }
 
     private Map<String, Object> flip(Map<String, Object> row) {
-        return map("similarity", row.get("similarity"),"intersection", row.get("intersection"),
+        return Map.of("similarity", row.get("similarity"),"intersection", row.get("intersection"),
                 "item1",row.get("item2"),"count1",row.get("count2"),
                 "item2",row.get("item1"),"count2",row.get("count1"));
     }
@@ -363,9 +362,9 @@ public class PearsonTest {
 
     @Test
     public void topK4PearsonStreamTest() {
-        Map<String, Object> params = map("config", map("topK", 4, "concurrency", 4, "similarityCutoff", -0.1), "missingValue", 0);
+        Map<String, Object> params = Map.of("config", Map.of("topK", 4, "concurrency", 4, "similarityCutoff", -0.1), "missingValue", 0);
 
-        Result results = dB.executeTransactionally(STATEMENT_STREAM,params);
+        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
         assertSameSource(results, 3, 0L);
         assertSameSource(results, 3, 1L);
         assertSameSource(results, 3, 2L);
@@ -375,11 +374,11 @@ public class PearsonTest {
 
     @Test
     public void topK3PearsonStreamTest() {
-        Map<String, Object> params = map("config", map("concurrency", 3, "topK", 3), "missingValue", 0);
+        Map<String, Object> params = Map.of("config", Map.of("concurrency", 3, "topK", 3), "missingValue", 0);
 
-        System.out.println(dB.executeTransactionally(STATEMENT_STREAM, params).resultAsString());
+        System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
-        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
+        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
         assertSameSource(results, 3, 0L);
         assertSameSource(results, 3, 1L);
         assertSameSource(results, 3, 2L);
@@ -389,11 +388,11 @@ public class PearsonTest {
 
     @Test
     public void simplePearsonTest() {
-        Map<String, Object> params = map("config", map());
+        Map<String, Object> params = Map.of("config", Map.of());
 
-        System.out.println(dB.executeTransactionally(STATEMENT, params).resultAsString());
+        System.out.println(db.executeTransactionally(STATEMENT, params, Result::resultAsString));
 
-        Map<String, Object> row = dB.executeTransactionally(STATEMENT,params).next();
+        Map<String, Object> row = db.executeTransactionally(STATEMENT,params, Result::next);
         assertEquals(0.86,(double) row.get("p25"),  0.01);
         assertEquals(0.94, (double) row.get("p50"), 0.01);
         assertEquals(0.98,(double) row.get("p75"),  0.01);
@@ -405,10 +404,10 @@ public class PearsonTest {
 
     @Test
     public void simplePearsonFromEmbeddingTest() {
-        dB.executeTransactionally(STORE_EMBEDDING_STATEMENT);
+        db.executeTransactionally(STORE_EMBEDDING_STATEMENT);
 
-        Map<String, Object> params = map("config", map());
-        Map<String, Object> row = dB.executeTransactionally(EMBEDDING_STATEMENT,params).next();
+        Map<String, Object> params = Map.of("config", Map.of());
+        Map<String, Object> row = db.executeTransactionally(EMBEDDING_STATEMENT,params, Result::next);
 
         assertEquals(0.86,(double) row.get("p25"),  0.01);
         assertEquals(0.94, (double) row.get("p50"), 0.01);
@@ -421,16 +420,16 @@ public class PearsonTest {
 
     @Test
     public void simplePearsonWriteTest() {
-        Map<String, Object> params = map("config", map( "write",true, "similarityCutoff", 0.1));
+        Map<String, Object> params = Map.of("config", Map.of( "write",true, "similarityCutoff", 0.1));
 
-        dB.executeTransactionally(STATEMENT,params).close();
+        db.executeTransactionally(STATEMENT,params);
 
         String checkSimilaritiesQuery = "MATCH (a)-[similar:SIMILAR]->(b)" +
                 "RETURN a.name AS node1, b.name as node2, similar.score AS score " +
                 "ORDER BY id(a), id(b)";
 
-        System.out.println(dB.executeTransactionally(checkSimilaritiesQuery).resultAsString());
-        Result result = dB.executeTransactionally(checkSimilaritiesQuery);
+        System.out.println(db.executeTransactionally(checkSimilaritiesQuery, Map.of(), Result::resultAsString));
+        Result result = db.executeTransactionally(checkSimilaritiesQuery, Map.of(), r -> r);
 
         assertTrue(result.hasNext());
         Map<String, Object> row = result.next();
@@ -473,23 +472,23 @@ public class PearsonTest {
 
     @Test
     public void dontComputeComputationsByDefault() {
-        Map<String, Object> params = map("config", map(
+        Map<String, Object> params = Map.of("config", Map.of(
                 "write", true,
                 "similarityCutoff", 0.1));
 
-        Result writeResult = dB.executeTransactionally(STATEMENT, params);
+        Result writeResult = db.executeTransactionally(STATEMENT, params, r -> r);
         Map<String, Object> writeRow = writeResult.next();
         assertEquals(-1L, (long) writeRow.get("computations"));
     }
 
     @Test
     public void numberOfComputations() {
-        Map<String, Object> params = map("config", map(
+        Map<String, Object> params = Map.of("config", Map.of(
                 "write", true,
                 "showComputations", true,
                 "similarityCutoff", 0.1));
 
-        Result writeResult = dB.executeTransactionally(STATEMENT, params);
+        Result writeResult = db.executeTransactionally(STATEMENT, params, r -> r);
         Map<String, Object> writeRow = writeResult.next();
         assertEquals(6L, (long) writeRow.get("computations"));
     }

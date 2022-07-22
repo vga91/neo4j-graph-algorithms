@@ -117,7 +117,7 @@ public class PrimTest {
                 .asUndirected(true)
                 .load(graphImpl);
 
-        try (Transaction transaction = DB.beginTx()) {
+        try (Transaction tx = DB.beginTx()) {
             a = graph.toMappedNodeId(tx.findNode(label, "name", "a").getId());
             b = graph.toMappedNodeId(tx.findNode(label, "name", "b").getId());
             c = graph.toMappedNodeId(tx.findNode(label, "name", "c").getId());
@@ -125,7 +125,7 @@ public class PrimTest {
             e = graph.toMappedNodeId(tx.findNode(label, "name", "e").getId());
             y = graph.toMappedNodeId(tx.findNode(label, "name", "y").getId());
             z = graph.toMappedNodeId(tx.findNode(label, "name", "z").getId());
-            transaction.commit();
+            tx.commit();
         }
     }
 

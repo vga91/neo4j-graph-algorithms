@@ -45,7 +45,7 @@ public class HarmonicCentralityIntegrationTest_477 {
     @BeforeClass
     public static void setupGraph() throws KernelException {
 
-        dB.executeTransactionally(
+        db.executeTransactionally(
                 "CREATE (alice:Person{id:\"Alice\"}),\n" +
                         "       (michael:Person{id:\"Michael\"}),\n" +
                         "       (karin:Person{id:\"Karin\"}),\n" +
@@ -78,6 +78,6 @@ public class HarmonicCentralityIntegrationTest_477 {
                 "',{graph:'cypher'}) YIELD nodeId,centrality";
 
 
-        dB.executeTransactionally(cypher);
+        db.executeTransactionally(cypher);
     }
 }

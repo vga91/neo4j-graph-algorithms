@@ -18,11 +18,13 @@
  */
 package org.neo4j.graphalgo.impl;
 
+import org.eclipse.jetty.util.log.Slf4jLog;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.neo4j.configuration.BufferingLog;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
@@ -35,10 +37,12 @@ import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.logging.FormattedLog;
 import org.neo4j.logging.Level;
 import org.neo4j.logging.Log;
 import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.logging.NullLog;
+import org.neo4j.logging.log4j.Log4jLog;
+import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -87,11 +91,6 @@ public class ProgressLoggingTest {
                         rel.setProperty(PROPERTY, Math.random() * 5); // (0-5)
                     });
         }
-    }
-
-    @AfterClass
-    public static void tearDown() {
-        db.shutdown();
     }
 
     public ProgressLoggingTest(Class<? extends GraphFactory> graphImpl, String nameIgnored) {
@@ -153,9 +152,13 @@ public class ProgressLoggingTest {
     }
 
     public static Log testLogger(StringWriter writer) {
-        return FormattedLog
-                .withLogLevel(Level.DEBUG)
-                .withCategory("Test")
-                .toPrintWriter(new PrintWriter(writer));
+        // todo - figure out...
+        final BufferingLog bufferingLog = new BufferingLog();
+        bufferingLog.debug(writer.toString());
+        return bufferingLog;
+//        return new BufferingLog().debugLogger().
+//                .withLogLevel(Level.DEBUG)
+//                .withCategory("Test")
+//                .toPrintWriter(new PrintWriter(writer));
     }
 }

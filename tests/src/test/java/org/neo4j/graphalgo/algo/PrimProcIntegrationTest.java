@@ -32,7 +32,7 @@ import org.neo4j.graphalgo.TestDatabaseCreator;
 import java.util.Map;
 
 import static org.junit.Assert.*;
-import static org.neo4j.graphalgo.util.TestUtil.executeAndAccept;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  *

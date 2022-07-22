@@ -43,17 +43,9 @@ public abstract class Neo4JTestCase {
         db = TestDatabaseCreator.createTestDatabase();
     }
 
-    @AfterClass
-    public static void teardown() {
-        if (db != null) {
-            db.shutdown();
-            db = null;
-        }
-    }
-
     public static int newNode() {
         try (Transaction transaction = db.beginTx()) {
-            final Node node = db.createNode(Label.label(LABEL));
+            final Node node = transaction.createNode(Label.label(LABEL));
             transaction.commit();
             final int id = Math.toIntExact(node.getId());
             transaction.commit();
@@ -63,8 +55,8 @@ public abstract class Neo4JTestCase {
 
     public static long newRelation(int sourceNodeId, int targetNodeId) {
         try (Transaction transaction = db.beginTx()) {
-            final Node source = db.getNodeById(sourceNodeId);
-            final Node target = db.getNodeById(targetNodeId);
+            final Node source = transaction.getNodeById(sourceNodeId);
+            final Node target = transaction.getNodeById(targetNodeId);
             final Relationship relation = source.createRelationshipTo(
                     target,
                     RelationshipType.withName(RELATION));
@@ -78,8 +70,8 @@ public abstract class Neo4JTestCase {
             long targetNodeId,
             double weight) {
         try (Transaction transaction = db.beginTx()) {
-            final Node source = db.getNodeById(sourceNodeId);
-            final Node target = db.getNodeById(targetNodeId);
+            final Node source = transaction.getNodeById(sourceNodeId);
+            final Node target = transaction.getNodeById(targetNodeId);
             final Relationship relation = source.createRelationshipTo(
                     target,
                     RelationshipType.withName(RELATION));

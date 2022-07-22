@@ -126,8 +126,8 @@ public class InfoMapTest {
     @Before
     public void setupGraph() throws KernelException {
 
-        dB.executeTransactionally("MATCH (n) detach delete n");
-        dB.executeTransactionally(cypher);
+        db.executeTransactionally("MATCH (n) detach delete n");
+        db.executeTransactionally(cypher);
 
         graph = new GraphLoader(db)
                 .withAnyRelationshipType()

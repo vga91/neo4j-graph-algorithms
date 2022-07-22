@@ -86,11 +86,6 @@ public class ParallelDeltaSteppingTest {
         reference = compute(1);
     }
 
-    @AfterClass
-    public static void tearDown() {
-        db.shutdown();
-    }
-
     @Test
     public void testParallelBehaviour() throws Exception {
         final int n = 20;

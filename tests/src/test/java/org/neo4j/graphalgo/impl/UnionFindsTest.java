@@ -36,6 +36,7 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphdb.Transaction;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -88,17 +89,17 @@ public class UnionFindsTest {
     }
 
     private static void createTestGraph(int... setSizes) {
-        DB.executeAndCommit(db -> {
+        DB.executeAndCommit(tx -> {
             for (int setSize : setSizes) {
-                createLine(db, setSize);
+                createLine(tx, setSize);
             }
         });
     }
 
-    private static void createLine(GraphDatabaseService db, int setSize) {
-        Node temp = db.createNode();
+    private static void createLine(Transaction tx, int setSize) {
+        Node temp = tx.createNode();
         for (int i = 1; i < setSize; i++) {
-            Node t = db.createNode();
+            Node t = tx.createNode();
             temp.createRelationshipTo(t, RELATIONSHIP_TYPE);
             temp = t;
         }

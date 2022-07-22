@@ -26,7 +26,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.LabelPropagationProc;
 import org.neo4j.graphdb.Result;
-import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
@@ -87,7 +86,7 @@ public class LabelPropagationProcIntegrationTest {
     @Before
     public void setup() throws KernelException {
         db.resolveDependency(GlobalProcedures.class).registerProcedure(LabelPropagationProc.class);
-        dB.executeTransactionally(DB_CYPHER);
+        db.executeTransactionally(DB_CYPHER);
     }
 
     @Test
@@ -226,7 +225,7 @@ public class LabelPropagationProcIntegrationTest {
             String query,
             Map<String, Object> params,
             Consumer<Result.ResultRow> check) {
-        try (Result result = dB.executeTransactionally(query, params)) {
+        try (Result result = db.executeTransactionally(query, params, r -> r)) {
             result.accept(row -> {
                 check.accept(row);
                 return true;
@@ -235,6 +234,6 @@ public class LabelPropagationProcIntegrationTest {
     }
 
     private Map<String, Object> parParams() {
-        return MapUtil.map("batchSize", parallel ? 1 : 100, "concurrency", parallel ? 8: 1, "graph", graphImpl);
+        return Map.of("batchSize", parallel ? 1 : 100, "concurrency", parallel ? 8: 1, "graph", graphImpl);
     }
 }

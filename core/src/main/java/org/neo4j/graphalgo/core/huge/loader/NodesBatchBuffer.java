@@ -20,9 +20,11 @@ package org.neo4j.graphalgo.core.huge.loader;
 
 import org.neo4j.graphalgo.core.huge.loader.AbstractStorePageCacheScanner.RecordConsumer;
 import org.neo4j.internal.kernel.api.Read;
+import org.neo4j.internal.kernel.api.TokenRead;
 import org.neo4j.kernel.impl.store.NodeLabelsField;
 import org.neo4j.kernel.impl.store.NodeStore;
 import org.neo4j.kernel.impl.store.record.NodeRecord;
+import org.neo4j.storageengine.api.cursor.StoreCursors;
 
 
 final class NodesBatchBuffer implements RecordConsumer<NodeRecord> {
@@ -35,12 +37,14 @@ final class NodesBatchBuffer implements RecordConsumer<NodeRecord> {
     private final long[] buffer;
     // property ids, consecutive
     private final long[] properties;
+    private final StoreCursors storeCursors;
 
-    NodesBatchBuffer(final NodeStore store, final int label, int capacity, boolean readProperty) {
+    NodesBatchBuffer(final NodeStore store, final int label, int capacity, boolean readProperty, StoreCursors storeCursors) {
         this.label = label;
         this.nodeStore = store;
         this.buffer = new long[capacity];
         this.properties = readProperty ? new long[capacity] : null;
+        this.storeCursors = storeCursors;
     }
 
     boolean scan(AbstractStorePageCacheScanner<NodeRecord>.Cursor cursor) {
@@ -61,11 +65,11 @@ final class NodesBatchBuffer implements RecordConsumer<NodeRecord> {
 
     // TODO: something label scan store
     private boolean hasCorrectLabel(final NodeRecord record) {
-        if (label == Read.ANY_LABEL) {
+        if (label == TokenRead.ANY_LABEL) {
             return true;
         }
-        final long[] labels = NodeLabelsField.get(record, nodeStore);
-        long label = (long) this.label;
+        final long[] labels = NodeLabelsField.get(record, nodeStore, storeCursors);
+        long label = this.label;
         for (long l : labels) {
             if (l == label) {
                 return true;

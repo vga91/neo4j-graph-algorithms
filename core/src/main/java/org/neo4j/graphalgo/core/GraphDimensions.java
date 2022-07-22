@@ -24,7 +24,7 @@ import org.neo4j.graphalgo.core.utils.StatementFunction;
 import org.neo4j.internal.kernel.api.Read;
 import org.neo4j.internal.kernel.api.TokenRead;
 import org.neo4j.kernel.api.KernelTransaction;
-import org.neo4j.kernel.impl.newapi.InternalReadOps;
+//import org.neo4j.kernel.impl.newapi.InternalReadOps;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 public final class GraphDimensions extends StatementFunction<GraphDimensions> {
@@ -78,7 +78,7 @@ public final class GraphDimensions extends StatementFunction<GraphDimensions> {
     }
 
     public int singleRelationshipTypeId() {
-        return relationId == null ? Read.ANY_RELATIONSHIP_TYPE : relationId[0];
+        return relationId == null ? TokenRead.ANY_RELATIONSHIP_TYPE : relationId[0];
     }
 
     public int relWeightId() {
@@ -127,7 +127,7 @@ public final class GraphDimensions extends StatementFunction<GraphDimensions> {
         TokenRead tokenRead = transaction.tokenRead();
         Read dataRead = transaction.dataRead();
         // TODO: if the label (and type and property) is not found, we default to all labels, which is probably not what we want
-        labelId = setup.loadAnyLabel() ? Read.ANY_LABEL : tokenRead.nodeLabel(setup.startLabel);
+        labelId = setup.loadAnyLabel() ? TokenRead.ANY_LABEL : tokenRead.nodeLabel(setup.startLabel);
         if (!setup.loadAnyRelationshipType()) {
             int relId = tokenRead.relationshipType(setup.relationshipType);
             if (relId != TokenRead.NO_TOKEN) {
@@ -150,20 +150,20 @@ public final class GraphDimensions extends StatementFunction<GraphDimensions> {
         nodePropId = propertyKey(tokenRead, setup.shouldLoadNodeProperty(), setup.nodePropertyName);
 
         nodeCount = dataRead.countsForNode(labelId);
-        allNodesCount = InternalReadOps.getHighestPossibleNodeCount(dataRead, api);
+        allNodesCount = 1L;//InternalReadOps.getHighestPossibleNodeCount(dataRead, api);
         maxRelCount = Math.max(
                 dataRead.countsForRelationshipWithoutTxState(
                         labelId,
                         singleRelationshipTypeId(),
-                        Read.ANY_LABEL
+                        TokenRead.ANY_LABEL
                 ),
                 dataRead.countsForRelationshipWithoutTxState(
-                        Read.ANY_LABEL,
+                        TokenRead.ANY_LABEL,
                         singleRelationshipTypeId(),
                         labelId
                 )
         );
-        allRelsCount = InternalReadOps.getHighestPossibleRelationshipCount(dataRead, api);
+        allRelsCount = 1L;//InternalReadOps.getHighestPossibleRelationshipCount(dataRead, api);
         return this;
     }
 

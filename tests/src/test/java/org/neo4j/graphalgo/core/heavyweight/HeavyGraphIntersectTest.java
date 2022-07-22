@@ -42,10 +42,10 @@ public class HeavyGraphIntersectTest {
         gdb = org.neo4j.graphalgo.TestDatabaseCreator.createTestDatabase();
     }
 
-    @After
-    public void tearDown() throws Exception {
-        gdb.shutdown();
-    }
+//    @After
+//    public void tearDown() throws Exception {
+//        gdb.shutdown();
+//    }
 
     @Test
     public void countTriangles() {
@@ -55,7 +55,7 @@ public class HeavyGraphIntersectTest {
                 "(c)-[:X]->(f) " +
                 "RETURN [id(a),id(b),id(c),id(d),id(e),id(f)] as ids";
         // triangles: a: 2, b: 4, c:4, d: 2, e: 0, f:0
-        List<Long> ids = gdB.executeTransactionally(statement).<List<Long>>columnAs("ids").next();
+        List<Long> ids = gdb.executeTransactionally(statement, Map.of(), r -> r.<List<Long>>columnAs("ids").next());
         // System.out.println("ids = " + ids);
         assertEquals(ids.subList(0,4), assertTriangles());
     }
@@ -70,8 +70,8 @@ public class HeavyGraphIntersectTest {
                 " AND id(b) < id(c) " +
                 "WITH [id(a),id(b),id(c)] as ids order by ids[0],ids[1],ids[2]" +
                 "RETURN ids[0] as start, collect(ids) as ids order by start";
-        // System.out.println(gdB.executeTransactionally(triangleQuery).resultAsString());
-        Result result = gdB.executeTransactionally(triangleQuery);
+        // System.out.println(gdb.executeTransactionally(triangleQuery).resultAsString());
+        Result result = gdb.executeTransactionally(triangleQuery, Map.of(), r -> r);
         List<Long> foundIds = new ArrayList<>();
         while (result.hasNext()) {
             Map<String, Object> row = result.next();

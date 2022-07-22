@@ -51,7 +51,7 @@ public class GraphLoaderCypherTest {
 
     @Test
     public void both() {
-        dB.executeTransactionally("" +
+        db.executeTransactionally("" +
                 "CREATE (a:Node),(b:Node),(c:Node),(d:Node) " +
                 "CREATE" +
                 " (a)-[:REL]->(a)," +
@@ -74,7 +74,7 @@ public class GraphLoaderCypherTest {
 
     @Test
     public void outgoing() {
-        dB.executeTransactionally("" +
+        db.executeTransactionally("" +
                 "CREATE (a:Node),(b:Node),(c:Node),(d:Node) " +
                 "CREATE" +
                 " (a)-[:REL]->(a)," +
@@ -97,7 +97,7 @@ public class GraphLoaderCypherTest {
 
     @Test
     public void incoming() {
-        dB.executeTransactionally("" +
+        db.executeTransactionally("" +
                 "CREATE (a:Node),(b:Node),(c:Node),(d:Node) " +
                 "CREATE" +
                 " (a)-[:REL]->(a)," +

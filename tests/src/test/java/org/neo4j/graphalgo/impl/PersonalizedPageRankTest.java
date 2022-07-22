@@ -90,16 +90,10 @@ public final class PersonalizedPageRankTest {
     public static void setupGraph() {
         db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            dB.executeTransactionally(DB_CYPHER).close();
+            db.executeTransactionally(DB_CYPHER);
             tx.commit();
         }
     }
-
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        if (db!=null) db.shutdown();
-    }
-
     public PersonalizedPageRankTest(
             Class<? extends GraphFactory> graphImpl,
             String nameIgnoredOnlyForTestName) {
@@ -124,7 +118,7 @@ public final class PersonalizedPageRankTest {
             expected.put(tx.findNode(productLabel, "name", "Fitbit Flex Wireless").getId(), 0.08085200000000001);
             expected.put(tx.findNode(productLabel, "name", "Harry Potter").getId(), 0.01224);
             expected.put(tx.findNode(productLabel, "name", "Hobbit").getId(), 0.01224);
-            tx.close();
+            tx.commit();
         }
 
         final Graph graph;

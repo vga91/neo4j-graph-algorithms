@@ -18,7 +18,7 @@
  */
 package org.neo4j.graphalgo.core.huge.loader;
 
-import org.neo4j.io.layout.DatabaseFile;
+import org.neo4j.io.layout.recordstorage.RecordDatabaseFile;
 import org.neo4j.kernel.impl.store.NeoStores;
 import org.neo4j.kernel.impl.store.RecordStore;
 import org.neo4j.kernel.impl.store.RelationshipStore;
@@ -42,7 +42,7 @@ public final class RelationshipStoreScanner extends AbstractStorePageCacheScanne
 
         @Override
         public String storeFileName() {
-            return DatabaseFile.RELATIONSHIP_STORE.getName();
+            return RecordDatabaseFile.RELATIONSHIP_STORE.getName();
         }
 
         @Override

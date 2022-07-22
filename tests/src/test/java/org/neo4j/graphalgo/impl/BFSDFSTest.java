@@ -33,6 +33,7 @@ import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import java.util.Arrays;
 
 import static org.junit.Assert.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  *
@@ -74,7 +75,7 @@ public class BFSDFSTest {
                         " (e)-[:TYPE {cost:2.0}]->(g),\n" +
                         " (f)-[:TYPE {cost:1.0}]->(g)";
 
-        dB.executeTransactionally(cypher);
+        db.executeTransactionally(cypher);
 
         graph = new GraphLoader(db)
                 .withAnyRelationshipType()
@@ -88,7 +89,7 @@ public class BFSDFSTest {
 
     private static long id(String name) {
         final Node[] node = new Node[1];
-        dB.executeTransactionally("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
+        executeAndAccept(db, "MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n", row -> {
             node[0] = row.getNode("n");
             return false;
         });
@@ -97,7 +98,7 @@ public class BFSDFSTest {
 
     private static String name(long id) {
         final String[] node = new String[1];
-        dB.executeTransactionally("MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name").accept(row -> {
+        executeAndAccept(db, "MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name", row -> {
             node[0] = row.getString("name");
             return false;
         });

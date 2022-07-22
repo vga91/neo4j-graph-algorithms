@@ -126,7 +126,7 @@ public class LouvainWeightedGraphTest {
         try (Transaction transaction = DB.beginTx()) {
             for (int i = 0; i < ABCDEFGHZ.length(); i++) {
                 final String value = String.valueOf(ABCDEFGHZ.charAt(i));
-                final int id = graph.toMappedNodeId(tx.findNode(LABEL, "name", value).getId());
+                final int id = graph.toMappedNodeId(transaction.findNode(LABEL, "name", value).getId());
                 nameMap.put(value, id);
             }
             transaction.commit();
@@ -137,7 +137,7 @@ public class LouvainWeightedGraphTest {
         try (Transaction transaction = DB.beginTx()) {
             louvain.resultStream()
                     .forEach(r -> {
-                        System.out.println(DB.getNodeById(r.nodeId).getProperty("name") + ":" + r.community);
+                        System.out.println(transaction.getNodeById(r.nodeId).getProperty("name") + ":" + r.community);
                     });
             transaction.commit();
         }

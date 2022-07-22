@@ -167,7 +167,8 @@ public class AdjacencyMatrix {
     }
 
     private int[] growArray(int[] array, int length) {
-        int newSize = ArrayUtil.oversize(length, RamUsageEstimator.NUM_BYTES_INT);
+        // todo - check if RamUsageEstimator.NUM_BYTES_OBJECT_REF is 4, and why
+        int newSize = ArrayUtil.oversize(length, RamUsageEstimator.NUM_BYTES_OBJECT_REF);
         tracker.remove(MemoryUsage.sizeOfIntArray(array.length));
         tracker.add(MemoryUsage.sizeOfIntArray(newSize));
         return Arrays.copyOf(array, newSize);

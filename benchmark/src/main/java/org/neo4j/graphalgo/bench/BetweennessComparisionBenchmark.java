@@ -57,7 +57,7 @@ public class BetweennessComparisionBenchmark {
                 new TestGraphDatabaseFactory()
                         .newImpermanentDatabaseBuilder()
                         .newGraphDatabase();
-        final Procedures procedures = db.getDependencyResolver()
+        final GlobalProcedures procedures = db.getDependencyResolver()
                 .resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(BetweennessCentralityProc.class);
 
@@ -111,21 +111,21 @@ public class BetweennessComparisionBenchmark {
 
     @Benchmark
     public Object _01_benchmark_sequential() {
-        return dB.executeTransactionally("CALL algo.betweenness('','', {write:false}) YIELD computeMillis")
+        return db.executeTransactionally("CALL algo.betweenness('','', {write:false}) YIELD computeMillis")
                 .stream()
                 .count();
     }
 
     @Benchmark
     public Object _04_benchmark_parallel8() {
-        return dB.executeTransactionally("CALL algo.betweenness('','', {write:false, concurrency:8}) YIELD computeMillis")
+        return db.executeTransactionally("CALL algo.betweenness('','', {write:false, concurrency:8}) YIELD computeMillis")
                 .stream()
                 .count();
     }
 
     @Benchmark
     public Object _05_benchmark_sucessorBrandes() {
-        return dB.executeTransactionally("CALL algo.betweenness.exp1('','', {write:false, concurrency:8}) YIELD computeMillis")
+        return db.executeTransactionally("CALL algo.betweenness.exp1('','', {write:false, concurrency:8}) YIELD computeMillis")
                 .stream()
                 .count();
     }

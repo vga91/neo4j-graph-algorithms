@@ -98,7 +98,7 @@ public class PageRankBenchmark {
                         .newImpermanentDatabaseBuilder()
                         .newGraphDatabase();
         try (Transaction tx = db.beginTx()) {
-            dB.executeTransactionally(createGraph).close();
+            db.executeTransactionally(createGraph);
             tx.commit();
         }
     }

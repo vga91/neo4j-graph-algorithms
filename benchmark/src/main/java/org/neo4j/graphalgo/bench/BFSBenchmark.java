@@ -86,7 +86,7 @@ public class BFSBenchmark {
 
     @TearDown
     public void tearDown() {
-        if (api != null) api.shutdown();
+//        if (api != null) api.shutdown();
         Pools.DEFAULT.shutdownNow();
     }
 

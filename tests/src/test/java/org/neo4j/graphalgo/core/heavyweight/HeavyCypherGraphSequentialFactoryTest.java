@@ -26,12 +26,13 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.DuplicateRelationshipsStrategy;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.helpers.collection.Iterators;
+import org.neo4j.graphdb.Result;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.test.TestGraphDatabaseFactory;
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
@@ -44,15 +45,15 @@ public class HeavyCypherGraphSequentialFactoryTest {
     @BeforeClass
     public static void setUp() {
 
-        db = new TestGraphDatabaseFactory().newImpermanentDatabase();
+        db = new ImpermanentDatabaseRule();
 
-        Iterators.count(dB.executeTransactionally("UNWIND range(1," + COUNT + ") AS id CREATE (n {id:id})-[:REL {prop:id%10}]->(n)"));
+        db.executeTransactionally("UNWIND range(1," + COUNT + ") AS id CREATE (n {id:id})-[:REL {prop:id%10}]->(n)", Map.of(), Result::resultAsString);
     }
 
-    @AfterClass
-    public static void tearDown() {
-        db.shutdown();
-    }
+//    @AfterClass
+//    public static void tearDown() {
+//        db.shutdown();
+//    }
 
 
     @Test

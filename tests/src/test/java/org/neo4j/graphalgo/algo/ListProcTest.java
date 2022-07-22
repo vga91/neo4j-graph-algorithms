@@ -25,14 +25,13 @@ import org.junit.Test;
 import org.neo4j.graphalgo.ListProc;
 import org.neo4j.graphalgo.PageRankProc;
 import org.neo4j.graphalgo.linkprediction.LinkPrediction;
-import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
-import org.neo4j.test.TestGraphDatabaseFactory;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -54,16 +53,16 @@ public class ListProcTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        Procedures procedures = DB.getDependencyResolver().resolveDependency(GlobalProcedures.class);
+        GlobalProcedures procedures = DB.getDependencyResolver().resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(ListProc.class);
         procedures.registerProcedure(PageRankProc.class);
         procedures.registerFunction(LinkPrediction.class);
     }
 
-    @AfterClass
-    public static void tearDown() {
-        DB.shutdown();
-    }
+//    @AfterClass
+//    public static void tearDown() {
+//        DB.shutdown();
+//    }
 
     @Test
     public void listProcedures() throws Exception {
@@ -81,10 +80,10 @@ public class ListProcTest {
     @Test
     public void listEmpty() throws Exception {
         assertEquals(ALL,
-                DB.executeTransactionally("CALL algo.list()").<String>columnAs("name").stream().collect(Collectors.toList()));
+                DB.executeTransactionally("CALL algo.list()", Map.of(), r -> r.<String>columnAs("name").stream().collect(Collectors.toList())));
     }
 
     private List<String> listProcs(Object name) {
-        return DB.executeTransactionally("CALL algo.list($name)", singletonMap("name", name)).<String>columnAs("name").stream().collect(Collectors.toList());
+        return DB.executeTransactionally("CALL algo.list($name)", singletonMap("name", name), r -> r.<String>columnAs("name").stream().collect(Collectors.toList()));
     }
 }

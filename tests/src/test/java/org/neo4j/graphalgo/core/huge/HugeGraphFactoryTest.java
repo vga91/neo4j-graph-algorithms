@@ -29,6 +29,7 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.stream.DoubleStream;
 import java.util.stream.LongStream;
 
@@ -54,9 +55,9 @@ public class HugeGraphFactoryTest {
                 "(n1)-[:REL1 {prop1: 1}]->(n2)," +
                 "(n1)-[:REL2 {prop2: 2}]->(n3)," +
                 "(n2)-[:REL3 {prop3: 3}]->(n3);");
-        id1 = DB.executeTransactionally("MATCH (n:Node1) RETURN id(n) AS id").<Long>columnAs("id").next();
-        id2 = DB.executeTransactionally("MATCH (n:Node2) RETURN id(n) AS id").<Long>columnAs("id").next();
-        id3 = DB.executeTransactionally("MATCH (n:Node3) RETURN id(n) AS id").<Long>columnAs("id").next();
+        id1 = DB.executeTransactionally("MATCH (n:Node1) RETURN id(n) AS id", Map.of(), r -> r.<Long>columnAs("id").next());
+        id2 = DB.executeTransactionally("MATCH (n:Node2) RETURN id(n) AS id", Map.of(), r -> r.<Long>columnAs("id").next());
+        id3 = DB.executeTransactionally("MATCH (n:Node3) RETURN id(n) AS id", Map.of(), r -> r.<Long>columnAs("id").next());
     }
 
     @Test

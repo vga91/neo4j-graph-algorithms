@@ -31,8 +31,10 @@ public abstract class StatementAction extends StatementApi implements RenamesCur
     public void run() {
         try (Revert ignored = RenamesCurrentThread.renameThread(threadName())) {
             acceptInTransaction(this);
-        } catch (Exception e) {
-            ExceptionUtil.throwIfUnchecked(e);
+        // todo - in 3.5 Exception.throwIfUnchecked block comment says "Do note that if the segment common code is missing, it's preferable to use this instead: catch (RuntimeException | Error e) {...}"
+        } catch (RuntimeException | Error e) {
+            throw e;
+        } catch (Throwable e) {
             throw new RuntimeException(e);
         }
     }

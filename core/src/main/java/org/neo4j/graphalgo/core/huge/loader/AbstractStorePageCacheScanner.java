@@ -28,6 +28,8 @@ import org.neo4j.internal.recordstorage.RecordStorageEngine;
 import org.neo4j.io.pagecache.PageCache;
 import org.neo4j.io.pagecache.PageCursor;
 import org.neo4j.io.pagecache.PagedFile;
+import org.neo4j.io.pagecache.context.CursorContext;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.impl.store.NeoStores;
 import org.neo4j.kernel.impl.store.RecordStore;
 import org.neo4j.kernel.impl.store.format.RecordFormat;
@@ -105,7 +107,9 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
 
         Cursor(PageCursor pageCursor, Record record) {
             this.lastPage = Math.max((((maxId - 1L) + ((long) recordsPerPage - 1L)) / (long) recordsPerPage) - 1L, 0L);
-            this.lastOffset = offsetForId(maxId, pageSize, recordSize);
+            
+            // TODO --- SHOULD BE configuration.get( GraphDatabaseInternalSettings.reserved_page_header_bytes ) INSTEAD OF 0
+            this.lastOffset = offsetForId(maxId, pageSize, recordSize, 0);
             this.pageCursor = pageCursor;
             this.record = record;
             this.offset = pageSize; // trigger page load as first action
@@ -252,7 +256,8 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
             do {
                 record.setInUse(false);
                 pageCursor.setOffset(offset);
-                recordFormat.read(record, pageCursor, RecordLoad.CHECK, recordSize);
+                // todo - test and investigate
+                recordFormat.read(record, pageCursor, RecordLoad.CHECK, recordSize, recordsPerPage);
             } while (pageCursor.shouldRetry());
             verifyLoad();
         }
@@ -295,6 +300,7 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
     private final RecordFormat<Record> recordFormat;
     private final RecordStore<Record> store;
     private final PagedFile pagedFile;
+    private final CursorContext cursorContext;
 
     AbstractStorePageCacheScanner(
             int prefetchSize,
@@ -303,7 +309,8 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
 
         DependencyResolver resolver = api.getDependencyResolver();
         NeoStores neoStores = resolver
-                .resolveDependency(RecordStorageEngine.class, SelectionStrategy.ONLY)
+                // todo - test SelectionStrategy.SINGLE instad of old ONLY
+                .resolveDependency(RecordStorageEngine.class, SelectionStrategy.SINGLE)
                 .testAccessNeoStores();
 
         RecordStore<Record> store = access.store(neoStores);
@@ -312,11 +319,12 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
         int pageSize = recordsPerPage * recordSize;
 
         PagedFile pagedFile = null;
-        PageCache pageCache = resolver.resolveDependency(PageCache.class, SelectionStrategy.ONLY);
+        PageCache pageCache = resolver.resolveDependency(PageCache.class, SelectionStrategy.SINGLE);
         String storeFileName = access.storeFileName();
         try {
             for (PagedFile pf : pageCache.listExistingMappings()) {
-                if (pf.file().getName().equals(storeFileName)) {
+                // todo - check path...
+                if (pf.path().getFileName().toString().equals(storeFileName)) {
                     pageSize = pf.pageSize();
                     recordsPerPage = pageSize / recordSize;
                     pagedFile = pf;
@@ -331,7 +339,8 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
         this.cursors = new ThreadLocal<>();
         this.recordSize = recordSize;
         this.recordsPerPage = recordsPerPage;
-        this.maxId = 1L + store.getHighestPossibleIdInUse();
+        this.cursorContext = api.getDependencyResolver().resolveDependency(KernelTransaction.class).cursorContext();
+        this.maxId = 1L + store.getHighestPossibleIdInUse(cursorContext);
         this.pageSize = pageSize;
         this.recordFormat = access.recordFormat(neoStores.getRecordFormats());
         this.store = store;
@@ -350,10 +359,10 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
             PageCursor pageCursor;
             try {
                 if (pagedFile != null) {
-                    pageCursor = pagedFile.io(next, PagedFile.PF_READ_AHEAD | PagedFile.PF_SHARED_READ_LOCK);
+                    pageCursor = pagedFile.io(next, PagedFile.PF_READ_AHEAD | PagedFile.PF_SHARED_READ_LOCK, cursorContext);
                 } else {
                     long recordId = next * (long) recordSize;
-                    pageCursor = store.openPageCursorForReading(recordId);
+                    pageCursor = store.openPageCursorForReading(recordId, cursorContext);
                 }
             } catch (IOException e) {
                 throw new UnderlyingStorageException(e);
@@ -367,9 +376,15 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
 
     final long storeSize() {
         if (pagedFile != null) {
-            return pagedFile.file().length();
+            // TODO - check here
+//            return pagedFile.file().length();
+            try {
+                return pagedFile.fileSize();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
-        long recordsInUse = 1L + store.getHighestPossibleIdInUse();
+        long recordsInUse = 1L + store.getHighestPossibleIdInUse(cursorContext);
         long idsInPages = ((recordsInUse + (recordsPerPage - 1L)) / recordsPerPage) * recordsPerPage;
         return idsInPages * (long) recordSize;
     }

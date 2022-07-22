@@ -108,15 +108,15 @@ public final class PageRankWikiTest {
     public static void setupGraph() {
         db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            dB.executeTransactionally(DB_CYPHER).close();
+            db.executeTransactionally(DB_CYPHER);
             tx.commit();
         }
     }
 
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        db.shutdown();
-    }
+//    @AfterClass
+//    public static void shutdownGraph() throws Exception {
+//        db.shutdown();
+//    }
 
     public PageRankWikiTest(
             Class<? extends GraphFactory> graphImpl,
@@ -141,7 +141,7 @@ public final class PageRankWikiTest {
             expected.put(tx.findNode(label, "name", "i").getId(), 0.15);
             expected.put(tx.findNode(label, "name", "j").getId(), 0.15);
             expected.put(tx.findNode(label, "name", "k").getId(), 0.15);
-            tx.close();
+            tx.commit();
         }
 
         final Graph graph = new GraphLoader(db)

@@ -65,7 +65,7 @@ public class YensKSharedPrefixMaxDepthTest {
                         " (e)-[:TYPE {cost:1.0}]->(f),\n" +
                         " (f)-[:TYPE {cost:1.0}]->(d)\n";
 
-        dB.executeTransactionally(cypher);
+        db.executeTransactionally(cypher);
         db.resolveDependency(GlobalProcedures.class).registerProcedure(KShortestPathsProc.class);
     }
 
@@ -80,8 +80,8 @@ public class YensKSharedPrefixMaxDepthTest {
         params.put("from", "d");
         params.put("to", "a");
         params.put("maxDepth", 5);
-        List<Object> paths = dB.executeTransactionally(cypher, params).stream().map(result -> result.get("path"))
-                .collect(Collectors.toList());
+        List<Object> paths = db.executeTransactionally(cypher, params, r -> r.stream().map(result -> result.get("path"))
+                .collect(Collectors.toList()));
 
         assertEquals("Number of paths to maxDepth=5 should be 1", 1, paths.size());
 
@@ -89,15 +89,15 @@ public class YensKSharedPrefixMaxDepthTest {
         params.put("from", "a");
         params.put("to", "d");
 
-        List<Object> pathsOtherDirection = dB.executeTransactionally(cypher, params).stream().map(result -> result.get("path"))
-                .collect(Collectors.toList());
+        List<Object> pathsOtherDirection = db.executeTransactionally(cypher, params, r -> r.stream().map(result -> result.get("path"))
+                .collect(Collectors.toList()));
 
         assertEquals("Number of paths to maxDepth=5 should be 1", 1, pathsOtherDirection.size());
 
         params.put("maxDepth", 6);
 
-        List<Object> pathsDepth6 = dB.executeTransactionally(cypher, params).stream().map(result -> result.get("path"))
-                .collect(Collectors.toList());
+        List<Object> pathsDepth6 = db.executeTransactionally(cypher, params, r -> r.stream().map(result -> result.get("path"))
+                .collect(Collectors.toList()));
 
         assertEquals("Number of paths to maxDepth=6 should be 2", 2, pathsDepth6.size());
     }

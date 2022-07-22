@@ -63,7 +63,7 @@ public final class LoadingTest {
 
     @Test
     public void testBasicLoading() {
-        dB.executeTransactionally("CREATE (a:Node {name:'a'})\n" +
+        db.executeTransactionally("CREATE (a:Node {name:'a'})\n" +
                 "CREATE (b:Node {name:'b'})\n" +
                 "CREATE (c:Node {name:'c'})\n" +
                 "CREATE (d:Node2 {name:'d'})\n" +

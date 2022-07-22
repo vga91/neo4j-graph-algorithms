@@ -32,6 +32,7 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * expected path OUTGOING:  abcf
@@ -73,10 +74,7 @@ public class DirectedDijkstraSPTest {
 
         api = TestDatabaseCreator.createTestDatabase();
 
-        try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
-            tx.commit();
-        }
+        api.executeTransactionally(cypher);
 
         graph = new GraphLoader(api)
                 .withNodeStatement("Node")
@@ -87,20 +85,19 @@ public class DirectedDijkstraSPTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if (api != null) api.shutdown();
         graph = null;
     }
 
 
     private static long id(String name) {
         try (Transaction transaction = api.beginTx()) {
-            return api.findNode(Label.label("Node"), "name", name).getId();
+            return transaction.findNode(Label.label("Node"), "name", name).getId();
         }
     }
 
     private static String name(long id) {
         final String[] name = {""};
-        api.execute(String.format("MATCH (n:Node) WHERE id(n)=%d RETURN n.name as name", id)).accept(row -> {
+        executeAndAccept(api, String.format("MATCH (n:Node) WHERE id(n)=%d RETURN n.name as name", id), row -> {
             name[0] = row.getString("name");
             return false;
         });

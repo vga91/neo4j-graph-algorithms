@@ -30,6 +30,8 @@ import org.neo4j.graphalgo.impl.walking.WalkResult;
 import org.neo4j.graphalgo.results.PageRankScore;
 import org.neo4j.graphdb.*;
 import org.neo4j.internal.kernel.api.NodeLabelIndexCursor;
+import org.neo4j.internal.kernel.api.Scan;
+import org.neo4j.internal.kernel.api.security.AccessMode;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
@@ -48,7 +50,10 @@ public class NodeWalkerProc  {
     public Log log;
 
     @Context
-    public KernelTransaction transaction;
+    public KernelTransaction kernelTransaction;
+
+    @Context
+    public Transaction transaction;
 
 
     @Procedure(name = "algo.randomWalk.stream", mode = Mode.READ)
@@ -87,7 +92,7 @@ public class NodeWalkerProc  {
                 new NodeWalker.RandomNextNodeStrategy(graph, graph) :
                 new NodeWalker.Node2VecStrategy(graph,graph, returnParam.doubleValue(), inOut.doubleValue());
 
-        TerminationFlag terminationFlag = TerminationFlag.wrap(transaction);
+        TerminationFlag terminationFlag = TerminationFlag.wrap(kernelTransaction);
 
         int concurrency = configuration.getConcurrency();
 
@@ -99,7 +104,7 @@ public class NodeWalkerProc  {
 
         Stream<long[]> randomWalks = new NodeWalker().randomWalk(graph, (int) steps, strategy, terminationFlag, concurrency, limit, idStream);
         return randomWalks
-                .map( nodes -> new WalkResult(nodes, returnPath ? WalkPath.toPath(api, nodes) : null));
+                .map( nodes -> new WalkResult(nodes, returnPath ? WalkPath.toPath(transaction, nodes) : null));
     }
 
 
@@ -107,20 +112,26 @@ public class NodeWalkerProc  {
         int nodeCount = Math.toIntExact(graph.nodeCount());
         if (start instanceof String) {
             String label = start.toString();
-            int labelId = transaction.tokenRead().nodeLabel(label);
-            int countWithLabel = Math.toIntExact(transaction.dataRead().countsForNodeWithoutTxState(labelId));
-            NodeLabelIndexCursor cursor = transaction.cursors().allocateNodeLabelIndexCursor();
-            transaction.dataRead().nodeLabelScan(labelId, cursor);
-            cursor.next();
-            LongStream ids;
-            if (limit == -1) {
-                ids = LongStream.range(0, countWithLabel).map( i -> cursor.next() ? cursor.nodeReference() : -1L );
-            } else {
-                int[] indexes = ThreadLocalRandom.current().ints(limit + 1, 0, countWithLabel).sorted().toArray();
-                IntStream deltas = IntStream.range(0, limit).map(i -> indexes[i + 1] - indexes[i]);
-                ids = deltas.mapToLong(delta -> { while (delta > 0 && cursor.next()) delta--;return cursor.nodeReference(); });
+            int labelId = kernelTransaction.tokenRead().nodeLabel(label);
+            int countWithLabel = Math.toIntExact(kernelTransaction.dataRead().countsForNodeWithoutTxState(labelId));
+            try (NodeLabelIndexCursor cursor = kernelTransaction.cursors().allocateNodeLabelIndexCursor(kernelTransaction.cursorContext())) {
+                final Scan<NodeLabelIndexCursor> nodeLabelIndexCursorScan = kernelTransaction.dataRead().nodeLabelScan(labelId);
+                // todo - investigate about 100
+                nodeLabelIndexCursorScan.reserveBatch(cursor, 100, kernelTransaction.cursorContext(), AccessMode.Static.READ);
+                cursor.next();
+                LongStream ids;
+                if (limit == -1) {
+                    ids = LongStream.range(0, countWithLabel).map(i -> cursor.next() ? cursor.nodeReference() : -1L);
+                } else {
+                    int[] indexes = ThreadLocalRandom.current().ints(limit + 1, 0, countWithLabel).sorted().toArray();
+                    IntStream deltas = IntStream.range(0, limit).map(i -> indexes[i + 1] - indexes[i]);
+                    ids = deltas.mapToLong(delta -> {
+                        while (delta > 0 && cursor.next()) delta--;
+                        return cursor.nodeReference();
+                    });
+                }
+                return ids.mapToInt(graph::toMappedNodeId).onClose(cursor::close);
             }
-            return ids.mapToInt(graph::toMappedNodeId).onClose(cursor::close);
         } else if (start instanceof Collection) {
             return ((Collection)start).stream().mapToLong(e -> ((Number)e).longValue()).mapToInt(graph::toMappedNodeId);
         } else if (start instanceof Number) {

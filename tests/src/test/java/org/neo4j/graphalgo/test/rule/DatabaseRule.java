@@ -47,6 +47,13 @@ public abstract class DatabaseRule extends ExternalResource implements GraphData
         return this;
     }
 
+    public void executeAndCommit(Consumer<Transaction> consumer) {
+        this.transaction((t) -> {
+            consumer.accept(t);
+            return null;
+        }, true);
+    }
+
     public <T> T executeAndCommit( Function<Transaction, T> function )
     {
         return transaction( function, true );
@@ -174,12 +181,12 @@ public abstract class DatabaseRule extends ExternalResource implements GraphData
             ensureStarted();
         }
     }
-
-    @Override
-    protected void after( boolean success )
-    {
-        shutdown( success );
-    }
+//
+//    @Override
+//    protected void after( boolean success )
+//    {
+//        shutdown( success );
+//    }
 
     private void create()
     {
@@ -257,7 +264,7 @@ public abstract class DatabaseRule extends ExternalResource implements GraphData
      * If this method is called when a database is already started an {@link IllegalStateException} will be thrown since the setting
      * will have no effect, instead letting the developer notice that and change the test code.
      */
-    public <T> DatabaseRule withSetting( Setting<T> key, T value )
+    public <T> DatabaseRule setConfig(Setting<T> key, T value )
     {
         if ( database != null )
         {
@@ -280,9 +287,9 @@ public abstract class DatabaseRule extends ExternalResource implements GraphData
     /**
      * Applies all settings in the settings map.
      *
-     * @see #withSetting(Setting, Object)
+     * @see #setConfig(Setting, Object)
      */
-    public DatabaseRule withSettings( Map<Setting<?>,Object> configuration )
+    public DatabaseRule setConfig(Map<Setting<?>,Object> configuration )
     {
         if ( database != null )
         {

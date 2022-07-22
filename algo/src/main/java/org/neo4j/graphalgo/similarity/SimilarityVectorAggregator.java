@@ -19,7 +19,6 @@
 package org.neo4j.graphalgo.similarity;
 
 import org.neo4j.graphdb.Node;
-import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.UserAggregationResult;
 import org.neo4j.procedure.UserAggregationUpdate;
@@ -36,7 +35,7 @@ public class SimilarityVectorAggregator {
     @UserAggregationUpdate
     public void next(
             @Name("node") Node node, @Name("weight") double weight) {
-        vector.add(MapUtil.map(CATEGORY_KEY, node.getId(), WEIGHT_KEY, weight));
+        vector.add(Map.of(CATEGORY_KEY, node.getId(), WEIGHT_KEY, weight));
     }
 
     @UserAggregationResult

@@ -36,6 +36,7 @@ import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * @author mknblch
@@ -68,18 +69,13 @@ public class StronglyConnectedComponentsProcIntegrationTest {
         db = TestDatabaseCreator.createTestDatabase();
 
         try (Transaction tx = db.beginTx()) {
-            dB.executeTransactionally(cypher);
+            db.executeTransactionally(cypher);
             tx.commit();
         }
 
         db.getDependencyResolver()
                 .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(StronglyConnectedComponentsProc.class);
-    }
-
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
     }
 
     @Parameterized.Parameters(name = "{0}")
@@ -96,8 +92,8 @@ public class StronglyConnectedComponentsProcIntegrationTest {
 
     @Test
     public void testScc() throws Exception {
-        dB.executeTransactionally("CALL algo.scc('Node', 'TYPE', {write:true, graph:'"+graphImpl+"'}) YIELD loadMillis, computeMillis, writeMillis, setCount, maxSetSize, minSetSize, partitionProperty, writeProperty")
-                .accept(row -> {
+        executeAndAccept(db, "CALL algo.scc('Node', 'TYPE', {write:true, graph:'"+graphImpl+"'}) YIELD loadMillis, computeMillis, writeMillis, setCount, maxSetSize, minSetSize, partitionProperty, writeProperty", 
+                row -> {
                     assertNotEquals(-1L, row.getNumber("computeMillis").longValue());
                     assertNotEquals(-1L, row.getNumber("writeMillis").longValue());
                     assertEquals(2, row.getNumber("setCount").longValue());
@@ -112,8 +108,8 @@ public class StronglyConnectedComponentsProcIntegrationTest {
 
     @Test
     public void explicitWriteProperty() throws Exception {
-        dB.executeTransactionally("CALL algo.scc('Node', 'TYPE', {write:true, graph:'"+graphImpl+"', writeProperty: 'scc'}) YIELD loadMillis, computeMillis, writeMillis, setCount, maxSetSize, minSetSize, partitionProperty, writeProperty")
-                .accept(row -> {
+        executeAndAccept(db, "CALL algo.scc('Node', 'TYPE', {write:true, graph:'"+graphImpl+"', writeProperty: 'scc'}) YIELD loadMillis, computeMillis, writeMillis, setCount, maxSetSize, minSetSize, partitionProperty, writeProperty",
+                row -> {
                     assertNotEquals(-1L, row.getNumber("computeMillis").longValue());
                     assertNotEquals(-1L, row.getNumber("writeMillis").longValue());
                     assertEquals(2, row.getNumber("setCount").longValue());

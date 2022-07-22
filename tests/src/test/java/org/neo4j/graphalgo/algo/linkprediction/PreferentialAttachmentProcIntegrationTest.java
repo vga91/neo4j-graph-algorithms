@@ -21,15 +21,16 @@ package org.neo4j.graphalgo.algo.linkprediction;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.neo4j.configuration.GraphDatabaseSettings;
 import org.neo4j.graphalgo.linkprediction.LinkPrediction;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.test.TestGraphDatabaseFactory;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -59,22 +60,20 @@ public class PreferentialAttachmentProcIntegrationTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        db = new TestGraphDatabaseFactory()
-                .newImpermanentDatabaseBuilder()
-                .setConfig(GraphDatabaseSettings.procedure_unrestricted,"algo.*")
-                .newGraphDatabase();
+        db = new ImpermanentDatabaseRule()
+                .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of("algo.*"));
 
         ((GraphDatabaseAPI) db).getDependencyResolver()
                 .resolveDependency(GlobalProcedures.class)
                 .registerFunction(LinkPrediction.class);
 
-        dB.executeTransactionally(SETUP).close();
+        db.executeTransactionally(SETUP);
     }
 
-    @AfterClass
-    public static void tearDown() {
-        db.shutdown();
-    }
+//    @AfterClass
+//    public static void tearDown() {
+//        db.shutdown();
+//    }
 
     @Test
     public void sameNodesHaveDegreeSquared() throws Exception {
@@ -85,7 +84,7 @@ public class PreferentialAttachmentProcIntegrationTest {
                         "       16.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = dB.executeTransactionally(controlQuery);
+            Result result = tx.execute(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -101,7 +100,7 @@ public class PreferentialAttachmentProcIntegrationTest {
                 "       0.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = dB.executeTransactionally(controlQuery);
+            Result result = tx.execute(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -116,7 +115,7 @@ public class PreferentialAttachmentProcIntegrationTest {
                         "       1.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = dB.executeTransactionally(controlQuery);
+            Result result = tx.execute(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -131,7 +130,7 @@ public class PreferentialAttachmentProcIntegrationTest {
                         "       16.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = dB.executeTransactionally(controlQuery);
+            Result result = tx.execute(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -146,7 +145,7 @@ public class PreferentialAttachmentProcIntegrationTest {
                         "      2.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = dB.executeTransactionally(controlQuery);
+            Result result = tx.execute(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -162,7 +161,7 @@ public class PreferentialAttachmentProcIntegrationTest {
                         "      1.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = dB.executeTransactionally(controlQuery);
+            Result result = tx.execute(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }

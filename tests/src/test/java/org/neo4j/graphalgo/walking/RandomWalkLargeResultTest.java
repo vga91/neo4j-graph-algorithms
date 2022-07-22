@@ -21,14 +21,15 @@ package org.neo4j.graphalgo.walking;
 import org.junit.*;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphdb.*;
-import org.neo4j.helpers.collection.Iterators;
 import org.neo4j.exceptions.KernelException;
+import org.neo4j.internal.helpers.collection.Iterators;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -46,13 +47,13 @@ public class RandomWalkLargeResultTest {
         db = TestDatabaseCreator.createTestDatabase();
         db.getDependencyResolver().resolveDependency(GlobalProcedures.class).registerProcedure(NodeWalkerProc.class);
 
-        dB.executeTransactionally(buildDatabaseQuery(), Collections.singletonMap("count",NODE_COUNT)).close();
+        db.executeTransactionally(buildDatabaseQuery(), Collections.singletonMap("count",NODE_COUNT));
     }
-
-    @AfterClass
-    public static void AfterClass() {
-        db.shutdown();
-    }
+//
+//    @AfterClass
+//    public static void AfterClass() {
+//        db.shutdown();
+//    }
 
     @Before
     public void setUp() throws Exception {
@@ -74,8 +75,8 @@ public class RandomWalkLargeResultTest {
 
     @Test
     public void shouldHandleLargeResults() {
-        Result results = dB.executeTransactionally("CALL algo.randomWalk.stream(null, 100, 100000)");
+        Result results = db.executeTransactionally("CALL algo.randomWalk.stream(null, 100, 100000)", Map.of(), r -> r);
 
-        assertEquals(100000,Iterators.count(results));
+        assertEquals(100000, Iterators.count(results));
     }
 }

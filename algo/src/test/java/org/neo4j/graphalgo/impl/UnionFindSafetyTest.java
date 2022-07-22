@@ -18,6 +18,7 @@
  */
 package org.neo4j.graphalgo.impl;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -72,7 +73,7 @@ public final class UnionFindSafetyTest {
                     10
             );
         } catch (Throwable e) {
-            assertSame(error, ExceptionUtil.rootCause(e));
+            assertSame(error, ExceptionUtils.getRootCause(e));
         }
     }
 
@@ -89,7 +90,7 @@ public final class UnionFindSafetyTest {
                     10
             );
         } catch (Throwable e) {
-            assertSame(error, ExceptionUtil.rootCause(e));
+            assertSame(error, ExceptionUtils.getRootCause(e));
         }
     }
 

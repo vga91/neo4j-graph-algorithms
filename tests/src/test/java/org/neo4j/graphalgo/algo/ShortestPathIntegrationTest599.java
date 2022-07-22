@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
@@ -80,7 +81,7 @@ public class ShortestPathIntegrationTest599 {
                 "  ,(v6)-[:EDGE {WEIGHT: 23.0}]->(v7)\n" +
                 "  ,(v1)-[:EDGE {WEIGHT: 5.0}]->(v4)\n" +
                 "";
-        db_599.execute(create);
+        db_599.executeTransactionally(create);
 
         final String totalCostCommand = "" +
                 "MATCH (startNode {VID: 1}), (endNode {VID: 4})\n" +
@@ -89,11 +90,11 @@ public class ShortestPathIntegrationTest599 {
                 "RETURN totalCost\n";
 
         double totalCost = db_599
-                .execute(totalCostCommand)
-                .<Double>columnAs("totalCost")
+                .executeTransactionally(totalCostCommand, Map.of(),
+                r -> r.<Double>columnAs("totalCost")
                 .stream()
                 .findFirst()
-                .orElse(Double.NaN);
+                .orElse(Double.NaN));
 
         assertEquals(4.0, totalCost, 1e-4);
 
@@ -113,7 +114,7 @@ public class ShortestPathIntegrationTest599 {
                 is(4L), is(4.0));
         Iterator<Matcher<Number>> expected = expectedList.iterator();
 
-        final Result pathResult = db_599.execute(pathCommand);
+        final Result pathResult = db_599.executeTransactionally(pathCommand, Map.of(), r -> r);
         pathResult.forEachRemaining(res -> {
             assertThat((Number) res.get("id"), expected.next());
             assertThat((Number) res.get("weight"), expected.next());

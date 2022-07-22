@@ -34,13 +34,4 @@ public class TestUtil {
     private static GlobalProcedures getGlobalProcs(GraphDatabaseAPI db) {
         return db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
     }
-
-
-    public static void executeAndAccept(GraphDatabaseService db, String cypher, Result.ResultVisitor<RuntimeException> visitor) {
-        try (Transaction tx = db.beginTx()) {
-            final Result execute = tx.execute(cypher);
-            execute.accept(visitor);
-            tx.commit();
-        }
-    }
 }

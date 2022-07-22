@@ -27,12 +27,12 @@ import org.neo4j.graphalgo.core.DuplicateRelationshipsStrategy;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 public class HeavyCypherGraphFactoryDeduplicationTest {
 
@@ -46,21 +46,15 @@ public class HeavyCypherGraphFactoryDeduplicationTest {
 
         db = TestDatabaseCreator.createTestDatabase();
 
-        dB.executeTransactionally(
-                "MERGE (n1 {id: 1}) " + "" +
-                   "MERGE (n2 {id: 2}) " +
-                   "CREATE (n1)-[:REL {weight: 4}]->(n2) " +
-                   "CREATE (n2)-[:REL {weight: 10}]->(n1) " +
-                   "RETURN id(n1) AS id1, id(n2) AS id2").accept(row -> {
+        executeAndAccept(db, "MERGE (n1 {id: 1}) " + "" +
+                "MERGE (n2 {id: 2}) " +
+                "CREATE (n1)-[:REL {weight: 4}]->(n2) " +
+                "CREATE (n2)-[:REL {weight: 10}]->(n1) " +
+                "RETURN id(n1) AS id1, id(n2) AS id2", row -> {
             id1 = row.getNumber("id1").intValue();
             id2 = row.getNumber("id2").intValue();
             return true;
         });
-    }
-
-    @AfterClass
-    public static void tearDown() {
-        db.shutdown();
     }
 
 

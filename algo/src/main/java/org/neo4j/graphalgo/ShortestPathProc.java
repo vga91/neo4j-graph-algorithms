@@ -34,6 +34,7 @@ import org.neo4j.graphalgo.impl.ShortestPathDijkstra;
 import org.neo4j.graphalgo.results.DijkstraResult;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
@@ -52,12 +53,15 @@ public class ShortestPathProc {
 
     @Context
     public GraphDatabaseAPI api;
+    
+    @Context
+    public Transaction transaction;
 
     @Context
     public Log log;
 
     @Context
-    public KernelTransaction transaction;
+    public KernelTransaction kernelTransaction;
 
     /**
      * single threaded dijkstra impl.
@@ -73,7 +77,7 @@ public class ShortestPathProc {
      */
     @Procedure("algo.shortestPath.stream")
     @Description("CALL algo.shortestPath.stream(startNode:Node, endNode:Node, weightProperty:String" +
-            "{nodeQuery:'labelName', relationshipQuery:'relationshipName', direction:'BOTH', defaultValue:1.0}) " +
+            "{nodeQuery:'labelName', relationshipQuery:'relationshipName', directHugeMultiSourceBFSTestion:'BOTH', defaultValue:1.0}) " +
             "YIELD nodeId, cost - yields a stream of {nodeId, cost} from start to end (inclusive)")
     public Stream<ShortestPathDijkstra.Result> dijkstraStream(
             @Name("startNode") Node startNode,
@@ -109,7 +113,7 @@ public class ShortestPathProc {
 
         return new ShortestPathDijkstra(graph)
                 .withProgressLogger(ProgressLogger.wrap(log, "ShortestPath(Dijkstra)"))
-                .withTerminationFlag(TerminationFlag.wrap(transaction))
+                .withTerminationFlag(TerminationFlag.wrap(kernelTransaction))
                 .compute(startNode.getId(), endNode.getId(), direction)
                 .resultStream();
     }
@@ -160,7 +164,7 @@ public class ShortestPathProc {
         try (ProgressTimer timer = builder.timeEval()) {
             dijkstra = new ShortestPathDijkstra(graph)
                     .withProgressLogger(ProgressLogger.wrap(log, "ShortestPath(Dijkstra)"))
-                    .withTerminationFlag(TerminationFlag.wrap(transaction))
+                    .withTerminationFlag(TerminationFlag.wrap(kernelTransaction))
                     .compute(startNode.getId(), endNode.getId(), direction);
             builder.withNodeCount(dijkstra.getPathLength())
                     .withTotalCosts(dijkstra.getTotalCost());
@@ -221,9 +225,9 @@ public class ShortestPathProc {
                 return Stream.empty();
             }
 
-    		return new ShortestPathAStar(graph, api)
+    		return new ShortestPathAStar(graph, transaction)
     				.withProgressLogger(ProgressLogger.wrap(log, "ShortestPath(AStar)"))
-    				.withTerminationFlag(TerminationFlag.wrap(transaction))
+    				.withTerminationFlag(TerminationFlag.wrap(kernelTransaction))
     				.compute(startNode.getId(), endNode.getId(), propertyKeyLat, propertyKeyLon, direction)
     				.resultStream();
     }

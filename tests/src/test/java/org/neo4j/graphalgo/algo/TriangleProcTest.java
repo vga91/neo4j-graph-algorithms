@@ -40,6 +40,7 @@ import static org.mockito.Matchers.longThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  *      (a)--(b)-(d)--(e)
@@ -91,8 +92,11 @@ public class TriangleProcTest {
                 .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(TriangleProc.class);
 
+        // todo - execute transactionally???
+        // todo - execute transactionally???
+        // todo - execute transactionally???
         try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
+            tx.execute(cypher);
             tx.commit();
         }
 
@@ -100,15 +104,10 @@ public class TriangleProcTest {
 
         try (Transaction tx = api.beginTx()) {
             for (int i = 0; i < 9; i++) {
-                final String name = (String) api.getNodeById(i).getProperty("name");
+                final String name = (String) tx.getNodeById(i).getProperty("name");
                 idToName[i] = name;
             }
         }
-    }
-
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        if (api != null) api.shutdown();
     }
 
     private static int idsum(String... names) {
@@ -142,7 +141,7 @@ public class TriangleProcTest {
         });
 
         final String request = "MATCH (n) WHERE exists(n.triangles) RETURN n.triangles as t";
-        api.execute(request).accept(row -> {
+        executeAndAccept(api, request, row -> {
             final int triangles = row.getNumber("t").intValue();
             assertEquals(1, triangles);
             return true;
@@ -169,7 +168,7 @@ public class TriangleProcTest {
         });
 
         final String request = "MATCH (n) WHERE exists(n.triangles) RETURN n.triangles as t";
-        api.execute(request).accept(row -> {
+        executeAndAccept(api, request, row -> {
             final int triangles = row.getNumber("t").intValue();
             assertEquals(1, triangles);
             return true;

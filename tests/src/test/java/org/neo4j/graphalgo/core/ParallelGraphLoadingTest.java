@@ -36,7 +36,7 @@ import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.helpers.collection.Iterables;
+import org.neo4j.internal.helpers.collection.Iterables;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.lang.invoke.MethodHandle;
@@ -63,6 +63,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withTx;
 
 @RunWith(Parameterized.class)
 public class ParallelGraphLoadingTest extends RandomGraphTestCase {
@@ -102,10 +103,10 @@ public class ParallelGraphLoadingTest extends RandomGraphTestCase {
     @Test
     public void shouldLoadSparseNodes() throws Exception {
         GraphDatabaseAPI largerGraph = buildGraph(PageUtil.pageSizeFor(Long.BYTES) << 1);
-        try {
+//        try {
             Graph sparseGraph = load(largerGraph, l -> l.withLabel("Label2"));
             try (Transaction tx = largerGraph.beginTx();
-                 Stream<Node> nodes = largerGraph
+                 Stream<Node> nodes = tx
                          .findNodes(Label.label("Label2"))
                          .stream()) {
                 nodes.forEach(n -> {
@@ -116,9 +117,9 @@ public class ParallelGraphLoadingTest extends RandomGraphTestCase {
                 });
                 tx.commit();
             }
-        } finally {
-            largerGraph.shutdown();
-        }
+//        } finally {
+//            largerGraph.shutdown();
+//        }
     }
 
     @Test
@@ -133,7 +134,7 @@ public class ParallelGraphLoadingTest extends RandomGraphTestCase {
         } else {
             final Set<Long> nodeIds;
             try (Transaction tx = db.beginTx()) {
-                nodeIds = db.getAllNodes().stream()
+                nodeIds = tx.getAllNodes().stream()
                         .map(Node::getId)
                         .collect(Collectors.toSet());
                 tx.commit();
@@ -188,7 +189,7 @@ public class ParallelGraphLoadingTest extends RandomGraphTestCase {
     }
 
     private void testRelationships(int nodeId, final Direction direction) {
-        final Node node = db.getNodeById(graph.toOriginalNodeId(nodeId));
+        final Node node = withTx(db, tx -> tx.getNodeById(graph.toOriginalNodeId(nodeId)));
         final Map<Long, Relationship> relationships = Iterables
                 .stream(node.getRelationships(direction))
                 .collect(Collectors.toMap(

@@ -129,7 +129,7 @@ final class LoadAllRelationships implements LoadRelationships {
 
     @Override
     public int degreeUndirected(final NodeCursor cursor) {
-        return NodesHelper.countUndirected(cursor, cursors);
+        return NodesHelper.countUndirected(cursor, cursors, cursorContext);
     }
 
     @Override
@@ -195,7 +195,7 @@ final class LoadRelationshipsOfSingleType implements LoadRelationships {
 
     @Override
     public int degreeUndirected(final NodeCursor cursor) {
-        return NodesHelper.countUndirected(cursor, cursors, type);
+        return NodesHelper.countUndirected(cursor, cursors, type, cursorContext);
     }
 
     @Override

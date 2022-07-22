@@ -88,9 +88,9 @@ public class RelationshipPredicateTest {
                 " (c)-[:TYPE]->(a)");
 
         try (Transaction transaction = DB.beginTx()) {
-            nodeA = tx.findNode(LABEL, "name", "a").getId();
-            nodeB = tx.findNode(LABEL, "name", "b").getId();
-            nodeC = tx.findNode(LABEL, "name", "c").getId();
+            nodeA = transaction.findNode(LABEL, "name", "a").getId();
+            nodeB = transaction.findNode(LABEL, "name", "b").getId();
+            nodeC = transaction.findNode(LABEL, "name", "c").getId();
             transaction.commit();
         };
     }

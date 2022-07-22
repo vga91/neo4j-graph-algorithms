@@ -42,13 +42,13 @@ public class WalkPath implements Path {
         this.size = size;
     }
 
-    public static Path toPath(GraphDatabaseAPI api, long[] nodes) {
+    public static Path toPath(Transaction tx, long[] nodes) {
         if (nodes.length == 0) return EMPTY;
         WalkPath result = new WalkPath(nodes.length);
-        Node node = api.getNodeById(nodes[0]);
+        Node node = tx.getNodeById(nodes[0]);
         result.addNode(node);
         for (int i = 1; i < nodes.length; i++) {
-            Node nextNode = api.getNodeById(nodes[i]);
+            Node nextNode = tx.getNodeById(nodes[i]);
             result.addRelationship(new VirtualRelationship(node, nextNode, NEXT));
             result.addNode(nextNode);
             node = nextNode;
@@ -56,13 +56,13 @@ public class WalkPath implements Path {
         return result;
     }
 
-    public static Path toPath(GraphDatabaseAPI api, long[] nodes, double[] costs) {
+    public static Path toPath(Transaction tx, long[] nodes, double[] costs) {
         if (nodes.length == 0) return EMPTY;
         WalkPath result = new WalkPath(nodes.length);
-        Node node = api.getNodeById(nodes[0]);
+        Node node = tx.getNodeById(nodes[0]);
         result.addNode(node);
         for (int i = 1; i < nodes.length; i++) {
-            Node nextNode = api.getNodeById(nodes[i]);
+            Node nextNode = tx.getNodeById(nodes[i]);
             VirtualRelationship relationship = new VirtualRelationship(node, nextNode, NEXT);
             relationship.setProperty("cost", costs[i-1]);
             result.addRelationship(relationship);
@@ -130,17 +130,18 @@ public class WalkPath implements Path {
     }
 
     @Override
-    public Iterator<PropertyContainer> iterator() {
-        return new Iterator<PropertyContainer>() {
+    public Iterator<Entity> iterator() {
+        return new Iterator<>() {
             int i = 0;
+
             @Override
             public boolean hasNext() {
                 return i < 2 * size;
             }
 
             @Override
-            public PropertyContainer next() {
-                PropertyContainer pc = i % 2 == 0 ? nodes.get(i / 2) : relationships.get(i / 2);
+            public Entity next() {
+                Entity pc = i % 2 == 0 ? nodes.get(i / 2) : relationships.get(i / 2);
                 i++;
                 return pc;
             }

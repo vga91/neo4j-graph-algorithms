@@ -38,6 +38,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  *  (A)-->(B)-->(C)-->(D)-->(E)
@@ -69,7 +70,7 @@ public class BetweennessCentralityTest {
         db = TestDatabaseCreator.createTestDatabase();
 
         try (Transaction tx = db.beginTx()) {
-            dB.executeTransactionally(cypher);
+            db.executeTransactionally(cypher);
             tx.commit();
         }
 
@@ -87,14 +88,13 @@ public class BetweennessCentralityTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
         graph = null;
     }
 
     private String name(long id) {
         String[] name = {""};
-        dB.executeTransactionally("MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name")
-                .accept(row -> {
+        executeAndAccept(db, "MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name",
+                row -> {
                     name[0] = row.getString("name");
                     return false;
                 });

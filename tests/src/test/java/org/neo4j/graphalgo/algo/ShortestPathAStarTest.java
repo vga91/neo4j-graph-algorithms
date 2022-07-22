@@ -19,6 +19,8 @@
 package org.neo4j.graphalgo.algo;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withTx;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,7 +87,7 @@ public class ShortestPathAStarTest {
 
         db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            dB.executeTransactionally(createGraph).close();
+            db.executeTransactionally(createGraph);
             tx.commit();
         }
         
@@ -93,11 +95,6 @@ public class ShortestPathAStarTest {
         .resolveDependency(GlobalProcedures.class)
         .registerProcedure(ShortestPathProc.class);
 	}
-	
-	@AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
 	
 	@Test
     public void testAStarResult() throws Exception {
@@ -107,13 +104,11 @@ public class ShortestPathAStarTest {
 				1652.0, 2392.0, 2979.0);
 		final List<String> actualNode = new ArrayList<String>();
 		final List<Double> actualDistance = new ArrayList<Double>(); 
-        dB.executeTransactionally(
-                "MATCH (start:Node{name:'SINGAPORE'}), (end:Node{name:'CHIBA'}) " +
-                        "CALL algo.shortestPath.astar.stream(start, end, 'cost') " +
-                        "YIELD nodeId, cost RETURN nodeId, cost ")
-                .accept(row -> {
+		executeAndAccept(db, "MATCH (start:Node{name:'SINGAPORE'}), (end:Node{name:'CHIBA'}) " +
+                "CALL algo.shortestPath.astar.stream(start, end, 'cost') " +
+                "YIELD nodeId, cost RETURN nodeId, cost ", row -> {
                     long nodeId = row.getNumber("nodeId").longValue();
-                    Node node = db.getNodeById(nodeId);
+                    Node node = withTx(db, tx -> tx.getNodeById(nodeId));
                     String nodeName = (String) node.getProperty("name");
                     double distance = row.getNumber("cost").doubleValue();
                     actualNode.add(nodeName);

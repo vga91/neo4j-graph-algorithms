@@ -23,10 +23,11 @@ import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
+import org.neo4j.configuration.GraphDatabaseSettings;
+import org.neo4j.dbms.api.DatabaseManagementService;
+import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.config.Setting;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.io.ByteUnit;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
@@ -47,15 +48,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
-import static org.neo4j.kernel.configuration.Settings.BOOLEAN;
-import static org.neo4j.kernel.configuration.Settings.setting;
+import static org.neo4j.configuration.SettingImpl.newBuilder;
+import static org.neo4j.configuration.SettingValueParsers.BOOL;
+
 
 public final class LdbcDownloader {
 
     private static Path DEFAULT_TEMP_DIR;
     private static final Map<String, S3Location> FILES;
 
-    private static final Setting<Boolean> udc = setting( "dbms.udc.enabled", BOOLEAN, "true" );
+    private static final Setting<Boolean> udc = newBuilder( "dbms.udc.enabled", BOOL, true ).build();
 
     static {
         FILES = new HashMap<>();
@@ -107,13 +109,16 @@ public final class LdbcDownloader {
     }
 
     private static GraphDatabaseAPI openDb(Path dbLocation, final String pageCache) {
-        GraphDatabaseService db = new GraphDatabaseFactory()
-                .newEmbeddedDatabaseBuilder(dbLocation.toFile())
+//        new DatabaseManagementService()
+        
+        // todo - deprecato..
+        final DatabaseManagementService build = new DatabaseManagementServiceBuilder(dbLocation.toFile())
                 .setConfig(GraphDatabaseSettings.pagecache_memory, pageCache)
-                .setConfig(GraphDatabaseSettings.allow_upgrade, "true")
-                .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
-                .setConfig(udc, "false")
-                .newGraphDatabase();
+                .setConfig(GraphDatabaseSettings.allow_upgrade, true)
+                .setConfig(udc, false)
+                .build();
+        GraphDatabaseService db = build.database("neo4j");
+//                .newGraphDatabase();
         return (GraphDatabaseAPI) db;
     }
 

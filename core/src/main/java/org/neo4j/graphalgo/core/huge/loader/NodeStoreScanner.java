@@ -18,7 +18,7 @@
  */
 package org.neo4j.graphalgo.core.huge.loader;
 
-import org.neo4j.io.layout.DatabaseFile;
+import org.neo4j.io.layout.recordstorage.RecordDatabaseFile;
 import org.neo4j.kernel.impl.store.NeoStores;
 import org.neo4j.kernel.impl.store.NodeStore;
 import org.neo4j.kernel.impl.store.RecordStore;
@@ -42,7 +42,7 @@ public final class NodeStoreScanner extends AbstractStorePageCacheScanner<NodeRe
 
         @Override
         public String storeFileName() {
-            return DatabaseFile.NODE_STORE.getName();
+            return RecordDatabaseFile.NODE_STORE.getName();
         }
 
         @Override

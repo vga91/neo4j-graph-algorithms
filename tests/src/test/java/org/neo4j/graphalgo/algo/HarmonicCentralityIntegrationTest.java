@@ -37,6 +37,7 @@ import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
 /**
@@ -102,8 +103,8 @@ public class HarmonicCentralityIntegrationTest {
     @Test
     public void testHarmonicStream() throws Exception {
 
-        dB.executeTransactionally("CALL algo.closeness.harmonic.stream('Node', 'TYPE') YIELD nodeId, centrality")
-                .accept((Result.ResultVisitor<Exception>) row -> {
+        executeAndAccept(db, "CALL algo.closeness.harmonic.stream('Node', 'TYPE') YIELD nodeId, centrality",
+                row -> {
                     consumer.accept(
                             row.getNumber("nodeId").longValue(),
                             row.getNumber("centrality").doubleValue());
@@ -117,8 +118,8 @@ public class HarmonicCentralityIntegrationTest {
     @Test
     public void testHugeHarmonicStream() throws Exception {
 
-        dB.executeTransactionally("CALL algo.closeness.harmonic.stream('Node', 'TYPE', {graph:'huge'}) YIELD nodeId, centrality")
-                .accept((Result.ResultVisitor<Exception>) row -> {
+        executeAndAccept(db, "CALL algo.closeness.harmonic.stream('Node', 'TYPE', {graph:'huge'}) YIELD nodeId, centrality",
+                row -> {
                     consumer.accept(
                             row.getNumber("nodeId").longValue(),
                             row.getNumber("centrality").doubleValue());
@@ -131,17 +132,17 @@ public class HarmonicCentralityIntegrationTest {
     @Test
     public void testHarmonicWrite() throws Exception {
 
-        dB.executeTransactionally("CALL algo.closeness.harmonic('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
-                "nodes, loadMillis, computeMillis, writeMillis")
-                .accept((Result.ResultVisitor<Exception>) row -> {
+        executeAndAccept(db, "CALL algo.closeness.harmonic('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
+                "nodes, loadMillis, computeMillis, writeMillis",
+                row -> {
                     assertNotEquals(-1L, row.getNumber("writeMillis"));
                     assertNotEquals(-1L, row.getNumber("computeMillis"));
                     assertNotEquals(-1L, row.getNumber("nodes"));
                     return true;
                 });
 
-        dB.executeTransactionally("MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality")
-                .accept(row -> {
+        executeAndAccept(db, "MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality",
+                row -> {
                     consumer.accept(
                             row.getNumber("id").longValue(),
                             row.getNumber("centrality").doubleValue());
@@ -154,17 +155,17 @@ public class HarmonicCentralityIntegrationTest {
     @Test
     public void testHugeHarmonicWrite() throws Exception {
 
-        dB.executeTransactionally("CALL algo.closeness.harmonic('','', {write:true, stats:true, writeProperty:'centrality', graph:'huge'}) YIELD " +
-                "nodes, loadMillis, computeMillis, writeMillis")
-                .accept((Result.ResultVisitor<Exception>) row -> {
+        executeAndAccept(db, "CALL algo.closeness.harmonic('','', {write:true, stats:true, writeProperty:'centrality', graph:'huge'}) YIELD " +
+                "nodes, loadMillis, computeMillis, writeMillis",
+                row -> {
                     assertNotEquals(-1L, row.getNumber("writeMillis"));
                     assertNotEquals(-1L, row.getNumber("computeMillis"));
                     assertNotEquals(-1L, row.getNumber("nodes"));
                     return true;
                 });
 
-        dB.executeTransactionally("MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality")
-                .accept(row -> {
+        executeAndAccept(db, "MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality",
+                row -> {
                     consumer.accept(
                             row.getNumber("id").longValue(),
                             row.getNumber("centrality").doubleValue());

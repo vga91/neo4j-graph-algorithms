@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  *   .0                 .0
@@ -95,7 +96,7 @@ public class BetweennessCentralityTest2 {
         db = TestDatabaseCreator.createTestDatabase();
 
         try (Transaction tx = db.beginTx()) {
-            dB.executeTransactionally(cypher);
+            db.executeTransactionally(cypher);
             tx.commit();
         }
 
@@ -112,14 +113,13 @@ public class BetweennessCentralityTest2 {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
         graph = null;
     }
 
     private String name(long id) {
         String[] name = {""};
-        dB.executeTransactionally("MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name")
-                .accept(row -> {
+        executeAndAccept(db, "MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name",
+                row -> {
                     name[0] = row.getString("name");
                     return false;
                 });

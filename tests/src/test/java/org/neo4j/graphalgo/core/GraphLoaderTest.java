@@ -65,7 +65,7 @@ public class GraphLoaderTest {
 
     @Test
     public void both() {
-        dB.executeTransactionally("" +
+        db.executeTransactionally("" +
                 "CREATE (a:Node),(b:Node),(c:Node),(d:Node) " +
                 "CREATE" +
                 " (a)-[:REL]->(a)," +
@@ -88,7 +88,7 @@ public class GraphLoaderTest {
 
     @Test
     public void outgoing() {
-        dB.executeTransactionally("" +
+        db.executeTransactionally("" +
                 "CREATE (a:Node),(b:Node),(c:Node),(d:Node) " +
                 "CREATE" +
                 " (a)-[:REL]->(a)," +
@@ -111,7 +111,7 @@ public class GraphLoaderTest {
 
     @Test
     public void incoming() {
-        dB.executeTransactionally("" +
+        db.executeTransactionally("" +
                 "CREATE (a:Node),(b:Node),(c:Node),(d:Node) " +
                 "CREATE" +
                 " (a)-[:REL]->(a)," +
@@ -134,8 +134,8 @@ public class GraphLoaderTest {
 
     @Test
     public void testLargerGraphWithDeletions() {
-        dB.executeTransactionally("FOREACH (x IN range(1, 4098) | CREATE (:Node {index:x}))");
-        dB.executeTransactionally("MATCH (n) WHERE n.index IN [1, 2, 3] DELETE n");
+        db.executeTransactionally("FOREACH (x IN range(1, 4098) | CREATE (:Node {index:x}))");
+        db.executeTransactionally("MATCH (n) WHERE n.index IN [1, 2, 3] DELETE n");
         new GraphLoader(db, Pools.DEFAULT)
                 .withLabel("Node")
                 .withAnyRelationshipType()
@@ -163,7 +163,7 @@ public class GraphLoaderTest {
     }
 
     private void runUndirectedNodeWithSelfReference(String cypher) {
-        dB.executeTransactionally(cypher);
+        db.executeTransactionally(cypher);
         final Graph graph = new GraphLoader(db)
                 .withAnyLabel()
                 .withAnyRelationshipType()
@@ -202,7 +202,7 @@ public class GraphLoaderTest {
     }
 
     private void runUndirectedNodesWithMultipleSelfReferences(String cypher) {
-        dB.executeTransactionally(cypher);
+        db.executeTransactionally(cypher);
         final Graph graph = new GraphLoader(db)
                 .withAnyLabel()
                 .withAnyRelationshipType()

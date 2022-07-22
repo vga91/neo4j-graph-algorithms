@@ -24,9 +24,9 @@ import com.carrotsearch.hppc.procedures.IntProcedure;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.utils.container.AtomicBitSet;
 import org.neo4j.graphalgo.core.utils.container.FlipStack;
+import org.neo4j.graphalgo.core.utils.traverse.SimpleBitSet;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphalgo.core.utils.ExceptionUtil;
-import org.neo4j.kernel.impl.util.collection.SimpleBitSet;
 
 import java.util.ArrayList;
 import java.util.Collection;

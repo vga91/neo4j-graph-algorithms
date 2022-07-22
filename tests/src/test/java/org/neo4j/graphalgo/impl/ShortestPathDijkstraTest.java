@@ -121,9 +121,9 @@ public final class ShortestPathDijkstraTest {
 
     @BeforeClass
     public static void setupGraph() {
-        DB.executeTransactionally(DB_CYPHER).close();
-        DB.executeTransactionally(DB_CYPHER2).close();
-        DB.executeTransactionally(DB_CYPHER_599).close();
+        DB.executeTransactionally(DB_CYPHER);
+        DB.executeTransactionally(DB_CYPHER2);
+        DB.executeTransactionally(DB_CYPHER_599);
     }
 
     private Class<? extends GraphFactory> graphImpl;
@@ -254,7 +254,7 @@ public final class ShortestPathDijkstraTest {
             Label label,
             RelationshipType type,
             String... kvPairs) {
-        return DB.executeAndCommit(db -> {
+        return DB.executeAndCommit(tx -> {
             double weight = 0.0;
             Node prev = null;
             long[] nodeIds = new long[kvPairs.length / 2];
@@ -263,7 +263,7 @@ public final class ShortestPathDijkstraTest {
                 long id = current.getId();
                 nodeIds[i] = id;
                 if (prev != null) {
-                    for (Relationship rel : prev.getRelationships(type, Direction.OUTGOING)) {
+                    for (Relationship rel : prev.getRelationships(Direction.OUTGOING, type)) {
                         if (rel.getEndNodeId() == id) {
                             double cost = ((Number) rel.getProperty("cost")).doubleValue();
                             weight += cost;

@@ -38,6 +38,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.mockito.AdditionalMatchers.eq;
 import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Mockito.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
 /**         5     5      5
@@ -92,15 +93,15 @@ public final class ShortestPathDeltaSteppingProcUndirectedTest {
                 .registerProcedure(ShortestPathDeltaSteppingProc.class);
 
         try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
+            tx.execute(cypher);
             tx.commit();
         }
     }
 
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-       if (api != null) api.shutdown();
-    }
+//    @AfterClass
+//    public static void shutdownGraph() throws Exception {
+//       if (api != null) api.shutdown();
+//    }
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() {

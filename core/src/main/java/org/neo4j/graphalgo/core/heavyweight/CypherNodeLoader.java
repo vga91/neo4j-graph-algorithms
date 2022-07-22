@@ -37,6 +37,7 @@ import java.util.concurrent.Future;
 
 import static org.neo4j.graphalgo.core.heavyweight.HeavyCypherGraphFactory.INITIAL_NODE_COUNT;
 import static org.neo4j.graphalgo.core.heavyweight.HeavyCypherGraphFactory.NO_BATCH;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 class CypherNodeLoader {
     private final GraphDatabaseAPI api;
@@ -124,7 +125,7 @@ class CypherNodeLoader {
 
 
         NodeRowVisitor visitor = new NodeRowVisitor(idMap, nodeProperties);
-        api.execute(setup.startLabel, CypherLoadingUtils.params(setup.params,offset, batchSize)).accept(visitor);
+        executeAndAccept(api, setup.startLabel, CypherLoadingUtils.params(setup.params,offset, batchSize), visitor);
         idMap.buildMappedIds(setup.tracker);
         return new Nodes(
                 offset,

@@ -30,6 +30,7 @@ import org.neo4j.graphalgo.similarity.recorder.NonRecordingSimilarityRecorder;
 import org.neo4j.graphalgo.similarity.recorder.RecordingSimilarityRecorder;
 import org.neo4j.graphalgo.similarity.recorder.SimilarityRecorder;
 import org.neo4j.graphdb.Result;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
@@ -50,7 +51,7 @@ public class SimilarityProc {
     @Context
     public Log log;
     @Context
-    public KernelTransaction transaction;
+    public KernelTransaction kernelTransaction;
 
     static TopKConsumer<SimilarityResult>[] initializeTopKConsumers(int length, int topK) {
         Comparator<SimilarityResult> comparator = topK > 0 ? SimilarityResult.DESCENDING : SimilarityResult.ASCENDING;
@@ -120,7 +121,7 @@ public class SimilarityProc {
     }
 
     <T> Stream<SimilarityResult> similarityStream(T[] inputs, int[] sourceIndexIds, int[] targetIndexIds, SimilarityComputer<T> computer, ProcedureConfiguration configuration, Supplier<RleDecoder> decoderFactory, double cutoff, int topK) {
-        TerminationFlag terminationFlag = TerminationFlag.wrap(transaction);
+        TerminationFlag terminationFlag = TerminationFlag.wrap(kernelTransaction);
 
         SimilarityStreamGenerator<T> generator = new SimilarityStreamGenerator<>(terminationFlag, configuration, decoderFactory, computer);
         if (sourceIndexIds.length == 0 && targetIndexIds.length == 0) {
@@ -169,7 +170,7 @@ public class SimilarityProc {
         Long degreeCutoff = getDegreeCutoff(configuration);
         int repeatCutoff = configuration.get("sparseVectorRepeatCutoff", REPEAT_CUTOFF).intValue();
 
-        Result result = api.execute(query, params);
+        Result result = api.executeTransactionally(query, params, r -> r);
 
         Map<Long, LongDoubleMap> map = new HashMap<>();
         LongSet ids = new LongHashSet();

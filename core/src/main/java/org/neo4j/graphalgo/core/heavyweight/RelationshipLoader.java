@@ -25,6 +25,7 @@ import org.neo4j.graphalgo.core.utils.RawValues;
 import org.neo4j.internal.kernel.api.NodeCursor;
 import org.neo4j.internal.kernel.api.PropertyCursor;
 import org.neo4j.internal.kernel.api.RelationshipTraversalCursor;
+import org.neo4j.io.pagecache.context.CursorContext;
 import org.neo4j.kernel.api.KernelTransaction;
 
 abstract class RelationshipLoader {
@@ -95,7 +96,7 @@ abstract class RelationshipLoader {
             int sourceGraphId,
             WeightMap weights,
             int propertyId) {
-        try (PropertyCursor pc = transaction.cursors().allocatePropertyCursor()) {
+        try (PropertyCursor pc = transaction.cursors().allocatePropertyCursor(transaction.cursorContext(), transaction.memoryTracker())) {
             sourceNode.properties(pc);
             double weight = ReadHelper.readProperty(pc, propertyId, weights.defaultValue());
             if (weight != weights.defaultValue()) {
@@ -115,7 +116,7 @@ abstract class RelationshipLoader {
     private void visitRelationships(RelationshipTraversalCursor rels, VisitRelationship visit) {
         try (RelationshipTraversalCursor cursor = rels) {
             while (cursor.next()) {
-                visit.visit(cursor);
+                visit.visit(cursor, transaction);
             }
         }
     }

@@ -56,7 +56,7 @@ public final class UndirectedLoopsTest {
 
     @Before
     public void setUp() {
-        DB.executeTransactionally(DB_CYPHER).close();
+        DB.executeTransactionally(DB_CYPHER);
     }
 
     @Test

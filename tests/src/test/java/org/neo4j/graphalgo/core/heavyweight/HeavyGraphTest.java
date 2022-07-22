@@ -39,11 +39,11 @@ public class HeavyGraphTest extends SimpleGraphTestCase {
         v1 = setup.getV1();
         v2 = setup.getV2();
     }
-
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (setup != null) setup.shutdown();
-        if (db != null) db.shutdown();
-    }
+//
+//    @AfterClass
+//    public static void tearDown() throws Exception {
+//        if (setup != null) setup.shutdown();
+//        if (db != null) db.shutdown();
+//    }
 
 }

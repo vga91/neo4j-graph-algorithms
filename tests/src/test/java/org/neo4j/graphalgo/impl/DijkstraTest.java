@@ -34,6 +34,7 @@ import org.neo4j.exceptions.KernelException;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * Test for specialized dijkstra implementation with filters & maxDepth
@@ -79,7 +80,7 @@ public class DijkstraTest {
                         " (e)-[:TYPE {cost:2.0}]->(g),\n" +
                         " (f)-[:TYPE {cost:1.0}]->(g)";
 
-        dB.executeTransactionally(cypher);
+        db.executeTransactionally(cypher);
 
         graph = new GraphLoader(db)
                 .withAnyRelationshipType()
@@ -98,7 +99,7 @@ public class DijkstraTest {
 
     private static int id(String name) {
         final Node[] node = new Node[1];
-        dB.executeTransactionally("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
+        executeAndAccept(db, "MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n", row -> {
             node[0] = row.getNode("n");
             return false;
         });

@@ -61,7 +61,7 @@ public class ShortestPathsComparisionBenchmark {
                 new TestGraphDatabaseFactory()
                         .newImpermanentDatabaseBuilder()
                         .newGraphDatabase();
-        final Procedures procedures = db.getDependencyResolver()
+        final GlobalProcedures procedures = db.getDependencyResolver()
                 .resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(ShortestPathDeltaSteppingProc.class);
         procedures.registerProcedure(ShortestPathsProc.class);
@@ -115,7 +115,7 @@ public class ShortestPathsComparisionBenchmark {
 
     @Benchmark
     public Object _01_benchmark_deltaStepping() {
-        return dB.executeTransactionally("MATCH (n {id:$head}) WITH n CALL algo.deltaStepping.stream(n, 'cost', $delta" +
+        return db.executeTransactionally("MATCH (n {id:$head}) WITH n CALL algo.deltaStepping.stream(n, 'cost', $delta" +
                 ", {concurrency:1})" +
                 " YIELD nodeId, distance RETURN nodeId, distance", params)
                 .stream()
@@ -124,7 +124,7 @@ public class ShortestPathsComparisionBenchmark {
 
     @Benchmark
     public Object _02_benchmark_singleDijkstra() {
-        return dB.executeTransactionally("MATCH (n {id:$head}) WITH n CALL algo.shortestPaths.stream(n, 'cost')" +
+        return db.executeTransactionally("MATCH (n {id:$head}) WITH n CALL algo.shortestPaths.stream(n, 'cost')" +
                 " YIELD nodeId, distance RETURN nodeId, distance", params)
                 .stream()
                 .count();

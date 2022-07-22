@@ -33,6 +33,7 @@ import java.util.HashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  *
@@ -70,7 +71,7 @@ public class KSpanningTreeTest {
     public void testMax() {
         final String cypher = "MATCH (n:Node {name:'a'}) WITH n CALL algo.spanningTree.kmax(null, null, 'w', id(n), 2, {graph:'huge'}) " +
                 "YIELD loadMillis, computeMillis, writeMillis RETURN loadMillis, computeMillis, writeMillis";
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
 
             assertTrue(row.getNumber("loadMillis").longValue() >= 0);
             assertTrue(row.getNumber("writeMillis").longValue() >= 0);
@@ -80,7 +81,7 @@ public class KSpanningTreeTest {
 
         final HashMap<String, Integer> communities = new HashMap<>();
 
-        DB.executeTransactionally("MATCH (n) WHERE exists(n.partition) RETURN n.name as name, n.partition as p").accept(row -> {
+        executeAndAccept(DB, "MATCH (n) WHERE exists(n.partition) RETURN n.name as name, n.partition as p", row -> {
             final String name = row.getString("name");
             final int p = row.getNumber("p").intValue();
             communities.put(name, p);
@@ -95,7 +96,7 @@ public class KSpanningTreeTest {
     public void testMin() {
         final String cypher = "MATCH (n:Node {name:'a'}) WITH n CALL algo.spanningTree.kmin(null, null, 'w', id(n), 2, {graph:'huge'}) " +
                 "YIELD loadMillis, computeMillis, writeMillis RETURN loadMillis, computeMillis, writeMillis";
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
 
             assertTrue(row.getNumber("loadMillis").longValue() >= 0);
             assertTrue(row.getNumber("writeMillis").longValue() >= 0);
@@ -105,7 +106,7 @@ public class KSpanningTreeTest {
 
         final HashMap<String, Integer> communities = new HashMap<>();
 
-        DB.executeTransactionally("MATCH (n) WHERE exists(n.partition) RETURN n.name as name, n.partition as p").accept(row -> {
+        executeAndAccept(DB, "MATCH (n) WHERE exists(n.partition) RETURN n.name as name, n.partition as p", row -> {
             final String name = row.getString("name");
             final int p = row.getNumber("p").intValue();
             communities.put(name, p);

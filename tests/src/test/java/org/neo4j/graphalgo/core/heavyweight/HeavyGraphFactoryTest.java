@@ -66,13 +66,13 @@ public class HeavyGraphFactoryTest {
         db = TestDatabaseCreator.createTestDatabase();
 
         try (final Transaction transaction = db.beginTx()) {
-            final Node node1 = db.createNode(Label.label("Node1"));
+            final Node node1 = transaction.createNode(Label.label("Node1"));
             node1.setProperty("prop1", 1);
 
-            final Node node2 = db.createNode(Label.label("Node2"));
+            final Node node2 = transaction.createNode(Label.label("Node2"));
             node2.setProperty("prop2", 2);
 
-            final Node node3 = db.createNode(Label.label("Node3"));
+            final Node node3 = transaction.createNode(Label.label("Node3"));
             node3.setProperty("prop3", 3);
 
             final Relationship rel1 = node1.createRelationshipTo(node2, RelationshipType.withName("REL1"));
@@ -88,11 +88,6 @@ public class HeavyGraphFactoryTest {
             id3 = node3.getId();
         }
 
-    }
-
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
     }
 
     @Test

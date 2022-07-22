@@ -56,7 +56,7 @@ public class LouvainBenchmarkLdbc {
     public void setup() throws KernelException, IOException {
         db = LdbcDownloader.openDb();
 
-        Procedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
+        GlobalProcedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(LouvainProc.class);
     }
 
@@ -67,7 +67,6 @@ public class LouvainBenchmarkLdbc {
 
     @TearDown
     public void shutdown() {
-        db.shutdown();
         Pools.DEFAULT.shutdownNow();
     }
 
@@ -106,7 +105,7 @@ public class LouvainBenchmarkLdbc {
             GraphDatabaseAPI db,
             String query,
             Consumer<Result.ResultRow> action) {
-        try (Result result = dB.executeTransactionally(query)) {
+        try (Result result = db.executeTransactionally(query)) {
             result.accept(r -> {
                 action.accept(r);
                 return true;

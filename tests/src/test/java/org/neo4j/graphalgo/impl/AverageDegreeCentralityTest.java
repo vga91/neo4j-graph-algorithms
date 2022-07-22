@@ -129,14 +129,9 @@ public final class AverageDegreeCentralityTest {
     public static void setupGraph() {
         db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            dB.executeTransactionally(DB_CYPHER).close();
+            db.executeTransactionally(DB_CYPHER);
             tx.commit();
         }
-    }
-
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        if (db!=null) db.shutdown();
     }
 
     public AverageDegreeCentralityTest(
@@ -161,7 +156,7 @@ public final class AverageDegreeCentralityTest {
             expected.put(tx.findNode(label, "name", "h").getId(), 0.0);
             expected.put(tx.findNode(label, "name", "i").getId(), 0.0);
             expected.put(tx.findNode(label, "name", "j").getId(), 0.0);
-            tx.close();
+            tx.commit();
         }
 
         final Graph graph;
@@ -201,7 +196,7 @@ public final class AverageDegreeCentralityTest {
             expected.put(tx.findNode(label, "name", "h").getId(), 0.0);
             expected.put(tx.findNode(label, "name", "i").getId(), 0.0);
             expected.put(tx.findNode(label, "name", "j").getId(), 0.0);
-            tx.close();
+            tx.commit();
         }
 
         final Graph graph;
@@ -243,7 +238,7 @@ public final class AverageDegreeCentralityTest {
             expected.put(tx.findNode(label, "name", "h").getId(), 0.0);
             expected.put(tx.findNode(label, "name", "i").getId(), 0.0);
             expected.put(tx.findNode(label, "name", "j").getId(), 0.0);
-            tx.close();
+            tx.commit();
         }
 
         final Graph graph;

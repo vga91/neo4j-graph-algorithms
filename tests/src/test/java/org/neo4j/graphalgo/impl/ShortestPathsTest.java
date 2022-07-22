@@ -32,6 +32,7 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
 /**         5     5      5
@@ -93,10 +94,7 @@ public final class ShortestPathsTest {
                         " (x)-[:TYPE {cost:2}]->(s)"; // create cycle
 
         api = TestDatabaseCreator.createTestDatabase();
-        try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
-            tx.commit();
-        }
+        api.executeTransactionally(cypher);
 
         head = getNode("s").getId();
         tail = getNode("x").getId();
@@ -111,7 +109,6 @@ public final class ShortestPathsTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if (api != null) api.shutdown();
         graph = null;
     }
 
@@ -129,7 +126,7 @@ public final class ShortestPathsTest {
 
     public static Node getNode(String name) {
         final Node[] node = new Node[1];
-        api.execute("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
+        executeAndAccept(api, "MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n", row -> {
             node[0] = row.getNode("n");
             return false;
         });

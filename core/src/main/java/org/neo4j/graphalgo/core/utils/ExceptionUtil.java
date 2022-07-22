@@ -24,8 +24,12 @@ import org.neo4j.kernel.api.exceptions.Status;
 import java.lang.reflect.InvocationTargetException;
 
 public final class ExceptionUtil {
+    
+    
+    
+    
     private static final String UNEXPECTED_MESSAGE = "Unexpected Exception";
-
+    
     // from org.neo4j.helpers.ExceptionUtil.chain() 3.5
     
     // todo - try this:

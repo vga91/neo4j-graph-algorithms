@@ -130,7 +130,7 @@ public final class LabelPropagation420Test {
 
     @BeforeClass
     public static void setupGraph() {
-        DB.executeTransactionally(GRAPH).close();
+        DB.executeTransactionally(GRAPH);
     }
 
     @Rule

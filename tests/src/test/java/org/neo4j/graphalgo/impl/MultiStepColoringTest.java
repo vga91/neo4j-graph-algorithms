@@ -23,6 +23,7 @@ import com.carrotsearch.hppc.IntIntScatterMap;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
@@ -31,6 +32,7 @@ import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.internal.kernel.api.Write;
 import org.neo4j.internal.kernel.api.exceptions.EntityNotFoundException;
 import org.neo4j.internal.kernel.api.exceptions.InvalidTransactionTypeKernelException;
@@ -73,11 +75,11 @@ public class MultiStepColoringTest {
     }
 
     private static void createTestGraph() throws Exception {
-        final int rIdx = DB.executeAndCommit((GraphDatabaseService __) -> {
-            KernelTransaction transaction = DB.transaction();
+        final int rIdx = DB.executeAndCommit((Transaction tx) -> {
+            KernelTransaction transaction = DB.resolveDependency(KernelTransaction.class);
             try {
                 return transaction.tokenWrite().relationshipTypeGetOrCreateForName(RELATIONSHIP_TYPE.name());
-            } catch (IllegalTokenNameException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
@@ -91,9 +93,9 @@ public class MultiStepColoringTest {
 
     private static Runnable createRing(int rIdx) {
         return () -> {
-            DB.executeAndCommit((GraphDatabaseService __) -> {
+            DB.executeAndCommit((Transaction __) -> {
                 try {
-                    KernelTransaction transaction = DB.transaction();
+                    KernelTransaction transaction = DB.resolveDependency(KernelTransaction.class);
                     final Write op = transaction.dataWrite();
                     long node = op.nodeCreate();
                     long start = node;
@@ -102,7 +104,8 @@ public class MultiStepColoringTest {
                         op.relationshipCreate(node, rIdx, temp);
                         node = temp;
                     }
-                    op.relationshipCreate(node, rIdx, start);
+                    // todo  - test that
+                    return op.relationshipCreate(node, rIdx, start);
                 } catch (EntityNotFoundException | InvalidTransactionTypeKernelException e) {
                     throw new RuntimeException(e);
                 }

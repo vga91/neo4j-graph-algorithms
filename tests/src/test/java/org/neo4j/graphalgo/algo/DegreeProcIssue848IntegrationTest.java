@@ -46,16 +46,11 @@ public class DegreeProcIssue848IntegrationTest {
             "UNWIND range(1,10001) as s\n" +
             "CREATE (:Node{id:s});\n";
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
-
     @BeforeClass
     public static void setup() throws KernelException {
         db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            dB.executeTransactionally(DB_CYPHER).close();
+            db.executeTransactionally(DB_CYPHER);
             tx.commit();
         }
 
@@ -125,7 +120,7 @@ public class DegreeProcIssue848IntegrationTest {
             String query,
             Map<String, Object> params,
             Consumer<Result.ResultRow> check) {
-        try (Result result = dB.executeTransactionally(query, params)) {
+        try (Result result = db.executeTransactionally(query, params, r -> r)) {
             result.accept(row -> {
                 check.accept(row);
                 return true;

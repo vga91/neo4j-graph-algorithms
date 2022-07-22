@@ -78,7 +78,8 @@ public abstract class RandomGraphTestCase {
                 System.err.println("Error exporting graph "+e.getMessage());
             }
         }
-        if (db!=null) db.shutdown();
+        // todo - check..
+//        if (db!=null) db.shutdown();
     }
 
     static GraphDatabaseAPI buildGraph(int nodeCount) {
@@ -88,7 +89,7 @@ public abstract class RandomGraphTestCase {
         final GraphDatabaseService db = TestDatabaseCreator.createTestDatabase();
         for (String cypher : cyphers) {
             try (Transaction tx = db.beginTx()) {
-                 dB.executeTransactionally(cypher).close();
+                 tx.execute(cypher);
                 tx.commit();
             } catch (Exception e) {
                 markFailure();

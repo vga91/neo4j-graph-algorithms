@@ -40,6 +40,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**        _______
  *        /       \
@@ -91,10 +92,7 @@ public class IterativeTarjanSCCTest {
                 .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(StronglyConnectedComponentsProc.class);
 
-        try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
-            tx.commit();
-        }
+        api.executeTransactionally(cypher);
 
         graph = new GraphLoader(api)
                 .withLabel("Node")
@@ -103,14 +101,14 @@ public class IterativeTarjanSCCTest {
                 .load(HeavyGraphFactory.class);
     }
 
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        api.shutdown();
-    }
+//    @AfterClass
+//    public static void shutdownGraph() throws Exception {
+//        api.shutdown();
+//    }
 
     public static int getMappedNodeId(String name) {
         final Node[] node = new Node[1];
-        api.execute("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
+        executeAndAccept(api, "MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n", row -> {
             node[0] = row.getNode("n");
             return false;
         });
@@ -146,7 +144,7 @@ public class IterativeTarjanSCCTest {
 
         String cypher2 = "MATCH (n) RETURN n.partition as c";
         final IntIntScatterMap testMap = new IntIntScatterMap();
-        api.execute(cypher2).accept(row -> {
+        executeAndAccept(api, cypher2, row -> {
             testMap.addTo(row.getNumber("c").intValue(), 1);
             return true;
         });

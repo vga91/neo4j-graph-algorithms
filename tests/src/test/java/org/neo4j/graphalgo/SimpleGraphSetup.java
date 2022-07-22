@@ -58,9 +58,9 @@ public class SimpleGraphSetup {
 
         try (Transaction transaction = db.beginTx()) {
 
-            final Node node0 = db.createNode(Label.label(LABEL));
-            final Node node1 = db.createNode(Label.label(LABEL));
-            final Node node2 = db.createNode(Label.label(LABEL));
+            final Node node0 = transaction.createNode(Label.label(LABEL));
+            final Node node1 = transaction.createNode(Label.label(LABEL));
+            final Node node2 = transaction.createNode(Label.label(LABEL));
 
             n0 = node0.getId();
             n1 = node1.getId();
@@ -132,9 +132,5 @@ public class SimpleGraphSetup {
 
     public long getN2() {
         return n2;
-    }
-
-    public void shutdown() {
-        if (db != null) db.shutdown();
     }
 }

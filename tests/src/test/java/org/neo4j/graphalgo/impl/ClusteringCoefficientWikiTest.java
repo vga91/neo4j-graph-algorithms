@@ -75,7 +75,7 @@ public class ClusteringCoefficientWikiTest {
                         " (b)-[:TYPE]->(d)";
 
         try (Transaction tx = db.beginTx()) {
-            dB.executeTransactionally(cypher);
+            db.executeTransactionally(cypher);
             tx.commit();
         }
 
@@ -90,7 +90,6 @@ public class ClusteringCoefficientWikiTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
         graph = null;
     }
 

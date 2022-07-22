@@ -75,7 +75,7 @@ public class LabelPropagationBenchmarkLdbc {
     public void setup() throws KernelException, IOException {
         db = LdbcDownloader.openDb();
 
-        Procedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
+        GlobalProcedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(LabelPropagationProc.class);
 
         graph = (HeavyGraph) new GraphLoader(db)
@@ -96,7 +96,6 @@ public class LabelPropagationBenchmarkLdbc {
     @TearDown
     public void shutdown() {
         graph.release();
-        db.shutdown();
         Pools.DEFAULT.shutdownNow();
     }
 
@@ -143,7 +142,7 @@ public class LabelPropagationBenchmarkLdbc {
             GraphDatabaseAPI db,
             String query,
             Consumer<Result.ResultRow> action) {
-        try (Result result = dB.executeTransactionally(query)) {
+        try (Result result = db.executeTransactionally(query)) {
             result.accept(r -> {
                 action.accept(r);
                 return true;

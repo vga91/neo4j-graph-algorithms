@@ -22,12 +22,14 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.KShortestPathsProc;
-import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
+import java.util.Map;
+
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * Graph:
@@ -67,7 +69,7 @@ public class YensKShortestPathsRelationshipCostsTest {
                 "CALL algo.kShortestPaths(c, a, 1, 'cost') " +
                 "YIELD resultCount RETURN resultCount";
 
-        DB.executeTransactionally(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             assertEquals(1, row.getNumber("resultCount").intValue());
             return true;
         });
@@ -76,7 +78,7 @@ public class YensKShortestPathsRelationshipCostsTest {
                 "UNWIND relationships(p) AS pair\n" +
                 "return sum(pair.weight) AS distance";
 
-        DB.executeTransactionally(shortestPathsQuery, MapUtil.map("one", "c", "two", "a")).accept(row -> {
+        executeAndAccept(DB, cypher, Map.of("one", "c", "two", "a"), row -> {
             assertEquals(5.0, row.getNumber("distance").doubleValue(), 0.01);
             return true;
         });

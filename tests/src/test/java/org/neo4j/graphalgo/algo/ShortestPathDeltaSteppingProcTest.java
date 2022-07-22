@@ -40,6 +40,7 @@ import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
 /**         5     5      5
@@ -95,16 +96,13 @@ public final class ShortestPathDeltaSteppingProcTest {
                 .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(ShortestPathDeltaSteppingProc.class);
 
-        try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
-            tx.commit();
-        }
+        api.executeTransactionally(cypher);
     }
 
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-       if (api != null) api.shutdown();
-    }
+//    @AfterClass
+//    public static void shutdownGraph() throws Exception {
+//       if (api != null) api.shutdown();
+//    }
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() {
@@ -170,7 +168,7 @@ public final class ShortestPathDeltaSteppingProcTest {
         final String matchCypher = "MATCH(n:Node {name:'s'}) WITH n CALL algo.shortestPath.deltaStepping(n, 'cost', 3.0, {write:true, writeProperty:'sp', graph:'"+graphImpl+"'}) " +
                 "YIELD nodeCount, loadDuration, evalDuration, writeDuration RETURN nodeCount, loadDuration, evalDuration, writeDuration";
 
-        api.execute(matchCypher).accept(row -> {
+        executeAndAccept(api, matchCypher, row -> {
             System.out.println("loadDuration = " + row.getNumber("loadDuration").longValue());
             System.out.println("evalDuration = " + row.getNumber("evalDuration").longValue());
             long writeDuration = row.getNumber("writeDuration").longValue();
@@ -184,7 +182,7 @@ public final class ShortestPathDeltaSteppingProcTest {
 
         final String testCypher = "MATCH(n:Node) WHERE exists(n.sp) WITH n RETURN id(n) as id, n.sp as sp";
 
-        api.execute(testCypher).accept(row -> {
+        executeAndAccept(api, testCypher, row -> {
             double sp = row.getNumber("sp").doubleValue();
             consumer.accept(sp);
             return true;

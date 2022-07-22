@@ -18,18 +18,18 @@
  */
 package org.neo4j.graphalgo.algo.linkprediction;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.neo4j.configuration.GraphDatabaseSettings;
 import org.neo4j.graphalgo.linkprediction.LinkPrediction;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.test.TestGraphDatabaseFactory;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -60,21 +60,14 @@ public class CommonNeighborsProcIntegrationTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        db = new TestGraphDatabaseFactory()
-                .newImpermanentDatabaseBuilder()
-                .setConfig(GraphDatabaseSettings.procedure_unrestricted,"algo.*")
-                .newGraphDatabase();
+        db = new ImpermanentDatabaseRule()
+                .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of("algo.*"));
 
         ((GraphDatabaseAPI) db).getDependencyResolver()
                 .resolveDependency(GlobalProcedures.class)
                 .registerFunction(LinkPrediction.class);
 
-        dB.executeTransactionally(SETUP).close();
-    }
-
-    @AfterClass
-    public static void tearDown() {
-        db.shutdown();
+        db.executeTransactionally(SETUP);
     }
 
     @Test
@@ -86,7 +79,7 @@ public class CommonNeighborsProcIntegrationTest {
                 "       1.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = dB.executeTransactionally(controlQuery);
+            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -102,7 +95,7 @@ public class CommonNeighborsProcIntegrationTest {
                         "1.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = dB.executeTransactionally(controlQuery);
+            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -117,7 +110,7 @@ public class CommonNeighborsProcIntegrationTest {
                         "       2.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = dB.executeTransactionally(controlQuery);
+            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -132,7 +125,7 @@ public class CommonNeighborsProcIntegrationTest {
                         "       0.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = dB.executeTransactionally(controlQuery);
+            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -147,7 +140,7 @@ public class CommonNeighborsProcIntegrationTest {
                         "       0.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = dB.executeTransactionally(controlQuery);
+            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }
@@ -162,7 +155,7 @@ public class CommonNeighborsProcIntegrationTest {
                         "       0.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = dB.executeTransactionally(controlQuery);
+            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
         }

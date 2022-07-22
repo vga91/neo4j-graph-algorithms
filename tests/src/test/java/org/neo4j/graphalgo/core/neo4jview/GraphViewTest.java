@@ -42,9 +42,9 @@ public class GraphViewTest extends SimpleGraphTestCase {
         v2 = 2;
     }
 
-    @AfterClass
-    public static void tearDown() {
-        if (setup != null) setup.shutdown();
-        if (db != null) db.shutdown();
-    }
+//    @AfterClass
+//    public static void tearDown() {
+//        if (setup != null) setup.shutdown();
+//        if (db != null) db.shutdown();
+//    }
 }

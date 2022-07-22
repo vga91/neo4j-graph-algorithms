@@ -117,7 +117,7 @@ public class DegreesTest {
 
     private int nodeId(String name) {
         try (Transaction transaction = DB.beginTx()) {
-            return graph.toMappedNodeId(tx.findNodes(Label.label("Node"), "name", name).next().getId());
+            return graph.toMappedNodeId(transaction.findNodes(Label.label("Node"), "name", name).next().getId());
         }
     }
 

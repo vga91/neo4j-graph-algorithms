@@ -29,7 +29,7 @@ import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.helpers.collection.Pair;
+import org.neo4j.internal.helpers.collection.Pair;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.ArrayList;
@@ -279,7 +279,7 @@ public final class MultiSourceBFSTest {
     private void withGraph(
             String cypher,
             Consumer<? super Graph> block) {
-        dB.executeTransactionally(cypher).close();
+        db.executeTransactionally(cypher);
         block.accept(new GraphLoader(db).load(HeavyGraphFactory.class));
     }
 

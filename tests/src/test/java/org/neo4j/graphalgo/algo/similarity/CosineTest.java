@@ -33,7 +33,6 @@ import java.util.Map;
 
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.*;
-import static org.neo4j.helpers.collection.MapUtil.map;
 
 public class CosineTest {
 
@@ -74,16 +73,16 @@ public class CosineTest {
     @BeforeClass
     public static void beforeClass() throws KernelException {
         db = TestDatabaseCreator.createTestDatabase();
-        Procedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
+        GlobalProcedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(CosineProc.class);
         procedures.registerFunction(IsFiniteFunc.class);
-        dB.executeTransactionally(buildDatabaseQuery()).close();
+        db.executeTransactionally(buildDatabaseQuery());
     }
-
-    @AfterClass
-    public static void AfterClass() {
-        db.shutdown();
-    }
+//
+//    @AfterClass
+//    public static void AfterClass() {
+//        db.shutdown();
+//    }
 
     @Before
     public void setUp() throws Exception {
@@ -96,15 +95,15 @@ public class CosineTest {
     }
 
     private static void buildRandomDB(int size) {
-        dB.executeTransactionally("MATCH (n) DETACH DELETE n").close();
-        dB.executeTransactionally("UNWIND range(1,$size/10) as _ CREATE (:Person) CREATE (:Item) ",singletonMap("size",size)).close();
+        db.executeTransactionally("MATCH (n) DETACH DELETE n");
+        db.executeTransactionally("UNWIND range(1,$size/10) as _ CREATE (:Person) CREATE (:Item) ",singletonMap("size",size));
         String statement =
                 "MATCH (p:Person) WITH collect(p) as people " +
                 "MATCH (i:Item) WITH people, collect(i) as items " +
                 "UNWIND range(1,$size) as _ " +
                 "WITH people[toInteger(rand()*size(people))] as p, items[toInteger(rand()*size(items))] as i " +
                 "MERGE (p)-[:LIKES]->(i) RETURN count(*) ";
-        dB.executeTransactionally(statement,singletonMap("size",size)).close();
+        db.executeTransactionally(statement,singletonMap("size",size));
     }
     private static String buildDatabaseQuery() {
         return  "CREATE (a:Person {name:'Alice'})\n" +
@@ -158,10 +157,10 @@ public class CosineTest {
     public void cosineSingleMultiThreadComparision() {
         int size = 333;
         buildRandomDB(size);
-        Result result1 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"concurrency", 1), "missingValue", 0));
-        Result result2 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"concurrency", 2), "missingValue", 0));
-        Result result4 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"concurrency", 4), "missingValue", 0));
-        Result result8 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"concurrency", 8), "missingValue", 0));
+        Result result1 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 1), "missingValue", 0), r -> r);
+        Result result2 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 2), "missingValue", 0), r -> r);
+        Result result4 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 4), "missingValue", 0), r -> r);
+        Result result8 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 8), "missingValue", 0), r -> r);
         int count=0;
         while (result1.hasNext()) {
             Map<String, Object> row1 = result1.next();
@@ -179,10 +178,10 @@ public class CosineTest {
         int size = 333;
         buildRandomDB(size);
 
-        Result result1 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 1), "missingValue", 0));
-        Result result2 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 2), "missingValue", 0));
-        Result result4 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 4), "missingValue", 0));
-        Result result8 = dB.executeTransactionally(STATEMENT_STREAM, map("config", map("similarityCutoff",-0.1,"topK",1,"concurrency", 8), "missingValue", 0));
+        Result result1 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 1), "missingValue", 0), r -> r);
+        Result result2 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 2), "missingValue", 0), r -> r);
+        Result result4 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 4), "missingValue", 0), r -> r);
+        Result result8 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 8), "missingValue", 0), r -> r);
         int count=0;
         while (result1.hasNext()) {
             Map<String, Object> row1 = result1.next();
@@ -197,7 +196,7 @@ public class CosineTest {
 
     @Test
     public void topNcosineStreamTest() {
-        Result results = dB.executeTransactionally(STATEMENT_STREAM, map("config",map("top",2), "missingValue", 0));
+        Result results = db.executeTransactionally(STATEMENT_STREAM, Map.of("config",Map.of("top",2), "missingValue", 0), r -> r);
         assert01(results.next());
         assert02(results.next());
         assertFalse(results.hasNext());
@@ -205,7 +204,7 @@ public class CosineTest {
 
     @Test
     public void cosineStreamTest() {
-        Result results = dB.executeTransactionally(STATEMENT_STREAM, map("config",map("concurrency",1), "missingValue", 0));
+        Result results = db.executeTransactionally(STATEMENT_STREAM, Map.of("config",Map.of("concurrency",1), "missingValue", 0), r -> r);
         assertTrue(results.hasNext());
         assert01(results.next());
         assert02(results.next());
@@ -218,12 +217,12 @@ public class CosineTest {
 
     @Test
     public void cosineStreamSourceTargetIdsTest() {
-        Map<String, Object> config = map(
+        Map<String, Object> config = Map.of(
                 "concurrency", 1,
                 "sourceIds", Collections.singletonList(0L),
                 "targetIds", Collections.singletonList(1L)
         );
-        Result results = dB.executeTransactionally(STATEMENT_STREAM, map("config", config, "missingValue", 0));
+        Result results = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", config, "missingValue", 0), r -> r);
 
         assertTrue(results.hasNext());
         assert01(results.next());
@@ -232,8 +231,8 @@ public class CosineTest {
 
     @Test
     public void cosineSkipStreamTest() {
-        Result results = dB.executeTransactionally(STATEMENT_STREAM,
-                map("config",map("concurrency",1, "skipValue", Double.NaN), "missingValue", Double.NaN));
+        Result results = db.executeTransactionally(STATEMENT_STREAM,
+                Map.of("config", Map.of("concurrency",1, "skipValue", Double.NaN), "missingValue", Double.NaN), r -> r);
 
         assertTrue(results.hasNext());
         assert01Skip(results.next());
@@ -245,7 +244,9 @@ public class CosineTest {
     @Test
     public void cosineCypherLoadingStreamTest() {
         String query = "MATCH (p:Person)-[r:LIKES]->(i) RETURN id(p) AS item, id(i) AS category, r.stars AS weight";
-        Result results = dB.executeTransactionally(STATEMENT_CYPHER_STREAM, map("config", map("concurrency", 1, "graph", "cypher", "skipValue", 0.0), "query", query));
+        Result results = db.executeTransactionally(STATEMENT_CYPHER_STREAM, 
+                Map.of("config", Map.of("concurrency", 1, "graph", "cypher", "skipValue", 0.0), "query", query), 
+                r -> r);
 
         assertTrue(results.hasNext());
         assert01Skip(results.next());
@@ -256,9 +257,9 @@ public class CosineTest {
 
     @Test
     public void topKCosineStreamTest() {
-        Map<String, Object> params = map("config", map( "concurrency", 1,"topK", 1), "missingValue", 0);
-        System.out.println(dB.executeTransactionally(STATEMENT_STREAM, params).resultAsString());
-        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
+        Map<String, Object> params = Map.of("config", Map.of( "concurrency", 1,"topK", 1), "missingValue", 0);
+        System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
+        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
         assertTrue(results.hasNext());
         assert02(results.next());
         assert01(flip(results.next()));
@@ -269,22 +270,22 @@ public class CosineTest {
 
     @Test
     public void topKCosineSourceTargetIdStreamTest() {
-        Map<String, Object> config = map(
+        Map<String, Object> config = Map.of(
                 "concurrency", 1,
                 "topK", 1,
                 "sourceIds", Collections.singletonList(0L)
 
         );
-        Map<String, Object> params = map("config", config, "missingValue", 0);
-        System.out.println(dB.executeTransactionally(STATEMENT_STREAM, params).resultAsString());
-        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
+        Map<String, Object> params = Map.of("config", config, "missingValue", 0);
+        System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
+        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
         assertTrue(results.hasNext());
         assert02(results.next());
         assertFalse(results.hasNext());
     }
 
     private Map<String, Object> flip(Map<String, Object> row) {
-        return map("similarity", row.get("similarity"),"intersection", row.get("intersection"),
+        return Map.of("similarity", row.get("similarity"),"intersection", row.get("intersection"),
                 "item1",row.get("item2"),"count1",row.get("count2"),
                 "item2",row.get("item1"),"count2",row.get("count1"));
     }
@@ -305,9 +306,9 @@ public class CosineTest {
 
     @Test
     public void topK4cosineStreamTest() {
-        Map<String, Object> params = map("config", map("topK", 4, "concurrency", 4, "similarityCutoff", -0.1), "missingValue", 0);
+        Map<String, Object> params = Map.of("config", Map.of("topK", 4, "concurrency", 4, "similarityCutoff", -0.1), "missingValue", 0);
 
-        Result results = dB.executeTransactionally(STATEMENT_STREAM,params);
+        Result results = db.executeTransactionally(STATEMENT_STREAM,params, r-> r);
         assertSameSource(results, 3, 0L);
         assertSameSource(results, 3, 1L);
         assertSameSource(results, 3, 2L);
@@ -317,11 +318,11 @@ public class CosineTest {
 
     @Test
     public void topK3cosineStreamTest() {
-        Map<String, Object> params = map("config", map("concurrency", 3, "topK", 3), "missingValue", 0);
+        Map<String, Object> params = Map.of("config", Map.of("concurrency", 3, "topK", 3), "missingValue", 0);
 
-        System.out.println(dB.executeTransactionally(STATEMENT_STREAM, params).resultAsString());
+        System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
-        Result results = dB.executeTransactionally(STATEMENT_STREAM, params);
+        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r-> r);
         assertSameSource(results, 3, 0L);
         assertSameSource(results, 3, 1L);
         assertSameSource(results, 3, 2L);
@@ -331,9 +332,9 @@ public class CosineTest {
 
     @Test
     public void simpleCosineTest() {
-        Map<String, Object> params = map("config", map());
+        Map<String, Object> params = Map.of("config", Map.of());
 
-        Map<String, Object> row = dB.executeTransactionally(STATEMENT,params).next();
+        Map<String, Object> row = db.executeTransactionally(STATEMENT,params, Result::next);
         assertEquals((double) row.get("p25"), 0.0, 0.01);
         assertEquals((double) row.get("p50"), 0, 0.01);
         assertEquals((double) row.get("p75"), 0.40, 0.01);
@@ -345,11 +346,11 @@ public class CosineTest {
 
     @Test
     public void simpleCosineFromEmbeddingTest() {
-        dB.executeTransactionally(STORE_EMBEDDING_STATEMENT);
+        db.executeTransactionally(STORE_EMBEDDING_STATEMENT);
 
-        Map<String, Object> params = map("config", map());
+        Map<String, Object> params = Map.of("config", Map.of());
 
-        Map<String, Object> row = dB.executeTransactionally(EMBEDDING_STATEMENT,params).next();
+        Map<String, Object> row = db.executeTransactionally(EMBEDDING_STATEMENT,params, Result::next);
         assertEquals((double) row.get("p25"), 0.0, 0.01);
         assertEquals((double) row.get("p50"), 0, 0.01);
         assertEquals((double) row.get("p75"), 0.40, 0.01);
@@ -361,39 +362,39 @@ public class CosineTest {
 
     @Test
     public void dontComputeComputationsByDefault() {
-        Map<String, Object> params = map("config", map(
+        Map<String, Object> params = Map.of("config", Map.of(
                 "write", true,
                 "similarityCutoff", 0.1));
 
-        Result writeResult = dB.executeTransactionally(STATEMENT, params);
+        Result writeResult = db.executeTransactionally(STATEMENT, params, r -> r);
         Map<String, Object> writeRow = writeResult.next();
         assertEquals(-1L, (long) writeRow.get("computations"));
     }
 
     @Test
     public void numberOfComputations() {
-        Map<String, Object> params = map("config", map(
+        Map<String, Object> params = Map.of("config", Map.of(
                 "write", true,
                 "showComputations", true,
                 "similarityCutoff", 0.1));
 
-        Result writeResult = dB.executeTransactionally(STATEMENT, params);
+        Result writeResult = db.executeTransactionally(STATEMENT, params, r -> r);
         Map<String, Object> writeRow = writeResult.next();
         assertEquals(6L, (long) writeRow.get("computations"));
     }
 
     @Test
     public void simpleCosineWriteTest() {
-        Map<String, Object> params = map("config", map( "write",true, "similarityCutoff", 0.1));
+        Map<String, Object> params = Map.of("config", Map.of( "write",true, "similarityCutoff", 0.1));
 
-        dB.executeTransactionally(STATEMENT, params).close();
+        db.executeTransactionally(STATEMENT, params);
 
         String checkSimilaritiesQuery = "MATCH (a)-[similar:SIMILAR]-(b)" +
                 "RETURN a.name AS node1, b.name as node2, similar.score AS score " +
                 "ORDER BY id(a), id(b)";
 
-        System.out.println(dB.executeTransactionally(checkSimilaritiesQuery).resultAsString());
-        Result result = dB.executeTransactionally(checkSimilaritiesQuery);
+        System.out.println(db.executeTransactionally(checkSimilaritiesQuery, Map.of(), Result::resultAsString));
+        Result result = db.executeTransactionally(checkSimilaritiesQuery, Map.of(), r -> r);
 
         assertTrue(result.hasNext());
         Map<String, Object> row = result.next();
