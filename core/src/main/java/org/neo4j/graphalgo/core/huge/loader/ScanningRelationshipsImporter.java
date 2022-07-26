@@ -23,6 +23,7 @@ import org.neo4j.graphalgo.api.HugeIdMapping;
 import org.neo4j.graphalgo.core.GraphDimensions;
 import org.neo4j.graphalgo.core.utils.ImportProgress;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.impl.store.record.RelationshipRecord;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
@@ -52,14 +53,16 @@ final class ScanningRelationshipsImporter extends ScanningRecordsImporter<Relati
             HugeAdjacencyBuilder outAdjacency,
             HugeAdjacencyBuilder inAdjacency,
             ExecutorService threadPool,
-            int concurrency) {
+            int concurrency/*,
+            KernelTransaction tx*/) {
         super(
                 RelationshipStoreScanner.RELATIONSHIP_ACCESS,
                 "Relationship",
                 api,
                 dimensions,
                 threadPool,
-                concurrency);
+                concurrency/*,
+                tx*/);
         this.setup = setup;
         this.progress = progress;
         this.tracker = tracker;

@@ -62,7 +62,8 @@ public final class NodeStoreScanner extends AbstractStorePageCacheScanner<NodeRe
     }
 
     private NodeStoreScanner(final int prefetchSize, final GraphDatabaseAPI api) {
-        super(prefetchSize, api, NODE_ACCESS);
+        // todo - null mocked, investigate
+        super(prefetchSize, api, NODE_ACCESS/*, null*/);
     }
 
     @Override

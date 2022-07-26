@@ -1,0 +1,90 @@
+2022-07-26 09:53:17.581+0000 WARN  [o.n.k.i.JvmChecker] The max heap memory has not been configured. It is recommended that it is always explicitly configured, to ensure the system has a balanced configuration. Until then, a JVM computed heuristic of 4294967296 bytes is used instead. If you are running neo4j server, you need to configure dbms.memory.heap.max_size in neo4j.conf. If you are running neo4j embedded, you have to launch the JVM with -Xmx set to a value. You can run neo4j-admin memrec for memory configuration suggestions.
+2022-07-26 09:53:17.583+0000 WARN  [o.n.k.i.JvmChecker] The initial heap memory has not been configured. It is recommended that it is always explicitly configured, to ensure the system has a balanced configuration. Until then, a JVM computed heuristic of 268435456 bytes is used instead. If you are running neo4j server, you need to configure dbms.memory.heap.initial_size in neo4j.conf. If you are running neo4j embedded, you have to launch the JVM with -Xms set to a value. You can run neo4j-admin memrec for memory configuration suggestions.
+2022-07-26 09:53:17.908+0000 INFO  [o.n.d.i.DefaultIdentityModule] Generated new ServerId: ServerId{9ea624d2} (9ea624d2-1c1f-4e4e-8f0d-8759edafaa82)
+2022-07-26 09:53:17.909+0000 INFO  [o.n.d.i.DefaultIdentityModule] This instance is ServerId{9ea624d2} (9ea624d2-1c1f-4e4e-8f0d-8759edafaa82)
+2022-07-26 09:53:17.916+0000 INFO  [o.n.g.f.EditionLocksFactories] Locking implementation 'forseti' selected.
+2022-07-26 09:53:18.731+0000 INFO  [o.n.d.d.DefaultDatabaseManager] Creating 'DatabaseId{00000000[system]}'.
+2022-07-26 09:53:18.890+0000 INFO  [o.n.d.d.DefaultDatabaseManager] Starting 'DatabaseId{00000000[system]}'.
+2022-07-26 09:53:19.043+0000 INFO  [o.n.k.i.s.f.RecordFormatSelector] [system/00000000] Selected format 'RecordFormat:PageAlignedV4_3[AF4.3.0]' for the new store /Users/GiuseppeVillani/Downloads/algo2/neo4j-graph-algorithms/tests/94588c7f-2059-4d46-baaa-267580c9636e/data/databases/system
+2022-07-26 09:53:21.274+0000 INFO  [o.n.k.a.DatabaseAvailabilityGuard] [system/00000000] Requirement `Database unavailable` makes database system unavailable.
+2022-07-26 09:53:21.275+0000 INFO  [o.n.k.a.DatabaseAvailabilityGuard] [system/00000000] DatabaseId{00000000[system]} is unavailable.
+2022-07-26 09:53:21.863+0000 WARN  [o.n.k.i.s.MetaDataStore] [system/00000000] Missing counts store, rebuilding it.
+2022-07-26 09:53:21.871+0000 WARN  [o.n.k.i.s.MetaDataStore] [system/00000000] Counts store rebuild completed.
+2022-07-26 09:53:21.873+0000 WARN  [o.n.i.c.DegreesRebuildFromStore] [system/00000000] Missing relationship degrees store, rebuilding it.
+2022-07-26 09:53:21.926+0000 WARN  [o.n.i.c.DegreesRebuildFromStore] [system/00000000] Relationship degrees store rebuild completed.
+2022-07-26 09:53:21.949+0000 INFO  [o.n.k.d.Database] [system/00000000] Starting transaction log [/Users/GiuseppeVillani/Downloads/algo2/neo4j-graph-algorithms/tests/94588c7f-2059-4d46-baaa-267580c9636e/data/transactions/system/neostore.transaction.db.0] at version=0
+2022-07-26 09:53:21.966+0000 INFO  [o.n.k.d.Database] [system/00000000] Starting transaction log [/Users/GiuseppeVillani/Downloads/algo2/neo4j-graph-algorithms/tests/94588c7f-2059-4d46-baaa-267580c9636e/data/transactions/system/checkpoint.0] at version=0
+2022-07-26 09:53:22.045+0000 INFO  [o.n.k.a.DatabaseAvailabilityGuard] [system/00000000] Fulfilling of requirement 'Database unavailable' makes database system available.
+2022-07-26 09:53:22.045+0000 INFO  [o.n.k.a.DatabaseAvailabilityGuard] [system/00000000] DatabaseId{00000000[system]} is ready.
+2022-07-26 09:53:22.047+0000 INFO  [o.n.m.DatabaseHealth] [system/00000000] Database health set to OK
+2022-07-26 09:53:22.845+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] Index population started: [Index( id=1, name='index_343aff4e', type='TOKEN LOOKUP', schema=(:<any-labels>), indexProvider='token-lookup-1.0' )]
+2022-07-26 09:53:23.006+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] Completed node store scan. Flushing all pending updates.
+MultipleIndexPopulator{activeTasks=0, batchedUpdatesFromScan = [org.neo4j.kernel.impl.api.index.MultipleIndexPopulator$IndexPopulation@a5e8260], concurrentUpdateQueue = 0}
+2022-07-26 09:53:23.073+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] Index creation finished for index [Index( id=1, name='index_343aff4e', type='TOKEN LOOKUP', schema=(:<any-labels>), indexProvider='token-lookup-1.0' )].
+2022-07-26 09:53:23.104+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] TIME/PHASE Final: SCAN[totalTime=0ns], FLIP[totalTime=93ms]
+2022-07-26 09:53:23.105+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] Index population started: [Index( id=2, name='index_f7700477', type='TOKEN LOOKUP', schema=-[:<any-types>]-, indexProvider='token-lookup-1.0' )]
+2022-07-26 09:53:23.196+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] Completed relationship store scan. Flushing all pending updates.
+MultipleIndexPopulator{activeTasks=0, batchedUpdatesFromScan = [org.neo4j.kernel.impl.api.index.MultipleIndexPopulator$IndexPopulation@625264ed], concurrentUpdateQueue = 0}
+2022-07-26 09:53:23.257+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] Index creation finished for index [Index( id=2, name='index_f7700477', type='TOKEN LOOKUP', schema=-[:<any-types>]-, indexProvider='token-lookup-1.0' )].
+2022-07-26 09:53:23.279+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] TIME/PHASE Final: SCAN[totalTime=0ns], FLIP[totalTime=81ms]
+2022-07-26 09:53:23.357+0000 INFO  [o.n.k.i.a.s.ConstraintIndexCreator] [system/00000000] Starting constraint creation: Constraint( name='constraint_375161cd', type='UNIQUENESS', schema=(:DatabaseName {name}) ).
+2022-07-26 09:53:23.453+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] Index population started: [Index( id=3, name='constraint_375161cd', type='UNIQUE BTREE', schema=(:DatabaseName {name}), indexProvider='native-btree-1.0' )]
+2022-07-26 09:53:23.546+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] Completed node store scan. Flushing all pending updates.
+MultipleIndexPopulator{activeTasks=0, batchedUpdatesFromScan = [org.neo4j.kernel.impl.api.index.MultipleIndexPopulator$IndexPopulation@31693a86], concurrentUpdateQueue = 0}
+2022-07-26 09:53:23.635+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] Index creation finished for index [Index( id=3, name='constraint_375161cd', type='UNIQUE BTREE', schema=(:DatabaseName {name}), indexProvider='native-btree-1.0' )].
+2022-07-26 09:53:23.659+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] TIME/PHASE Final: SCAN[totalTime=0ns], MERGE[totalTime=0ns], BUILD[totalTime=2ms], APPLY_EXTERNAL[totalTime=44ms], FLIP[totalTime=67ms]
+2022-07-26 09:53:23.660+0000 INFO  [o.n.k.i.a.s.ConstraintIndexCreator] [system/00000000] Constraint Constraint( name='constraint_375161cd', type='UNIQUENESS', schema=(:DatabaseName {name}) ) populated, starting verification.
+2022-07-26 09:53:23.662+0000 INFO  [o.n.k.i.a.s.ConstraintIndexCreator] [system/00000000] Constraint Constraint( name='constraint_375161cd', type='UNIQUENESS', schema=(:DatabaseName {name}) ) verified.
+2022-07-26 09:53:23.688+0000 INFO  [o.n.k.i.a.s.ConstraintIndexCreator] [system/00000000] Starting constraint creation: Constraint( name='constraint_42eb0b7c', type='UNIQUENESS', schema=(:Database {name}) ).
+2022-07-26 09:53:23.712+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] Index population started: [Index( id=4, name='constraint_42eb0b7c', type='UNIQUE BTREE', schema=(:Database {name}), indexProvider='native-btree-1.0' )]
+2022-07-26 09:53:23.785+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] Completed node store scan. Flushing all pending updates.
+MultipleIndexPopulator{activeTasks=0, batchedUpdatesFromScan = [org.neo4j.kernel.impl.api.index.MultipleIndexPopulator$IndexPopulation@1a7e799e], concurrentUpdateQueue = 0}
+2022-07-26 09:53:23.865+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] Index creation finished for index [Index( id=4, name='constraint_42eb0b7c', type='UNIQUE BTREE', schema=(:Database {name}), indexProvider='native-btree-1.0' )].
+2022-07-26 09:53:23.886+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] TIME/PHASE Final: SCAN[totalTime=0ns], MERGE[totalTime=0ns], BUILD[totalTime=0ns], APPLY_EXTERNAL[totalTime=39ms], FLIP[totalTime=60ms]
+2022-07-26 09:53:23.906+0000 INFO  [o.n.k.i.a.s.ConstraintIndexCreator] [system/00000000] Constraint Constraint( name='constraint_42eb0b7c', type='UNIQUENESS', schema=(:Database {name}) ) populated, starting verification.
+2022-07-26 09:53:23.907+0000 INFO  [o.n.k.i.a.s.ConstraintIndexCreator] [system/00000000] Constraint Constraint( name='constraint_42eb0b7c', type='UNIQUENESS', schema=(:Database {name}) ) verified.
+2022-07-26 09:53:23.986+0000 INFO  [o.n.k.i.a.i.IndexingService] [system/00000000] Constraint Index( id=3, name='constraint_375161cd', type='UNIQUE BTREE', schema=(:Label[0] {PropertyKey[10]}), indexProvider='native-btree-1.0' ) is ONLINE.
+2022-07-26 09:53:23.987+0000 INFO  [o.n.k.i.a.i.IndexingService] [system/00000000] Constraint Index( id=4, name='constraint_42eb0b7c', type='UNIQUE BTREE', schema=(:Label[1] {PropertyKey[10]}), indexProvider='native-btree-1.0' ) is ONLINE.
+2022-07-26 09:53:24.544+0000 INFO  [o.n.k.i.a.s.ConstraintIndexCreator] [system/00000000] Starting constraint creation: Constraint( name='constraint_e31771aa', type='UNIQUENESS', schema=(:User {name}) ).
+2022-07-26 09:53:24.570+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] Index population started: [Index( id=7, name='constraint_e31771aa', type='UNIQUE BTREE', schema=(:User {name}), indexProvider='native-btree-1.0' )]
+2022-07-26 09:53:24.646+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] Completed node store scan. Flushing all pending updates.
+MultipleIndexPopulator{activeTasks=0, batchedUpdatesFromScan = [org.neo4j.kernel.impl.api.index.MultipleIndexPopulator$IndexPopulation@72c71964], concurrentUpdateQueue = 0}
+2022-07-26 09:53:24.726+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] Index creation finished for index [Index( id=7, name='constraint_e31771aa', type='UNIQUE BTREE', schema=(:User {name}), indexProvider='native-btree-1.0' )].
+2022-07-26 09:53:24.748+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [system/00000000] TIME/PHASE Final: SCAN[totalTime=0ns], MERGE[totalTime=0ns], BUILD[totalTime=0ns], APPLY_EXTERNAL[totalTime=38ms], FLIP[totalTime=62ms]
+2022-07-26 09:53:24.748+0000 INFO  [o.n.k.i.a.s.ConstraintIndexCreator] [system/00000000] Constraint Constraint( name='constraint_e31771aa', type='UNIQUENESS', schema=(:User {name}) ) populated, starting verification.
+2022-07-26 09:53:24.749+0000 INFO  [o.n.k.i.a.s.ConstraintIndexCreator] [system/00000000] Constraint Constraint( name='constraint_e31771aa', type='UNIQUENESS', schema=(:User {name}) ) verified.
+2022-07-26 09:53:24.774+0000 INFO  [o.n.k.i.a.i.IndexingService] [system/00000000] Constraint Index( id=7, name='constraint_e31771aa', type='UNIQUE BTREE', schema=(:Label[3] {PropertyKey[10]}), indexProvider='native-btree-1.0' ) is ONLINE.
+2022-07-26 09:53:24.777+0000 INFO  [o.n.s.s.s.UserSecurityGraphComponent] Initializing system graph model for component 'security-users' with version -1 and status UNINITIALIZED
+2022-07-26 09:53:24.790+0000 INFO  [o.n.s.s.s.UserSecurityGraphComponent] Setting up initial user from defaults: neo4j
+2022-07-26 09:53:24.791+0000 INFO  [o.n.s.s.s.UserSecurityGraphComponent] Creating new user 'neo4j' (passwordChangeRequired=true, suspended=false)
+2022-07-26 09:53:24.884+0000 INFO  [o.n.s.s.s.UserSecurityGraphComponent] Setting version for 'security-users' to 3
+2022-07-26 09:53:24.906+0000 INFO  [o.n.s.s.s.UserSecurityGraphComponent] After initialization of system graph model component 'security-users' have version 3 and status CURRENT
+2022-07-26 09:53:24.930+0000 INFO  [o.n.s.s.s.UserSecurityGraphComponent] Performing postInitialization step for component 'security-users' with version 3 and status CURRENT
+2022-07-26 09:53:24.939+0000 INFO  [o.n.d.d.DefaultDatabaseManager] Creating 'DatabaseId{ba214a2a[neo4j]}'.
+2022-07-26 09:53:24.943+0000 INFO  [o.n.d.d.DefaultDatabaseManager] Starting 'DatabaseId{ba214a2a[neo4j]}'.
+2022-07-26 09:53:24.946+0000 INFO  [o.n.k.i.s.f.RecordFormatSelector] [neo4j/ba214a2a] Selected format 'RecordFormat:PageAlignedV4_3[AF4.3.0]' for the new store /Users/GiuseppeVillani/Downloads/algo2/neo4j-graph-algorithms/tests/94588c7f-2059-4d46-baaa-267580c9636e/data/databases/neo4j
+2022-07-26 09:53:26.459+0000 INFO  [o.n.k.a.DatabaseAvailabilityGuard] [neo4j/ba214a2a] Requirement `Database unavailable` makes database neo4j unavailable.
+2022-07-26 09:53:26.460+0000 INFO  [o.n.k.a.DatabaseAvailabilityGuard] [neo4j/ba214a2a] DatabaseId{ba214a2a[neo4j]} is unavailable.
+2022-07-26 09:53:27.151+0000 WARN  [o.n.k.i.s.MetaDataStore] [neo4j/ba214a2a] Missing counts store, rebuilding it.
+2022-07-26 09:53:27.152+0000 WARN  [o.n.k.i.s.MetaDataStore] [neo4j/ba214a2a] Counts store rebuild completed.
+2022-07-26 09:53:27.152+0000 WARN  [o.n.i.c.DegreesRebuildFromStore] [neo4j/ba214a2a] Missing relationship degrees store, rebuilding it.
+2022-07-26 09:53:27.175+0000 WARN  [o.n.i.c.DegreesRebuildFromStore] [neo4j/ba214a2a] Relationship degrees store rebuild completed.
+2022-07-26 09:53:27.176+0000 INFO  [o.n.k.d.Database] [neo4j/ba214a2a] Starting transaction log [/Users/GiuseppeVillani/Downloads/algo2/neo4j-graph-algorithms/tests/94588c7f-2059-4d46-baaa-267580c9636e/data/transactions/neo4j/neostore.transaction.db.0] at version=0
+2022-07-26 09:53:27.179+0000 INFO  [o.n.k.d.Database] [neo4j/ba214a2a] Starting transaction log [/Users/GiuseppeVillani/Downloads/algo2/neo4j-graph-algorithms/tests/94588c7f-2059-4d46-baaa-267580c9636e/data/transactions/neo4j/checkpoint.0] at version=0
+2022-07-26 09:53:27.180+0000 INFO  [o.n.k.a.DatabaseAvailabilityGuard] [neo4j/ba214a2a] Fulfilling of requirement 'Database unavailable' makes database neo4j available.
+2022-07-26 09:53:27.180+0000 INFO  [o.n.k.a.DatabaseAvailabilityGuard] [neo4j/ba214a2a] DatabaseId{ba214a2a[neo4j]} is ready.
+2022-07-26 09:53:27.181+0000 INFO  [o.n.m.DatabaseHealth] [neo4j/ba214a2a] Database health set to OK
+2022-07-26 09:53:27.227+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [neo4j/ba214a2a] Index population started: [Index( id=1, name='index_343aff4e', type='TOKEN LOOKUP', schema=(:<any-labels>), indexProvider='token-lookup-1.0' )]
+2022-07-26 09:53:27.307+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [neo4j/ba214a2a] Completed node store scan. Flushing all pending updates.
+MultipleIndexPopulator{activeTasks=0, batchedUpdatesFromScan = [org.neo4j.kernel.impl.api.index.MultipleIndexPopulator$IndexPopulation@7ecb9e17], concurrentUpdateQueue = 0}
+2022-07-26 09:53:27.366+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [neo4j/ba214a2a] Index creation finished for index [Index( id=1, name='index_343aff4e', type='TOKEN LOOKUP', schema=(:<any-labels>), indexProvider='token-lookup-1.0' )].
+2022-07-26 09:53:27.386+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [neo4j/ba214a2a] TIME/PHASE Final: SCAN[totalTime=0ns], FLIP[totalTime=78ms]
+2022-07-26 09:53:27.387+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [neo4j/ba214a2a] Index population started: [Index( id=2, name='index_f7700477', type='TOKEN LOOKUP', schema=-[:<any-types>]-, indexProvider='token-lookup-1.0' )]
+2022-07-26 09:53:27.471+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [neo4j/ba214a2a] Completed relationship store scan. Flushing all pending updates.
+MultipleIndexPopulator{activeTasks=0, batchedUpdatesFromScan = [org.neo4j.kernel.impl.api.index.MultipleIndexPopulator$IndexPopulation@3caa4d85], concurrentUpdateQueue = 0}
+2022-07-26 09:53:27.551+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [neo4j/ba214a2a] Index creation finished for index [Index( id=2, name='index_f7700477', type='TOKEN LOOKUP', schema=-[:<any-types>]-, indexProvider='token-lookup-1.0' )].
+2022-07-26 09:53:27.571+0000 INFO  [o.n.k.i.a.i.IndexPopulationJob] [neo4j/ba214a2a] TIME/PHASE Final: SCAN[totalTime=0ns], FLIP[totalTime=100ms]
+2022-07-26 09:53:27.583+0000 INFO  [o.n.t.TestDatabaseManagementServiceFactory] id: 48C50B8178B32416AC7428EE2E12D67FFCB1F610D6C143BB0206DD87D1F25D26
+2022-07-26 09:53:27.583+0000 INFO  [o.n.t.TestDatabaseManagementServiceFactory] name: system
+2022-07-26 09:53:27.584+0000 INFO  [o.n.t.TestDatabaseManagementServiceFactory] creationDate: 2022-07-26T09:53:20.87Z
+2022-07-26 09:53:28.845+0000 ERROR [o.n.k.a.p.GlobalProcedures] Failed to register built-in edition procedures at start up: Unable to register procedure, because the name `dbms.routing.getRoutingTable` is already in use.

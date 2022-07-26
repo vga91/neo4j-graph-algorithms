@@ -298,10 +298,7 @@ public final class HugeMultiSourceBFSTest {
                         .build();
 
 //        try {
-            try (Transaction tx = db.beginTx()) {
                 db.executeTransactionally(cypher);
-                tx.commit();
-            }
             block.accept((HugeGraph) new GraphLoader(db).load(HugeGraphFactory.class));
 //        } finally {
 //            db.shutdown();

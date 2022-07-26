@@ -27,6 +27,7 @@ import org.neo4j.graphalgo.core.utils.ApproximatedImportProgress;
 import org.neo4j.graphalgo.core.utils.ImportProgress;
 import org.neo4j.graphalgo.core.utils.ProgressLogger;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.api.StatementConstants;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
@@ -35,8 +36,8 @@ public final class HugeGraphFactory extends GraphFactory {
     // TODO: make this configurable from somewhere
     private static final boolean LOAD_DEGREES = false;
 
-    public HugeGraphFactory(GraphDatabaseAPI api, GraphSetup setup) {
-        super(api, setup);
+    public HugeGraphFactory(GraphDatabaseAPI api, GraphSetup setup/*, KernelTransaction tx*/) {
+        super(api, setup/*, tx*/);
     }
 
     @Override
@@ -87,7 +88,8 @@ public final class HugeGraphFactory extends GraphFactory {
                 tracker,
                 threadPool,
                 concurrency,
-                setup.nodePropertyMappings)
+                setup.nodePropertyMappings/*,
+                tx*/)
                 .call(setup.log);
     }
 
@@ -116,7 +118,7 @@ public final class HugeGraphFactory extends GraphFactory {
 
         new ScanningRelationshipsImporter(
                 setup, api, dimensions, progress, tracker, idsAndProperties.hugeIdMap, weightsBuilder,
-                LOAD_DEGREES, outAdjacency, inAdjacency, threadPool, concurrency)
+                LOAD_DEGREES, outAdjacency, inAdjacency, threadPool, concurrency/*, tx*/)
                 .call(setup.log);
 
         HugeWeightMapping weights = weightsBuilder.build();

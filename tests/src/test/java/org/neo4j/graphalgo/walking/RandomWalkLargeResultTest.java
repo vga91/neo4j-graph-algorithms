@@ -34,6 +34,7 @@ import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.count;
 
 public class RandomWalkLargeResultTest {
 
@@ -75,8 +76,8 @@ public class RandomWalkLargeResultTest {
 
     @Test
     public void shouldHandleLargeResults() {
-        Result results = db.executeTransactionally("CALL algo.randomWalk.stream(null, 100, 100000)", Map.of(), r -> r);
+        final long count = count(db, "CALL algo.randomWalk.stream(null, 100, 100000)");
 
-        assertEquals(100000, Iterators.count(results));
+        assertEquals(100000, count);
     }
 }

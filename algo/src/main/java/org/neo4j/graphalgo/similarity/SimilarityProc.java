@@ -42,6 +42,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 import static org.neo4j.graphalgo.similarity.TopKConsumer.topK;
 import static org.neo4j.graphalgo.similarity.Weights.REPEAT_CUTOFF;
 
@@ -170,11 +171,10 @@ public class SimilarityProc {
         Long degreeCutoff = getDegreeCutoff(configuration);
         int repeatCutoff = configuration.get("sparseVectorRepeatCutoff", REPEAT_CUTOFF).intValue();
 
-        Result result = api.executeTransactionally(query, params, r -> r);
-
         Map<Long, LongDoubleMap> map = new HashMap<>();
         LongSet ids = new LongHashSet();
-        result.accept((Result.ResultVisitor<Exception>) resultRow -> {
+        
+        executeAndAccept(api, query, params, resultRow -> {
             long item = resultRow.getNumber("item").longValue();
             long id = resultRow.getNumber("category").longValue();
             ids.add(id);

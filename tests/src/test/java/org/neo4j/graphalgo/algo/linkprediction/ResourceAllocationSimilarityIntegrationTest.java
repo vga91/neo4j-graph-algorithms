@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 public class ResourceAllocationSimilarityIntegrationTest {
     private static final String SETUP =
@@ -77,11 +78,10 @@ public class ResourceAllocationSimilarityIntegrationTest {
                 "RETURN algo.linkprediction.resourceAllocation(p1, p2) AS score, " +
                 "       1/3.0 AS cypherScore";
 
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
-            Map<String, Object> node = result.next();
-            assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+            testResult(db, controlQuery, Map.of(), result -> {
+                Map<String, Object> node = result.next();
+                assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
+            });
     }
 
     @Test
@@ -93,11 +93,10 @@ public class ResourceAllocationSimilarityIntegrationTest {
                         "{relationshipQuery: 'FRIENDS', direction: 'BOTH'}) AS score," +
                         "1/2.0 AS cypherScore";
 
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
-            Map<String, Object> node = result.next();
-            assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+            testResult(db, controlQuery, Map.of(), result -> {
+                Map<String, Object> node = result.next();
+                assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
+            });
     }
 
     @Test
@@ -108,11 +107,10 @@ public class ResourceAllocationSimilarityIntegrationTest {
                         "RETURN algo.linkprediction.resourceAllocation(p1, p2) AS score, " +
                         "       1/2.0 + 1/2.0 AS cypherScore";
 
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
-            Map<String, Object> node = result.next();
-            assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+            testResult(db, controlQuery, Map.of(), result -> {
+                Map<String, Object> node = result.next();
+                assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
+            });
     }
 
     @Test
@@ -123,11 +121,10 @@ public class ResourceAllocationSimilarityIntegrationTest {
                         "RETURN algo.linkprediction.resourceAllocation(p1, p2) AS score, " +
                         "       0.0 AS cypherScore";
 
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
+        testResult(db, controlQuery, Map.of(), result -> {
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+        });
     }
 
     @Test
@@ -138,11 +135,10 @@ public class ResourceAllocationSimilarityIntegrationTest {
                         "RETURN algo.linkprediction.resourceAllocation(p1, p2) AS score, " +
                         "       0.0 AS cypherScore";
 
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
+        testResult(db, controlQuery, Map.of(), result -> {
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+        });
     }
 
 }

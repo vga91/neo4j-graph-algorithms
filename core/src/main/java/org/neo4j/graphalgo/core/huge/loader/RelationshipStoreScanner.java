@@ -62,7 +62,8 @@ public final class RelationshipStoreScanner extends AbstractStorePageCacheScanne
     }
 
     private RelationshipStoreScanner(final int prefetchSize, final GraphDatabaseAPI api) {
-        super(prefetchSize, api, RELATIONSHIP_ACCESS);
+        // todo - null mocked, investigate
+        super(prefetchSize, api, RELATIONSHIP_ACCESS/*, null*/);
     }
 
     @Override

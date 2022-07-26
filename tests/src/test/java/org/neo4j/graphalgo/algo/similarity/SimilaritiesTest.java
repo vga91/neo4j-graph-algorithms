@@ -31,6 +31,7 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 public class SimilaritiesTest {
     private static final String SETUP = "create (java:Skill{name:'Java'})\n" +
@@ -61,7 +62,6 @@ public class SimilaritiesTest {
     @BeforeClass
     public static void setUp() throws Exception {
         db = TestDatabaseCreator.createTestDatabase();
-
         db.getDependencyResolver()
                 .resolveDependency(GlobalProcedures.class)
                 .registerFunction(Similarities.class);
@@ -95,13 +95,14 @@ public class SimilaritiesTest {
             tx.commit();
         }
 
-        Result result = db.executeTransactionally(
+        testResult(db,
                 "MATCH (p1:Employee)-[x:HAS_SKILL]->(sk:Skill)<-[y:REQUIRES_SKILL]-(p2:Role {name:'Role 1-Analytics Manager'})\n" +
                         "WITH p1, COLLECT(coalesce(x.proficiency, 0.0d)) as v1, COLLECT(coalesce(y.proficiency, 0.0d)) as v2\n" +
                         "WITH p1.name as name, algo.similarity.cosine(v1, v2) as cosineSim ORDER BY name ASC\n" +
-                        "RETURN name, toString(toInteger(cosineSim*10000)/10000.0) as cosineSim", Map.of(), r -> r);
-        assertEquals(bobSimilarity, result.next().get("cosineSim"));
-        assertEquals(jimSimilarity, result.next().get("cosineSim"));
+                        "RETURN name, toString(toInteger(cosineSim*10000)/10000.0) as cosineSim", result -> {
+                    assertEquals(bobSimilarity, result.next().get("cosineSim"));
+                    assertEquals(jimSimilarity, result.next().get("cosineSim"));
+                });
     }
 
     @Test
@@ -126,16 +127,17 @@ public class SimilaritiesTest {
             jimSimilarity = (String) result.next().get("cosineSim");
         }
 
-        Result result = db.executeTransactionally(
+        testResult(db,
                 "MATCH (sk:Skill)<-[y:REQUIRES_SKILL]-(p2:Role {name:'Role 1-Analytics Manager'})\n" +
                         "MATCH (p1:Employee)\n" +
                         "OPTIONAL MATCH (p1)-[x:HAS_SKILL]->(sk)\n" +
                         "WITH p1, COLLECT(coalesce(x.proficiency, 0.0d)) as v1, COLLECT(coalesce(y.proficiency, 0.0d)) as v2\n" +
                         "WITH p1.name as name, algo.similarity.cosine(v1, v2) as cosineSim ORDER BY name ASC\n" +
-                        "RETURN name, toString(toInteger(cosineSim*10000)/10000.0) as cosineSim", Map.of(), r -> r);
+                        "RETURN name, toString(toInteger(cosineSim*10000)/10000.0) as cosineSim", result -> {
 
-        assertEquals(bobSimilarity, result.next().get("cosineSim"));
-        assertEquals(jimSimilarity, result.next().get("cosineSim"));
+                    assertEquals(bobSimilarity, result.next().get("cosineSim"));
+                    assertEquals(jimSimilarity, result.next().get("cosineSim"));
+                });
     }
 
     @Test
@@ -162,16 +164,17 @@ public class SimilaritiesTest {
             jimSimilarity = (String) result.next().get("pearsonSim");
         }
 
-        Result result = db.executeTransactionally(
+        testResult(db,
                 "MATCH (sk:Skill)<-[y:REQUIRES_SKILL]-(p2:Role {name:'Role 1-Analytics Manager'})\n" +
                         "MATCH (p1:Employee)\n" +
                         "OPTIONAL MATCH (p1)-[x:HAS_SKILL]->(sk)\n" +
                         "WITH p1, COLLECT(coalesce(x.proficiency, 0.0d)) as v1, COLLECT(coalesce(y.proficiency, 0.0d)) as v2\n" +
                         "WITH p1.name as name, algo.similarity.pearson(v1, v2) as pearsonSim ORDER BY name ASC\n" +
-                        "RETURN name, toString(toInteger(pearsonSim*10000)/10000.0) as pearsonSim", Map.of(), r -> r);
+                        "RETURN name, toString(toInteger(pearsonSim*10000)/10000.0) as pearsonSim", Map.of(), result -> {
 
-        assertEquals(bobSimilarity, result.next().get("pearsonSim"));
-        assertEquals(jimSimilarity, result.next().get("pearsonSim"));
+                    assertEquals(bobSimilarity, result.next().get("pearsonSim"));
+                    assertEquals(jimSimilarity, result.next().get("pearsonSim"));
+                });
 
     }
 
@@ -192,17 +195,17 @@ public class SimilaritiesTest {
             jimDist = (String) result.next().get("euclidDist");
         }
 
-        Result result = db.executeTransactionally(
+        testResult(db, 
                 "MATCH (sk:Skill)<-[y:REQUIRES_SKILL]-(p2:Role {name:'Role 1-Analytics Manager'})\n" +
                         "MATCH (p1:Employee)\n" +
                         "OPTIONAL MATCH (p1)-[x:HAS_SKILL]->(sk)\n" +
                         "WITH p1, COLLECT(coalesce(x.proficiency, 0.0d)) as v1, COLLECT(coalesce(y.proficiency, 0.0d)) as v2\n" +
                         "WITH p1.name as name, algo.similarity.euclideanDistance(v1, v2) as euclidDist ORDER BY name ASC\n" +
-                        "RETURN name, toString(toInteger(euclidDist*10000)/10000.0) as euclidDist", Map.of(), r -> r);
+                        "RETURN name, toString(toInteger(euclidDist*10000)/10000.0) as euclidDist", Map.of(), result -> {
 
-        assertEquals(bobDist, result.next().get("euclidDist"));
-        assertEquals(jimDist, result.next().get("euclidDist"));
-
+                    assertEquals(bobDist, result.next().get("euclidDist"));
+                    assertEquals(jimDist, result.next().get("euclidDist"));
+                });
     }
 
     @Test
@@ -221,14 +224,15 @@ public class SimilaritiesTest {
             jimSim = (String) result.next().get("jaccardSim");
         }
 
-        Result result = db.executeTransactionally(
-                        "MATCH (p1:Employee),(p2:Employee) WHERE p1 <> p2\n" +
+        testResult(db, 
+                "MATCH (p1:Employee),(p2:Employee) WHERE p1 <> p2\n" +
                         "WITH p1, [(p1)-[:HAS_SKILL]->(sk) | id(sk)] as v1, p2, [(p2)-[:HAS_SKILL]->(sk) | id(sk)] as v2\n" +
                         "WITH p1.name as name1, p2.name as name2, algo.similarity.jaccard(v1, v2) as jaccardSim ORDER BY name1,name2\n" +
-                        "RETURN name1, name2, toString(toInteger(jaccardSim*10000)/10000.0) as jaccardSim", Map.of(), r -> r);
+                        "RETURN name1, name2, toString(toInteger(jaccardSim*10000)/10000.0) as jaccardSim", Map.of(), result -> {
 
-        assertEquals(bobSim, result.next().get("jaccardSim"));
-        assertEquals(jimSim, result.next().get("jaccardSim"));
+                    assertEquals(bobSim, result.next().get("jaccardSim"));
+                    assertEquals(jimSim, result.next().get("jaccardSim"));
+                });
     }
     
     @Test
@@ -247,14 +251,15 @@ public class SimilaritiesTest {
             jimSim = (String) result.next().get("overlapSim");
         }
 
-        Result result = db.executeTransactionally(
+        testResult(db, 
                 "MATCH (p1:Employee),(p2:Employee) WHERE p1 <> p2\n" +
                         "WITH p1, [(p1)-[:HAS_SKILL]->(sk) | id(sk)] as v1, p2, [(p2)-[:HAS_SKILL]->(sk) | id(sk)] as v2\n" +
                         "WITH p1.name as name1, p2.name as name2, algo.similarity.overlap(v1, v2) as overlapSim ORDER BY name1,name2\n" +
-                        "RETURN name1, name2, toString(toInteger(overlapSim*10000)/10000.0) as overlapSim", Map.of(), r -> r);
+                        "RETURN name1, name2, toString(toInteger(overlapSim*10000)/10000.0) as overlapSim", Map.of(), result -> {
 
-        assertEquals(bobSim, result.next().get("overlapSim"));
-        assertEquals(jimSim, result.next().get("overlapSim"));
+                    assertEquals(bobSim, result.next().get("overlapSim"));
+                    assertEquals(jimSim, result.next().get("overlapSim"));
+                });
     }
 
     @Test
@@ -275,15 +280,16 @@ public class SimilaritiesTest {
             jimSim = (String) result.next().get("euclidSim");
         }
 
-        Result result = db.executeTransactionally(
+        testResult(db, 
                 "MATCH (sk:Skill)<-[y:REQUIRES_SKILL]-(p2:Role {name:'Role 1-Analytics Manager'})\n" +
                         "MATCH (p1:Employee)\n" +
                         "OPTIONAL MATCH (p1)-[x:HAS_SKILL]->(sk)\n" +
                         "WITH p1, COLLECT(coalesce(x.proficiency, 0.0d)) as v1, COLLECT(coalesce(y.proficiency, 0.0d)) as v2\n" +
                         "WITH p1.name as name, algo.similarity.euclidean(v1, v2) as euclidSim ORDER BY name ASC\n" +
-                        "RETURN name, toString(toInteger(euclidSim*10000)/10000.0) as euclidSim", Map.of(), r -> r);
+                        "RETURN name, toString(toInteger(euclidSim*10000)/10000.0) as euclidSim", Map.of(), result -> {
 
-        assertEquals(bobSim, result.next().get("euclidSim"));
-        assertEquals(jimSim, result.next().get("euclidSim"));
+                    assertEquals(bobSim, result.next().get("euclidSim"));
+                    assertEquals(jimSim, result.next().get("euclidSim"));
+                });
     }
 }

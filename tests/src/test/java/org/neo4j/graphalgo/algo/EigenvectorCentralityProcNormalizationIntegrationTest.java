@@ -42,6 +42,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import static org.junit.Assert.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 public class EigenvectorCentralityProcNormalizationIntegrationTest {
 
@@ -242,12 +243,10 @@ public class EigenvectorCentralityProcNormalizationIntegrationTest {
             String query,
             Map<String, Object> params,
             Consumer<Result.ResultRow> check) {
-        try (Result result = db.executeTransactionally(query, params, r -> r)) {
-            result.accept(row -> {
-                check.accept(row);
-                return true;
-            });
-        }
+        executeAndAccept(db, query, params, row -> {
+            check.accept(row);
+            return true;
+        });
     }
 
     private void assertResult(final String scoreProperty, Map<Long, Double> expected) {

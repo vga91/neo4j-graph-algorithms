@@ -20,6 +20,7 @@ package org.neo4j.graphalgo.core.huge.loader;
 
 import org.neo4j.graphalgo.core.GraphDimensions;
 import org.neo4j.graphalgo.core.huge.loader.ImportingThreadPool.ImportResult;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.impl.store.record.AbstractBaseRecord;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
@@ -43,6 +44,7 @@ abstract class ScanningRecordsImporter<Record extends AbstractBaseRecord, T> {
     final GraphDimensions dimensions;
     private final ExecutorService threadPool;
     private final int concurrency;
+//    private final KernelTransaction tx;
 
     ScanningRecordsImporter(
             AbstractStorePageCacheScanner.Access<Record> access,
@@ -50,13 +52,15 @@ abstract class ScanningRecordsImporter<Record extends AbstractBaseRecord, T> {
             GraphDatabaseAPI api,
             GraphDimensions dimensions,
             ExecutorService threadPool,
-            int concurrency) {
+            int concurrency/*,
+            KernelTransaction tx*/) {
         this.access = access;
         this.label = label;
         this.api = api;
         this.dimensions = dimensions;
         this.threadPool = threadPool;
         this.concurrency = concurrency;
+//        this.tx = tx;
     }
 
     final T call(Log log) {
@@ -65,7 +69,7 @@ abstract class ScanningRecordsImporter<Record extends AbstractBaseRecord, T> {
         int numberOfThreads = sizing.numberOfThreads();
 
         AbstractStorePageCacheScanner<Record> scanner =
-                new AbstractStorePageCacheScanner<>(DEFAULT_PREFETCH_SIZE, api, access);
+                new AbstractStorePageCacheScanner<>(DEFAULT_PREFETCH_SIZE, api, access/*, tx*/);
 
         ImportingThreadPool.CreateScanner creator = creator(nodeCount, sizing, scanner);
         ImportingThreadPool pool = new ImportingThreadPool(numberOfThreads, creator);

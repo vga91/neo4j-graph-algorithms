@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 public class TotalNeighborsProcIntegrationTest {
     private static final String SETUP =
@@ -90,9 +91,10 @@ public class TotalNeighborsProcIntegrationTest {
                         "RETURN algo.linkprediction.totalNeighbors(p1, p2) AS score, " +
                         "       3.0 AS cypherScore";
 
-            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
+        testResult(db, controlQuery, Map.of(), result -> {
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
+        });
     }
 
     @Test
@@ -103,9 +105,10 @@ public class TotalNeighborsProcIntegrationTest {
                         "RETURN algo.linkprediction.totalNeighbors(p1, p2) AS score, " +
                         "       4.0 AS cypherScore";
 
-        Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
-        Map<String, Object> node = result.next();
-        assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
+        testResult(db, controlQuery, Map.of(), result -> {
+            Map<String, Object> node = result.next();
+            assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
+        });
     }
 
 

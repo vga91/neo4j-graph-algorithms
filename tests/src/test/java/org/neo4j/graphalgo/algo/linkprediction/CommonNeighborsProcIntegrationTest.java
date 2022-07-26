@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 public class CommonNeighborsProcIntegrationTest {
     private static final String SETUP =
@@ -78,11 +79,10 @@ public class CommonNeighborsProcIntegrationTest {
                 "RETURN algo.linkprediction.commonNeighbors(p1, p2) AS score, " +
                 "       1.0 AS cypherScore";
 
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
+        testResult(db, controlQuery, Map.of(), result -> {
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+        });
     }
 
     @Test
@@ -93,12 +93,11 @@ public class CommonNeighborsProcIntegrationTest {
                         "RETURN algo.linkprediction.commonNeighbors(p1, p2, " +
                         "{relationshipQuery: 'FRIENDS', direction: 'BOTH'}) AS score," +
                         "1.0 AS cypherScore";
-
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
+        
+        testResult(db, controlQuery, Map.of(), result -> {
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+        });
     }
 
     @Test
@@ -109,11 +108,10 @@ public class CommonNeighborsProcIntegrationTest {
                         "RETURN algo.linkprediction.commonNeighbors(p1, p2) AS score, " +
                         "       2.0 AS cypherScore";
 
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
+        testResult(db, controlQuery, Map.of(), result -> {
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+        });
     }
 
     @Test
@@ -124,11 +122,10 @@ public class CommonNeighborsProcIntegrationTest {
                         "RETURN algo.linkprediction.commonNeighbors(p1, p2) AS score, " +
                         "       0.0 AS cypherScore";
 
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
+        testResult(db, controlQuery, Map.of(), result -> {
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+        });
     }
 
     @Test
@@ -138,12 +135,11 @@ public class CommonNeighborsProcIntegrationTest {
                         "MATCH (p2:Person {name: 'Michael'})\n" +
                         "RETURN algo.linkprediction.commonNeighbors(p1, p2) AS score, " +
                         "       0.0 AS cypherScore";
-
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
+        
+        testResult(db, controlQuery, Map.of(), result -> {
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+        });
     }
 
     @Test
@@ -153,12 +149,11 @@ public class CommonNeighborsProcIntegrationTest {
                         "MATCH (p2:Person {name: 'Praveena'})\n" +
                         "RETURN algo.linkprediction.commonNeighbors(p1, p2) AS score, " +
                         "       0.0 AS cypherScore";
-
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.executeTransactionally(controlQuery, Map.of(), r -> r);
+        
+        testResult(db, controlQuery, Map.of(), result -> {
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+        });
     }
 
 

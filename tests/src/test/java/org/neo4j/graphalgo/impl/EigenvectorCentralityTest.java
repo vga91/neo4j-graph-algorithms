@@ -113,10 +113,7 @@ public final class EigenvectorCentralityTest {
     @BeforeClass
     public static void setupGraph() {
         db = TestDatabaseCreator.createTestDatabase();
-        try (Transaction tx = db.beginTx()) {
-            db.executeTransactionally(DB_CYPHER);
-            tx.commit();
-        }
+        db.executeTransactionally(DB_CYPHER);
     }
     public EigenvectorCentralityTest(
             Class<? extends GraphFactory> graphImpl,
@@ -140,6 +137,7 @@ public final class EigenvectorCentralityTest {
             expected.put(tx.findNode(label, "name", "h").getId(), 0.1);
             expected.put(tx.findNode(label, "name", "i").getId(), 0.1);
             expected.put(tx.findNode(label, "name", "j").getId(), 0.1);
+            tx.commit();
         }
 
         final Graph graph;

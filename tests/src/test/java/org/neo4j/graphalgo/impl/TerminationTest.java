@@ -1,55 +1,55 @@
-///*
-// * Copyright (c) 2017 "Neo4j, Inc." <http://neo4j.com>
-// *
-// * This file is part of Neo4j Graph Algorithms <http://github.com/neo4j-contrib/neo4j-graph-algorithms>.
-// *
-// * Neo4j Graph Algorithms is free software: you can redistribute it and/or modify
-// * it under the terms of the GNU General Public License as published by
-// * the Free Software Foundation, either version 3 of the License, or
-// * (at your option) any later version.
-// *
-// * This program is distributed in the hope that it will be useful,
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// * GNU General Public License for more details.
-// *
-// * You should have received a copy of the GNU General Public License
-// * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-// */
-//package org.neo4j.graphalgo.impl;
-//
-//import org.junit.AfterClass;
-//import org.junit.BeforeClass;
-//import org.junit.Test;
-//import org.neo4j.graphalgo.TerminateProcedure;
-//import org.neo4j.graphalgo.core.utils.ParallelUtil;
-//import org.neo4j.graphalgo.core.utils.Pools;
-//import org.neo4j.graphdb.*;
-//import org.neo4j.exceptions.KernelException;
-//import org.neo4j.kernel.api.exceptions.Status;
-//import org.neo4j.kernel.impl.api.KernelTransactions;
-//import org.neo4j.kernel.api.procedure.GlobalProcedures;
-//import org.neo4j.kernel.internal.GraphDatabaseAPI;
-//import org.neo4j.graphalgo.TestDatabaseCreator;
-//
-//import java.util.*;
-//import java.util.stream.Collectors;
-//
-//import static org.junit.Assert.assertEquals;
-//import static org.junit.Assert.assertNotEquals;
-//import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
-//
-///**        _______
-// *        /       \
-// *      (0)--(1) (3)--(4)
-// *        \  /     \ /
-// *        (2)  (6) (5)
-// *             / \
-// *           (7)-(8)
-// *
-// * @author mknblch
-// */
-//public class TerminationTest {
+/*
+ * Copyright (c) 2017 "Neo4j, Inc." <http://neo4j.com>
+ *
+ * This file is part of Neo4j Graph Algorithms <http://github.com/neo4j-contrib/neo4j-graph-algorithms>.
+ *
+ * Neo4j Graph Algorithms is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.neo4j.graphalgo.impl;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.neo4j.graphalgo.TerminateProcedure;
+import org.neo4j.graphalgo.core.utils.ParallelUtil;
+import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphdb.*;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.exceptions.Status;
+import org.neo4j.kernel.impl.api.KernelTransactions;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.kernel.internal.GraphDatabaseAPI;
+import org.neo4j.graphalgo.TestDatabaseCreator;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
+
+/**        _______
+ *        /       \
+ *      (0)--(1) (3)--(4)
+ *        \  /     \ /
+ *        (2)  (6) (5)
+ *             / \
+ *           (7)-(8)
+ *
+ * @author mknblch
+ */
+public class TerminationTest {
 //
 //    private static GraphDatabaseAPI api;
 //
@@ -134,5 +134,5 @@
 //            throw e.getCause();
 //        }
 //    }
-//
-//}
+
+}

@@ -38,6 +38,7 @@ import java.util.Map;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 /**
  * @author mknblch
@@ -114,12 +115,13 @@ public class ShortestPathIntegrationTest599 {
                 is(4L), is(4.0));
         Iterator<Matcher<Number>> expected = expectedList.iterator();
 
-        final Result pathResult = db_599.executeTransactionally(pathCommand, Map.of(), r -> r);
-        pathResult.forEachRemaining(res -> {
-            assertThat((Number) res.get("id"), expected.next());
-            assertThat((Number) res.get("weight"), expected.next());
+        testResult(db_599, pathCommand, pathResult -> {
+            pathResult.forEachRemaining(res -> {
+                assertThat((Number) res.get("id"), expected.next());
+                assertThat((Number) res.get("weight"), expected.next());
+            });
+            pathResult.close();
         });
-        pathResult.close();
     }
 
     private interface PathConsumer {

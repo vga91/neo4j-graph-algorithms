@@ -56,8 +56,6 @@ public class KShortestPathsProc {
     public static final String REL_TYPE_PROPERTY_IDENTIFIER = "writeRelationshipTypeProperty";
     public static final String DEFAULT_RELATIONSHIP_PROPERTY = "weight";
 
-    // todo - e se provassi ad importare direttamente @Context Transaction tx
-    
     @Context
     public GraphDatabaseAPI api;
     

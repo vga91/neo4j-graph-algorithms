@@ -391,7 +391,7 @@ public class AllShortestPaths427Test {
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() {
         return Arrays.asList(
-                new Object[]{HeavyGraphFactory.class, "Heavy"},
+                new Object[]{GraphViewFactory.class, "Heavy"},
                 new Object[]{HugeGraphFactory.class, "Huge"},
                 new Object[]{GraphViewFactory.class, "Kernel"}
         );

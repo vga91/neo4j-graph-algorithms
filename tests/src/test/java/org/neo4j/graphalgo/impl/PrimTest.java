@@ -87,10 +87,7 @@ public class PrimTest {
 
     @BeforeClass
     public static void setupGraph() {
-        try (Transaction tx = DB.beginTx()) {
-            DB.executeTransactionally(cypher);
-            tx.commit();
-        }
+        DB.executeTransactionally(cypher);
     }
 
 

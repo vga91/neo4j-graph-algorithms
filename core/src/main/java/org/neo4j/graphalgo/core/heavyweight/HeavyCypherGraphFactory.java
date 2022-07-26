@@ -24,6 +24,7 @@ import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.api.GraphSetup;
 import org.neo4j.graphalgo.api.WeightMapping;
 import org.neo4j.graphalgo.core.WeightMap;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.HashMap;
@@ -45,8 +46,9 @@ public class HeavyCypherGraphFactory extends GraphFactory {
 
     public HeavyCypherGraphFactory(
             GraphDatabaseAPI api,
-            GraphSetup setup) {
-        super(api, setup);
+            GraphSetup setup/*,
+            KernelTransaction tx*/) {
+        super(api, setup/*, tx*/);
         this.nodeLoader = new CypherNodeLoader(api, setup, dimensions);
         this.relationshipLoader = new CypherRelationshipLoader(api, setup);
     }

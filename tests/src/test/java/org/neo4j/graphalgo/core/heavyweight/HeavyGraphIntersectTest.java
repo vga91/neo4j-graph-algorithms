@@ -33,6 +33,7 @@ import java.util.Map;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 public class HeavyGraphIntersectTest {
     private GraphDatabaseAPI gdb;
@@ -71,18 +72,19 @@ public class HeavyGraphIntersectTest {
                 "WITH [id(a),id(b),id(c)] as ids order by ids[0],ids[1],ids[2]" +
                 "RETURN ids[0] as start, collect(ids) as ids order by start";
         // System.out.println(gdb.executeTransactionally(triangleQuery).resultAsString());
-        Result result = gdb.executeTransactionally(triangleQuery, Map.of(), r -> r);
-        List<Long> foundIds = new ArrayList<>();
-        while (result.hasNext()) {
-            Map<String, Object> row = result.next();
-            long start = (long)row.get("start");
-            List<List<Long>> triangles = (List<List<Long>>) row.get("ids");
-            List<List<Long>> found = new ArrayList<>(triangles.size());
-            graph.intersectAll((int)start, (nodeA, nodeB, nodeC) -> found.add(asList(nodeA,nodeB,nodeC)));
-            assertEquals(triangles,found);
-            foundIds.add(start);
-        }
-        return foundIds;
+        return gdb.executeTransactionally(triangleQuery, Map.of(), result -> {
+            List<Long> foundIds = new ArrayList<>();
+            while (result.hasNext()) {
+                Map<String, Object> row = result.next();
+                long start = (long) row.get("start");
+                List<List<Long>> triangles = (List<List<Long>>) row.get("ids");
+                List<List<Long>> found = new ArrayList<>(triangles.size());
+                graph.intersectAll((int) start, (nodeA, nodeB, nodeC) -> found.add(asList(nodeA, nodeB, nodeC)));
+                assertEquals(triangles, found);
+                foundIds.add(start);
+            }
+            return foundIds;
+        });
     }
 
     private static final int[] ONE = {1};

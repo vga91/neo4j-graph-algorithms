@@ -32,6 +32,7 @@ import java.util.Map;
 
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.*;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 public class OverlapTest {
 
@@ -122,20 +123,23 @@ public class OverlapTest {
     public void overlapSingleMultiThreadComparision() {
         int size = 333;
         buildRandomDB(size);
-        Result result1 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 1)), r -> r);
-        Result result2 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 2)), r -> r);
-        Result result4 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 4)), r -> r);
-        Result result8 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 8)), r -> r);
-        int count=0;
-        while (result1.hasNext()) {
-            Map<String, Object> row1 = result1.next();
-            assertEquals(row1.toString(), row1,result2.next());
-            assertEquals(row1.toString(), row1,result4.next());
-            assertEquals(row1.toString(), row1,result8.next());
-            count++;
+        try (final Transaction tx = db.beginTx()) {
+            Result result1 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 1)));
+            Result result2 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 2)));
+            Result result4 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 4)));
+            Result result8 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 8)));
+            int count = 0;
+            while (result1.hasNext()) {
+                Map<String, Object> row1 = result1.next();
+                assertEquals(row1.toString(), row1, result2.next());
+                assertEquals(row1.toString(), row1, result4.next());
+                assertEquals(row1.toString(), row1, result8.next());
+                count++;
+            }
+            int people = size / 10;
+            assertEquals((people * people - people) / 2, count);
+            tx.commit();
         }
-        int people = size/10;
-        assertEquals((people * people - people)/2,count);
     }
 
     @Test
@@ -143,40 +147,44 @@ public class OverlapTest {
         int size = 333;
         buildRandomDB(size);
 
-        Result result1 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 1)), r -> r);
-        Result result2 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 2)), r -> r);
-        Result result4 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 4)), r -> r);
-        Result result8 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 8)), r -> r);
-        int count=0;
-        while (result1.hasNext()) {
-            Map<String, Object> row1 = result1.next();
-            assertEquals(row1.toString(), row1,result2.next());
-            assertEquals(row1.toString(), row1,result4.next());
-            assertEquals(row1.toString(), row1,result8.next());
-            count++;
+        try (final Transaction tx = db.beginTx()) {
+            Result result1 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 1)));
+            Result result2 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 2)));
+            Result result4 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 4)));
+            Result result8 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 8)));
+            int count = 0;
+            while (result1.hasNext()) {
+                Map<String, Object> row1 = result1.next();
+                assertEquals(row1.toString(), row1, result2.next());
+                assertEquals(row1.toString(), row1, result4.next());
+                assertEquals(row1.toString(), row1, result8.next());
+                count++;
+            }
+            assertFalse(result2.hasNext());
+            assertFalse(result4.hasNext());
+            assertFalse(result8.hasNext());
+            tx.commit();
         }
-        assertFalse(result2.hasNext());
-        assertFalse(result4.hasNext());
-        assertFalse(result8.hasNext());
     }
 
     @Test
     public void topNoverlapStreamTest() {
-        Result results = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("top",2)), r -> r);
-        assert10(results.next());
-        assert20(results.next());
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM, Map.of("config", Map.of("top",2)), results -> {
+            assert10(results.next());
+            assert20(results.next());
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
     public void overlapStreamTest() {
-        Result results = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("concurrency",1)), r -> r);
+        testResult(db, STATEMENT_STREAM, Map.of("config", Map.of("concurrency",1)), results -> {
 
-        assertTrue(results.hasNext());
-        assert10(results.next());
-        assert20(results.next());
-        assert12(results.next());
-        assertFalse(results.hasNext());
+            assert10(results.next());
+            assert20(results.next());
+            assert12(results.next());
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
@@ -196,11 +204,12 @@ public class OverlapTest {
 
         System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
-        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
+        testResult(db, STATEMENT_STREAM, params, results -> {
 
-        assertTrue(results.hasNext());
-        assert10(results.next());
-        assertFalse(results.hasNext());
+            assertTrue(results.hasNext());
+            assert10(results.next());
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
@@ -208,11 +217,12 @@ public class OverlapTest {
         Map<String, Object> params = Map.of("config", Map.of( "concurrency", 1,"topK", 1));
         System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
-        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
-        assertTrue(results.hasNext());
-        assert10(results.next());
-        assert20(results.next());
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM, params, results -> {
+            assertTrue(results.hasNext());
+            assert10(results.next());
+            assert20(results.next());
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
@@ -226,10 +236,11 @@ public class OverlapTest {
         Map<String, Object> params = Map.of("config", config);
         System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
-        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
-        assertTrue(results.hasNext());
-        assert10(results.next());
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM, params, results -> {
+            assertTrue(results.hasNext());
+            assert10(results.next());
+            assertFalse(results.hasNext());
+        });
     }
 
     private Map<String, Object> flip(Map<String, Object> row) {
@@ -257,11 +268,12 @@ public class OverlapTest {
         Map<String, Object> params = Map.of("config", Map.of("topK", 4, "concurrency", 4, "similarityCutoff", -0.1));
         System.out.println(db.executeTransactionally(STATEMENT_STREAM,params, Result::resultAsString));
 
-        Result results = db.executeTransactionally(STATEMENT_STREAM,params, r -> r);
-        assertSameSource(results, 0, 0L);
-        assertSameSource(results, 1, 1L);
-        assertSameSource(results, 2, 2L);
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM,params, results -> {
+            assertSameSource(results, 0, 0L);
+            assertSameSource(results, 1, 1L);
+            assertSameSource(results, 2, 2L);
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
@@ -270,11 +282,12 @@ public class OverlapTest {
 
         System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
-        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
-        assertSameSource(results, 0, 0L);
-        assertSameSource(results, 1, 1L);
-        assertSameSource(results, 2, 2L);
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM, params, results -> {
+            assertSameSource(results, 0, 0L);
+            assertSameSource(results, 1, 1L);
+            assertSameSource(results, 2, 2L);
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
@@ -324,21 +337,22 @@ public class OverlapTest {
                 "ORDER BY id(a), id(b)";
 
         System.out.println(db.executeTransactionally(checkSimilaritiesQuery, Map.of(), Result::resultAsString));
-        Result result = db.executeTransactionally(checkSimilaritiesQuery, Map.of(), r -> r);
+        testResult(db, checkSimilaritiesQuery, Map.of(), result -> {
 
-        assertTrue(result.hasNext());
-        Map<String, Object> row = result.next();
-        assertEquals(row.get("node1"), "Bob");
-        assertEquals(row.get("node2"), "Alice");
-        assertEquals((double) row.get("score"), 1.0, 0.01);
+            assertTrue(result.hasNext());
+            Map<String, Object> row = result.next();
+            assertEquals(row.get("node1"), "Bob");
+            assertEquals(row.get("node2"), "Alice");
+            assertEquals((double) row.get("score"), 1.0, 0.01);
 
-        assertTrue(result.hasNext());
-        row = result.next();
-        assertEquals(row.get("node1"), "Charlie");
-        assertEquals(row.get("node2"), "Alice");
-        assertEquals((double) row.get("score"), 1.0, 0.01);
+            assertTrue(result.hasNext());
+            row = result.next();
+            assertEquals(row.get("node1"), "Charlie");
+            assertEquals(row.get("node2"), "Alice");
+            assertEquals((double) row.get("score"), 1.0, 0.01);
 
-        assertFalse(result.hasNext());
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -347,9 +361,10 @@ public class OverlapTest {
                 "write", true,
                 "similarityCutoff", 0.1));
 
-        Result writeResult = db.executeTransactionally(STATEMENT, params, r -> r);
-        Map<String, Object> writeRow = writeResult.next();
-        assertEquals(-1L, (long) writeRow.get("computations"));
+        testResult(db, STATEMENT, params, writeResult -> {
+            Map<String, Object> writeRow = writeResult.next();
+            assertEquals(-1L, (long) writeRow.get("computations"));
+        });
     }
 
     @Test
@@ -359,9 +374,10 @@ public class OverlapTest {
                 "showComputations", true,
                 "similarityCutoff", 0.1));
 
-        Result writeResult = db.executeTransactionally(STATEMENT, params, r -> r);
-        Map<String, Object> writeRow = writeResult.next();
-        assertEquals(3L, (long) writeRow.get("computations"));
+        testResult(db, STATEMENT, params, writeResult -> {
+            Map<String, Object> writeRow = writeResult.next();
+            assertEquals(3L, (long) writeRow.get("computations"));
+        });
     }
 
     private void assert12(Map<String, Object> row) {

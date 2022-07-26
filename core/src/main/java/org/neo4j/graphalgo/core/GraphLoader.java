@@ -30,6 +30,7 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphalgo.core.utils.ExceptionUtil;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
 import org.neo4j.logging.NullLog;
@@ -59,7 +60,8 @@ public class GraphLoader {
     private static final MethodType CTOR_METHOD = MethodType.methodType(
             void.class,
             GraphDatabaseAPI.class,
-            GraphSetup.class);
+            GraphSetup.class/*,
+            KernelTransaction.class*/);
 
     private String name = null;
     private String label = null;
@@ -498,7 +500,7 @@ public class GraphLoader {
         final GraphSetup setup = toSetup();
 
         try {
-            return (GraphFactory) constructor.invoke(api, setup);
+            return (GraphFactory) constructor.invoke(api, setup/*, tx*/);
         } catch (Throwable throwable) {
             throw ExceptionUtil.launderedException(
                     throwable.getMessage(),

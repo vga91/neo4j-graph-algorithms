@@ -95,7 +95,7 @@ public class InfoMapBenchmarkLdbc {
             GraphDatabaseAPI db,
             String query,
             Consumer<Result.ResultRow> action) {
-        try (Result result = db.executeTransactionally(query)) {
+        try (testResult(db, query)) {
             result.accept(r -> {
                 action.accept(r);
                 return true;

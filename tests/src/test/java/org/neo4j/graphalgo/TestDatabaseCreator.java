@@ -19,6 +19,8 @@
 package org.neo4j.graphalgo;
 
 import org.junit.Ignore;
+import org.neo4j.configuration.GraphDatabaseSettings;
+import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.graphalgo.TestDatabaseCreator;
@@ -40,8 +42,9 @@ public class TestDatabaseCreator {
         // TODO - QUESTO PER TUTTI NON ANDREBBE BENE?
         // 
         // 
-        
-        return (GraphDatabaseAPI)new TestDatabaseManagementServiceBuilder(new File(UUID.randomUUID().toString()).toPath())
+
+        final DatabaseManagementService databaseManagementService = new TestDatabaseManagementServiceBuilder(new File(UUID.randomUUID().toString()).toPath())
                 .build();
+        return (GraphDatabaseAPI) databaseManagementService.database(GraphDatabaseSettings.DEFAULT_DATABASE_NAME);
     }
 }

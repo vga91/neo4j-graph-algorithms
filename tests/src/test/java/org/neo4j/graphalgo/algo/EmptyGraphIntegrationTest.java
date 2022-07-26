@@ -32,6 +32,7 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 /**
  * @author mknblch
@@ -75,8 +76,9 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testUnionFindStream() {
-        Result result = db.executeTransactionally("CALL algo.unionFind.stream('', '',{graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.unionFind.stream('', '',{graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -89,8 +91,9 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testUnionFindMSColoringStream() {
-        Result result = db.executeTransactionally("CALL algo.unionFind.mscoloring.stream('', '',{graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.unionFind.mscoloring.stream('', '',{graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -103,8 +106,9 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testStronglyConnectedComponentsStream() {
-        Result result = db.executeTransactionally("CALL algo.scc.stream('', '',{graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.scc.stream('', '',{graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -118,8 +122,9 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testStronglyConnectedComponentsMultiStepStream() {
-        Result result = db.executeTransactionally("CALL algo.scc.stream('', '',{graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.scc.stream('', '',{graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -140,26 +145,30 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testStronglyConnectedComponentsTunedTarjanStream() {
-        Result result = db.executeTransactionally("CALL algo.scc.recursive.tunedTarjan.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.scc.recursive.tunedTarjan.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
     public void testForwardBackwardStronglyConnectedComponentsStream() {
-        Result result = db.executeTransactionally("CALL algo.scc.forwardBackward.stream(0, '', '', {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.scc.forwardBackward.stream(0, '', '', {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
     public void testAllShortestPathsStream() {
-        Result result = db.executeTransactionally("CALL algo.allShortestPaths.stream('',{graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.allShortestPaths.stream('',{graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
     public void testBetweennessCentralityStream() {
-        Result result = db.executeTransactionally("CALL algo.betweenness.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.betweenness.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -172,8 +181,9 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testSampledBetweennessCentralityStream() {
-        Result result = db.executeTransactionally("CALL algo.betweenness.sampled.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.betweenness.sampled.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -186,8 +196,9 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testClosenessCentralityStream() {
-        Result result = db.executeTransactionally("CALL algo.closeness.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.closeness.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -200,8 +211,9 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testTriangleCountStream() {
-        Result result = db.executeTransactionally("CALL algo.triangleCount.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.triangleCount.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -214,14 +226,16 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testTriangleStream() {
-        Result result = db.executeTransactionally("CALL algo.triangle.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.triangle.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
     public void testDangelchevCentralityStream() {
-        Result result = db.executeTransactionally("CALL algo.closeness.dangalchev.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.closeness.dangalchev.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -234,8 +248,9 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testHarmonicCentralityStream() {
-        Result result = db.executeTransactionally("CALL algo.closeness.harmonic.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.closeness.harmonic.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -264,8 +279,9 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testLabelPropagationStream() {
-        Result result = db.executeTransactionally("CALL algo.labelPropagation.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.labelPropagation.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -278,8 +294,9 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testLouvainStream() {
-        Result result = db.executeTransactionally("CALL algo.louvain.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.louvain.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -292,8 +309,9 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testPageRankStream() {
-        Result result = db.executeTransactionally("CALL algo.pageRank.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.pageRank.stream('', '', {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -338,14 +356,16 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testShortestPathAStarStream() throws Exception {
-        Result result = db.executeTransactionally("CALL algo.shortestPath.astar.stream(null, null, '', '', '', {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.shortestPath.astar.stream(null, null, '', '', '', {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
     public void testShortestPathStream() throws Exception {
-        Result result = db.executeTransactionally("CALL algo.shortestPath.stream(null, null, '', {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.shortestPath.stream(null, null, '', {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -358,8 +378,9 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testShortestPathsStream() throws Exception {
-        Result result = db.executeTransactionally("CALL algo.shortestPaths.stream(null, '', {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.shortestPaths.stream(null, '', {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -380,8 +401,9 @@ public class EmptyGraphIntegrationTest {
 
     @Test
     public void testShortestPathsDeltaSteppingStream() throws Exception {
-        Result result = db.executeTransactionally("CALL algo.shortestPath.deltaStepping.stream(null, '', 0, {graph:'" + graphImpl + "'})", Map.of(), r -> r);
-        assertFalse(result.hasNext());
+        testResult(db, "CALL algo.shortestPath.deltaStepping.stream(null, '', 0, {graph:'" + graphImpl + "'})", Map.of(), result -> {
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test

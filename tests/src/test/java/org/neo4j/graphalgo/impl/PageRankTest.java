@@ -106,10 +106,7 @@ public final class PageRankTest {
     @BeforeClass
     public static void setupGraph() {
         db = TestDatabaseCreator.createTestDatabase();
-        try (Transaction tx = db.beginTx()) {
-            db.executeTransactionally(DB_CYPHER);
-            tx.commit();
-        }
+        db.executeTransactionally(DB_CYPHER);
     }
 
 //    @AfterClass

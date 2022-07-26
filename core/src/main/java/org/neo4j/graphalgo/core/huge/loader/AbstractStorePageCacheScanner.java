@@ -23,7 +23,6 @@ import org.neo4j.graphalgo.core.utils.paged.PaddedAtomicLong;
 import org.neo4j.common.DependencyResolver;
 import org.neo4j.common.DependencyResolver.SelectionStrategy;
 
-// todo - internal...
 import org.neo4j.internal.recordstorage.RecordStorageEngine;
 import org.neo4j.io.pagecache.PageCache;
 import org.neo4j.io.pagecache.PageCursor;
@@ -37,7 +36,6 @@ import org.neo4j.kernel.impl.store.format.RecordFormats;
 import org.neo4j.kernel.impl.store.record.AbstractBaseRecord;
 import org.neo4j.kernel.impl.store.record.RecordLoad;
 
-// todo - internal...
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.io.IOException;
@@ -300,12 +298,14 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
     private final RecordFormat<Record> recordFormat;
     private final RecordStore<Record> store;
     private final PagedFile pagedFile;
-    private final CursorContext cursorContext;
+//    private final CursorContext cursorContext;
+//    private final KernelTransaction tx;
 
     AbstractStorePageCacheScanner(
             int prefetchSize,
             GraphDatabaseAPI api,
-            Access<Record> access) {
+            Access<Record> access/*,
+            KernelTransaction tx*/) {
 
         DependencyResolver resolver = api.getDependencyResolver();
         NeoStores neoStores = resolver
@@ -339,8 +339,10 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
         this.cursors = new ThreadLocal<>();
         this.recordSize = recordSize;
         this.recordsPerPage = recordsPerPage;
-        this.cursorContext = api.getDependencyResolver().resolveDependency(KernelTransaction.class).cursorContext();
-        this.maxId = 1L + store.getHighestPossibleIdInUse(cursorContext);
+        // todo - maybe not needed
+//        this.tx = tx;
+//        this.cursorContext = tx.cursorContext();
+        this.maxId = 1L + store.getHighestPossibleIdInUse(CursorContext.NULL);
         this.pageSize = pageSize;
         this.recordFormat = access.recordFormat(neoStores.getRecordFormats());
         this.store = store;
@@ -359,10 +361,12 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
             PageCursor pageCursor;
             try {
                 if (pagedFile != null) {
-                    pageCursor = pagedFile.io(next, PagedFile.PF_READ_AHEAD | PagedFile.PF_SHARED_READ_LOCK, cursorContext);
+                    // todo - CursorContext.NULL
+                    pageCursor = pagedFile.io(next, PagedFile.PF_READ_AHEAD | PagedFile.PF_SHARED_READ_LOCK, CursorContext.NULL);
                 } else {
                     long recordId = next * (long) recordSize;
-                    pageCursor = store.openPageCursorForReading(recordId, cursorContext);
+                    // todo - CursorContext.NULL
+                    pageCursor = store.openPageCursorForReading(recordId, CursorContext.NULL);
                 }
             } catch (IOException e) {
                 throw new UnderlyingStorageException(e);
@@ -384,7 +388,8 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
                 throw new RuntimeException(e);
             }
         }
-        long recordsInUse = 1L + store.getHighestPossibleIdInUse(cursorContext);
+        // todo - CursorContext.NULL
+        long recordsInUse = 1L + store.getHighestPossibleIdInUse(CursorContext.NULL);
         long idsInPages = ((recordsInUse + (recordsPerPage - 1L)) / recordsPerPage) * recordsPerPage;
         return idsInPages * (long) recordSize;
     }

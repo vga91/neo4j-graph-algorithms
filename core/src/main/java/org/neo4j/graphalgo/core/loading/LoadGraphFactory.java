@@ -21,6 +21,7 @@ package org.neo4j.graphalgo.core.loading;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.api.GraphSetup;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,8 +32,9 @@ public final class LoadGraphFactory extends GraphFactory {
 
     public LoadGraphFactory(
             final GraphDatabaseAPI api,
-            final GraphSetup setup) {
-        super(api, setup);
+            final GraphSetup setup/*,
+            KernelTransaction tx*/) {
+        super(api, setup/*, tx*/);
     }
 
     @Override

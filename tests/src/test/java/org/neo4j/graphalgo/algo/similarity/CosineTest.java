@@ -33,6 +33,7 @@ import java.util.Map;
 
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.*;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 public class CosineTest {
 
@@ -157,62 +158,69 @@ public class CosineTest {
     public void cosineSingleMultiThreadComparision() {
         int size = 333;
         buildRandomDB(size);
-        Result result1 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 1), "missingValue", 0), r -> r);
-        Result result2 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 2), "missingValue", 0), r -> r);
-        Result result4 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 4), "missingValue", 0), r -> r);
-        Result result8 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 8), "missingValue", 0), r -> r);
-        int count=0;
-        while (result1.hasNext()) {
-            Map<String, Object> row1 = result1.next();
-            assertEquals(row1.toString(), row1,result2.next());
-            assertEquals(row1.toString(), row1,result4.next());
-            assertEquals(row1.toString(), row1,result8.next());
-            count++;
+        try (final Transaction tx = db.beginTx()) {
+            Result result1 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 1), "missingValue", 0));
+            Result result2 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 2), "missingValue", 0));
+            Result result4 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 4), "missingValue", 0));
+            Result result8 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 8), "missingValue", 0));
+            int count = 0;
+            while (result1.hasNext()) {
+                Map<String, Object> row1 = result1.next();
+                assertEquals(row1.toString(), row1, result2.next());
+                assertEquals(row1.toString(), row1, result4.next());
+                assertEquals(row1.toString(), row1, result8.next());
+                count++;
+            }
+            int people = size / 10;
+            assertEquals((people * people - people) / 2, count);
+            tx.commit();
         }
-        int people = size/10;
-        assertEquals((people * people - people)/2,count);
     }
 
     @Test
     public void cosineSingleMultiThreadComparisionTopK() {
         int size = 333;
         buildRandomDB(size);
-
-        Result result1 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 1), "missingValue", 0), r -> r);
-        Result result2 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 2), "missingValue", 0), r -> r);
-        Result result4 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 4), "missingValue", 0), r -> r);
-        Result result8 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 8), "missingValue", 0), r -> r);
-        int count=0;
-        while (result1.hasNext()) {
-            Map<String, Object> row1 = result1.next();
-            assertEquals(row1.toString(), row1,result2.next());
-            assertEquals(row1.toString(), row1,result4.next());
-            assertEquals(row1.toString(), row1,result8.next());
-            count++;
+        try (final Transaction tx = db.beginTx()) {
+            Result result1 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff", -0.1, "topK", 1, "concurrency", 1), "missingValue", 0));
+            Result result2 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff", -0.1, "topK", 1, "concurrency", 2), "missingValue", 0));
+            Result result4 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff", -0.1, "topK", 1, "concurrency", 4), "missingValue", 0));
+            Result result8 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff", -0.1, "topK", 1, "concurrency", 8), "missingValue", 0));
+            int count = 0;
+            while (result1.hasNext()) {
+                Map<String, Object> row1 = result1.next();
+                assertEquals(row1.toString(), row1, result2.next());
+                assertEquals(row1.toString(), row1, result4.next());
+                assertEquals(row1.toString(), row1, result8.next());
+                count++;
+            }
+            int people = size / 10;
+            assertEquals(people, count);
+            tx.commit();
         }
-        int people = size/10;
-        assertEquals(people,count);
     }
 
     @Test
     public void topNcosineStreamTest() {
-        Result results = db.executeTransactionally(STATEMENT_STREAM, Map.of("config",Map.of("top",2), "missingValue", 0), r -> r);
-        assert01(results.next());
-        assert02(results.next());
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM, Map.of("config",Map.of("top",2), "missingValue", 0), results -> {
+            assert01(results.next());
+            assert02(results.next());
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
     public void cosineStreamTest() {
-        Result results = db.executeTransactionally(STATEMENT_STREAM, Map.of("config",Map.of("concurrency",1), "missingValue", 0), r -> r);
-        assertTrue(results.hasNext());
-        assert01(results.next());
-        assert02(results.next());
-        assert03(results.next());
-        assert12(results.next());
-        assert13(results.next());
-        assert23(results.next());
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM, Map.of("config",Map.of("concurrency",1), "missingValue", 0), results -> {
+            assertTrue(results.hasNext());
+            assert01(results.next());
+            assert02(results.next());
+            assert03(results.next());
+            assert12(results.next());
+            assert13(results.next());
+            assert23(results.next());
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
@@ -222,50 +230,54 @@ public class CosineTest {
                 "sourceIds", Collections.singletonList(0L),
                 "targetIds", Collections.singletonList(1L)
         );
-        Result results = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", config, "missingValue", 0), r -> r);
+        testResult(db, STATEMENT_STREAM, Map.of("config", config, "missingValue", 0), results -> {
 
-        assertTrue(results.hasNext());
-        assert01(results.next());
-        assertFalse(results.hasNext());
+            assertTrue(results.hasNext());
+            assert01(results.next());
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
     public void cosineSkipStreamTest() {
-        Result results = db.executeTransactionally(STATEMENT_STREAM,
-                Map.of("config", Map.of("concurrency",1, "skipValue", Double.NaN), "missingValue", Double.NaN), r -> r);
+        testResult(db, STATEMENT_STREAM,
+                Map.of("config", Map.of("concurrency",1, "skipValue", Double.NaN), "missingValue", Double.NaN), results -> {
 
-        assertTrue(results.hasNext());
-        assert01Skip(results.next());
-        assert02Skip(results.next());
-        assert12Skip(results.next());
-        assertFalse(results.hasNext());
+                    assertTrue(results.hasNext());
+                    assert01Skip(results.next());
+                    assert02Skip(results.next());
+                    assert12Skip(results.next());
+                    assertFalse(results.hasNext());
+                });
     }
 
     @Test
     public void cosineCypherLoadingStreamTest() {
         String query = "MATCH (p:Person)-[r:LIKES]->(i) RETURN id(p) AS item, id(i) AS category, r.stars AS weight";
-        Result results = db.executeTransactionally(STATEMENT_CYPHER_STREAM, 
+        testResult(db, STATEMENT_CYPHER_STREAM, 
                 Map.of("config", Map.of("concurrency", 1, "graph", "cypher", "skipValue", 0.0), "query", query), 
-                r -> r);
+                results -> {
 
-        assertTrue(results.hasNext());
-        assert01Skip(results.next());
-        assert02Skip(results.next());
-        assert12Skip(results.next());
-        assertFalse(results.hasNext());
+                    assertTrue(results.hasNext());
+                    assert01Skip(results.next());
+                    assert02Skip(results.next());
+                    assert12Skip(results.next());
+                    assertFalse(results.hasNext());
+                });
     }
 
     @Test
     public void topKCosineStreamTest() {
         Map<String, Object> params = Map.of("config", Map.of( "concurrency", 1,"topK", 1), "missingValue", 0);
         System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
-        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
-        assertTrue(results.hasNext());
-        assert02(results.next());
-        assert01(flip(results.next()));
-        assert02(flip(results.next()));
-        assert03(flip(results.next()));
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM, params, results -> {
+            assertTrue(results.hasNext());
+            assert02(results.next());
+            assert01(flip(results.next()));
+            assert02(flip(results.next()));
+            assert03(flip(results.next()));
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
@@ -278,10 +290,11 @@ public class CosineTest {
         );
         Map<String, Object> params = Map.of("config", config, "missingValue", 0);
         System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
-        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
-        assertTrue(results.hasNext());
-        assert02(results.next());
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM, params, results -> {
+            assertTrue(results.hasNext());
+            assert02(results.next());
+            assertFalse(results.hasNext());
+        });
     }
 
     private Map<String, Object> flip(Map<String, Object> row) {
@@ -308,12 +321,13 @@ public class CosineTest {
     public void topK4cosineStreamTest() {
         Map<String, Object> params = Map.of("config", Map.of("topK", 4, "concurrency", 4, "similarityCutoff", -0.1), "missingValue", 0);
 
-        Result results = db.executeTransactionally(STATEMENT_STREAM,params, r-> r);
-        assertSameSource(results, 3, 0L);
-        assertSameSource(results, 3, 1L);
-        assertSameSource(results, 3, 2L);
-        assertSameSource(results, 3, 3L);
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM,params, results -> {
+            assertSameSource(results, 3, 0L);
+            assertSameSource(results, 3, 1L);
+            assertSameSource(results, 3, 2L);
+            assertSameSource(results, 3, 3L);
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
@@ -322,12 +336,13 @@ public class CosineTest {
 
         System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
-        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r-> r);
-        assertSameSource(results, 3, 0L);
-        assertSameSource(results, 3, 1L);
-        assertSameSource(results, 3, 2L);
-        assertSameSource(results, 3, 3L);
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM, params, results -> {
+            assertSameSource(results, 3, 0L);
+            assertSameSource(results, 3, 1L);
+            assertSameSource(results, 3, 2L);
+            assertSameSource(results, 3, 3L);
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
@@ -366,9 +381,10 @@ public class CosineTest {
                 "write", true,
                 "similarityCutoff", 0.1));
 
-        Result writeResult = db.executeTransactionally(STATEMENT, params, r -> r);
-        Map<String, Object> writeRow = writeResult.next();
-        assertEquals(-1L, (long) writeRow.get("computations"));
+        testResult(db, STATEMENT, params, writeResult -> {
+            Map<String, Object> writeRow = writeResult.next();
+            assertEquals(-1L, (long) writeRow.get("computations"));
+        });
     }
 
     @Test
@@ -378,9 +394,10 @@ public class CosineTest {
                 "showComputations", true,
                 "similarityCutoff", 0.1));
 
-        Result writeResult = db.executeTransactionally(STATEMENT, params, r -> r);
-        Map<String, Object> writeRow = writeResult.next();
-        assertEquals(6L, (long) writeRow.get("computations"));
+        testResult(db, STATEMENT, params, writeResult -> {
+            Map<String, Object> writeRow = writeResult.next();
+            assertEquals(6L, (long) writeRow.get("computations"));
+        });
     }
 
     @Test
@@ -394,34 +411,35 @@ public class CosineTest {
                 "ORDER BY id(a), id(b)";
 
         System.out.println(db.executeTransactionally(checkSimilaritiesQuery, Map.of(), Result::resultAsString));
-        Result result = db.executeTransactionally(checkSimilaritiesQuery, Map.of(), r -> r);
-
-        assertTrue(result.hasNext());
-        Map<String, Object> row = result.next();
-        assertEquals(row.get("node1"), "Alice");
-        assertEquals(row.get("node2"), "Bob");
-        assertEquals((double) row.get("score"), 0.40, 0.01);
-
-        assertTrue(result.hasNext());
-        row = result.next();
-        assertEquals(row.get("node1"), "Alice");
-        assertEquals(row.get("node2"), "Charlie");
-        assertEquals((double) row.get("score"), 0.91, 0.01);
-
-        assertTrue(result.hasNext());
-        row = result.next();
-        assertEquals(row.get("node1"), "Bob");
-        assertEquals(row.get("node2"), "Alice");
-        assertEquals((double) row.get("score"), 0.40, 0.01);
-
-
-        assertTrue(result.hasNext());
-        row = result.next();
-        assertEquals(row.get("node1"), "Charlie");
-        assertEquals(row.get("node2"), "Alice");
-        assertEquals((double) row.get("score"), 0.91, 0.01);
-
-        assertFalse(result.hasNext());
+        db.executeTransactionally(checkSimilaritiesQuery, Map.of(), result -> {
+            assertTrue(result.hasNext());
+            Map<String, Object> row = result.next();
+            assertEquals(row.get("node1"), "Alice");
+            assertEquals(row.get("node2"), "Bob");
+            assertEquals((double) row.get("score"), 0.40, 0.01);
+            
+            assertTrue(result.hasNext());
+            row = result.next();
+            assertEquals(row.get("node1"), "Alice");
+            assertEquals(row.get("node2"), "Charlie");
+            assertEquals((double) row.get("score"), 0.91, 0.01);
+    
+            assertTrue(result.hasNext());
+            row = result.next();
+            assertEquals(row.get("node1"), "Bob");
+            assertEquals(row.get("node2"), "Alice");
+            assertEquals((double) row.get("score"), 0.40, 0.01);
+    
+    
+            assertTrue(result.hasNext());
+            row = result.next();
+            assertEquals(row.get("node1"), "Charlie");
+            assertEquals(row.get("node2"), "Alice");
+            assertEquals((double) row.get("score"), 0.91, 0.01);
+    
+            assertFalse(result.hasNext());
+            return null;
+        });
     }
 
     private void assert23(Map<String, Object> row) {

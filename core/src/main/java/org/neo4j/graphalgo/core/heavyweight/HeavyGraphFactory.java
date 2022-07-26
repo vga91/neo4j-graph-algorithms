@@ -25,6 +25,7 @@ import org.neo4j.graphalgo.api.GraphSetup;
 import org.neo4j.graphalgo.api.WeightMapping;
 import org.neo4j.graphalgo.core.IdMap;
 import org.neo4j.graphalgo.core.utils.ParallelUtil;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.*;
@@ -37,8 +38,9 @@ public class HeavyGraphFactory extends GraphFactory {
 
     public HeavyGraphFactory(
             GraphDatabaseAPI api,
-            GraphSetup setup) {
-        super(api, setup);
+            GraphSetup setup/*,
+            KernelTransaction tx*/) {
+        super(api, setup/*, tx*/);
     }
 
     @Override

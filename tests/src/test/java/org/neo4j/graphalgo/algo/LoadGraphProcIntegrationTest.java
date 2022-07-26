@@ -42,6 +42,7 @@ import java.util.function.Consumer;
 
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
 @RunWith(Parameterized.class)
@@ -178,11 +179,9 @@ public class LoadGraphProcIntegrationTest {
     }
 
     private void runQuery(String query, Map<String, Object> params, Consumer<Result.ResultRow> check) {
-        try (Result result = db.executeTransactionally(query, params, r -> r)) {
-            result.accept(row -> {
-                check.accept(row);
-                return true;
-            });
-        }
+        executeAndAccept(db, query, params, row -> {
+            check.accept(row);
+            return true;
+        });
     }
 }

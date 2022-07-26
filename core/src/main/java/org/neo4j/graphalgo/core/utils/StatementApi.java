@@ -34,9 +34,11 @@ public abstract class StatementApi {
     }
     
     public static void executeAndAccept(GraphDatabaseService db, String cypher, Map<String, Object> params, Result.ResultVisitor<RuntimeException> visitor) {
+        // todo - execute transactionally ??
+        
         try (Transaction tx = db.beginTx()) {
-            final Result execute = tx.execute(cypher, params);
-            execute.accept(visitor);
+            final Result result = tx.execute(cypher, params);
+            result.accept(visitor);
             tx.commit();
         }
     }

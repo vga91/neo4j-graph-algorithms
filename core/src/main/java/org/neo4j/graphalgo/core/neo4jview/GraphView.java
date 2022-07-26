@@ -330,24 +330,24 @@ public class GraphView implements Graph {
         }
     }
 
-    private static class PrimitiveIntRangeIterator extends PrimitiveIntBaseIterator {
-        private int current;
-        private final int end;
-
-        PrimitiveIntRangeIterator(int start, int end) {
-            this.current = start;
-            this.end = end;
-        }
-
-        @Override
-        protected boolean fetchNext() {
-            try {
-                return current <= end && next(current);
-            } finally {
-                current++;
-            }
-        }
-    }
+//    private static class PrimitiveIntRangeIterator extends PrimitiveIntBaseIterator {
+//        private int current;
+//        private final int end;
+//
+//        PrimitiveIntRangeIterator(int start, int end) {
+//            this.current = start;
+//            this.end = end;
+//        }
+//
+//        @Override
+//        protected boolean fetchNext() {
+//            try {
+//                return current <= end && next(current);
+//            } finally {
+//                current++;
+//            }
+//        }
+//    }
 
     private static void withBreaker(Consumer<Runnable> block) {
         try {

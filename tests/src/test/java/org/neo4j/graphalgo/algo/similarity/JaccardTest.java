@@ -32,6 +32,8 @@ import java.util.Map;
 
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.*;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withTx;
 
 public class JaccardTest {
 
@@ -123,20 +125,47 @@ public class JaccardTest {
     public void jaccardSingleMultiThreadComparision() {
         int size = 333;
         buildRandomDB(size);
-        Result result1 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 1)), r -> r);
-        Result result2 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 2)), r -> r);
-        Result result4 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 4)), r -> r);
-        Result result8 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 8)), r -> r);
-        int count=0;
-        while (result1.hasNext()) {
-            Map<String, Object> row1 = result1.next();
-            assertEquals(row1.toString(), row1,result2.next());
-            assertEquals(row1.toString(), row1,result4.next());
-            assertEquals(row1.toString(), row1,result8.next());
-            count++;
+        System.out.println("to delete - " + 
+                db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 1)), r -> r.resultAsString()));
+
+
+        try (final Transaction tx = db.beginTx()) {
+            final Result result1 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff", -0.1, "concurrency", 1)));
+            Result result2 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 2)));
+            Result result4 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 4)));
+            Result result8 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 8)));
+
+            int count=0;
+            while (result1.hasNext()) {
+                Map<String, Object> row1 = result1.next();
+                assertEquals(row1.toString(), row1,result2.next());
+                assertEquals(row1.toString(), row1,result4.next());
+                assertEquals(row1.toString(), row1,result8.next());
+                count++;
+            }
+            int people = size/10;
+            assertEquals((people * people - people)/2,count);
+            tx.commit();
         }
-        int people = size/10;
-        assertEquals((people * people - people)/2,count);
+
+//        Result result1 = withTx(db, tx -> {
+//            final Result execute = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff", -0.1, "concurrency", 1)));
+//            execute.close();
+//            return execute;
+//        });
+//        Result result2 = withTx(db, tx -> tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 2))));
+//        Result result4 = withTx(db, tx -> tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 4))));
+//        Result result8 = withTx(db, tx -> tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"concurrency", 8))));
+//        int count=0;
+//        while (result1.hasNext()) {
+//            Map<String, Object> row1 = result1.next();
+//            assertEquals(row1.toString(), row1,result2.next());
+//            assertEquals(row1.toString(), row1,result4.next());
+//            assertEquals(row1.toString(), row1,result8.next());
+//            count++;
+//        }
+//        int people = size/10;
+//        assertEquals((people * people - people)/2,count);
     }
 
     @Test
@@ -144,62 +173,74 @@ public class JaccardTest {
         int size = 333;
         buildRandomDB(size);
 
-        Result result1 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 1)), r -> r);
-        Result result2 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 2)), r -> r);
-        Result result4 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 4)), r -> r);
-        Result result8 = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 8)), r -> r);
-        int count=0;
-        while (result1.hasNext()) {
-            Map<String, Object> row1 = result1.next();
-            assertEquals(row1.toString(), row1,result2.next());
-            assertEquals(row1.toString(), row1,result4.next());
-            assertEquals(row1.toString(), row1,result8.next());
-            count++;
+        try (final Transaction tx = db.beginTx()) {
+            Result result1 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 1)));
+            Result result2 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 2)));
+            Result result4 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 4)));
+            Result result8 = tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 8)));
+            int count=0;
+            while (result1.hasNext()) {
+                Map<String, Object> row1 = result1.next();
+                assertEquals(row1.toString(), row1,result2.next());
+                assertEquals(row1.toString(), row1,result4.next());
+                assertEquals(row1.toString(), row1,result8.next());
+                count++;
+            }
+            int people = size/10;
+            assertEquals(people,count);
+            tx.commit();
         }
-        int people = size/10;
-        assertEquals(people,count);
+        
+//        Result result1 = withTx(db, tx -> tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 1))));
+//        Result result2 = withTx(db, tx -> tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 2))));
+//        Result result4 = withTx(db, tx -> tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 4))));
+//        Result result8 = withTx(db, tx -> tx.execute(STATEMENT_STREAM, Map.of("config", Map.of("similarityCutoff",-0.1,"topK",1,"concurrency", 8))));
     }
 
     @Test
     public void topNjaccardStreamTest() {
-        Result results = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("top",2)), r -> r);
-        assert01(results.next());
-        assert02(results.next());
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM, Map.of("config", Map.of("top",2)), results -> {
+            assert01(results.next());
+            assert02(results.next());
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
     public void jaccardStreamTest() {
-        Result results = db.executeTransactionally(STATEMENT_STREAM, Map.of("config", Map.of("concurrency",1)), r -> r);
-        assertTrue(results.hasNext());
-        assert01(results.next());
-        assert02(results.next());
-        assert12(results.next());
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM, Map.of("config", Map.of("concurrency",1)), results -> {
+            assertTrue(results.hasNext());
+            assert01(results.next());
+            assert02(results.next());
+            assert12(results.next());
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
     public void jaccardStreamSourceTargetIdsTest() {
-        Result results = db.executeTransactionally(STATEMENT_STREAM, Map.of("config",Map.of(
+        testResult(db, STATEMENT_STREAM, Map.of("config",Map.of(
                 "concurrency",1,
                 "targetIds", Collections.singletonList(1L),
-                "sourceIds", Collections.singletonList(0L))), r -> r);
+                "sourceIds", Collections.singletonList(0L))), results -> {
 
-        assertTrue(results.hasNext());
-        assert01(results.next());
-        assertFalse(results.hasNext());
+            assertTrue(results.hasNext());
+            assert01(results.next());
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
     public void jaccardStreamSourceTargetIdsTopKTest() {
-        Result results = db.executeTransactionally(STATEMENT_STREAM, Map.of("config",Map.of(
+        testResult(db, STATEMENT_STREAM, Map.of("config",Map.of(
                 "concurrency",1,
                 "topK", 1,
-                "sourceIds", Collections.singletonList(0L))), r -> r);
+                "sourceIds", Collections.singletonList(0L))), results -> {
 
-        assertTrue(results.hasNext());
-        assert01(results.next());
-        assertFalse(results.hasNext());
+            assertTrue(results.hasNext());
+            assert01(results.next());
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
@@ -207,12 +248,13 @@ public class JaccardTest {
         Map<String, Object> params = Map.of("config", Map.of( "concurrency", 1,"topK", 1));
         System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
-        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
-        assertTrue(results.hasNext());
-        assert01(results.next());
-        assert01(flip(results.next()));
-        assert02(flip(results.next()));
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM, params, results -> {
+            assertTrue(results.hasNext());
+            assert01(results.next());
+            assert01(flip(results.next()));
+            assert02(flip(results.next()));
+            assertFalse(results.hasNext());
+        });
     }
 
     private Map<String, Object> flip(Map<String, Object> row) {
@@ -240,11 +282,12 @@ public class JaccardTest {
         Map<String, Object> params = Map.of("config", Map.of("topK", 4, "concurrency", 4, "similarityCutoff", -0.1));
         System.out.println(db.executeTransactionally(STATEMENT_STREAM,params, Result::resultAsString));
 
-        Result results = db.executeTransactionally(STATEMENT_STREAM,params, r -> r);
-        assertSameSource(results, 2, 0L);
-        assertSameSource(results, 2, 1L);
-        assertSameSource(results, 2, 2L);
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM,params, results -> {
+            assertSameSource(results, 2, 0L);
+            assertSameSource(results, 2, 1L);
+            assertSameSource(results, 2, 2L);
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
@@ -253,11 +296,12 @@ public class JaccardTest {
 
         System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
-        Result results = db.executeTransactionally(STATEMENT_STREAM, params, r -> r);
-        assertSameSource(results, 2, 0L);
-        assertSameSource(results, 2, 1L);
-        assertSameSource(results, 2, 2L);
-        assertFalse(results.hasNext());
+        testResult(db, STATEMENT_STREAM, params, results -> {
+            assertSameSource(results, 2, 0L);
+            assertSameSource(results, 2, 1L);
+            assertSameSource(results, 2, 2L);
+            assertFalse(results.hasNext());
+        });
     }
 
     @Test
@@ -300,33 +344,34 @@ public class JaccardTest {
                 "ORDER BY id(a), id(b)";
 
         System.out.println(db.executeTransactionally(checkSimilaritiesQuery, Map.of(), Result::resultAsString));
-        Result result = db.executeTransactionally(checkSimilaritiesQuery, Map.of(), r -> r);
+        testResult(db, checkSimilaritiesQuery, Map.of(), result -> {
 
-        assertTrue(result.hasNext());
-        Map<String, Object> row = result.next();
-        assertEquals(row.get("node1"), "Alice");
-        assertEquals(row.get("node2"), "Bob");
-        assertEquals((double) row.get("score"), 0.66, 0.01);
+            assertTrue(result.hasNext());
+            Map<String, Object> row = result.next();
+            assertEquals(row.get("node1"), "Alice");
+            assertEquals(row.get("node2"), "Bob");
+            assertEquals((double) row.get("score"), 0.66, 0.01);
 
-        assertTrue(result.hasNext());
-        row = result.next();
-        assertEquals(row.get("node1"), "Alice");
-        assertEquals(row.get("node2"), "Charlie");
-        assertEquals((double) row.get("score"), 0.33, 0.01);
+            assertTrue(result.hasNext());
+            row = result.next();
+            assertEquals(row.get("node1"), "Alice");
+            assertEquals(row.get("node2"), "Charlie");
+            assertEquals((double) row.get("score"), 0.33, 0.01);
 
-        assertTrue(result.hasNext());
-        row = result.next();
-        assertEquals(row.get("node1"), "Bob");
-        assertEquals(row.get("node2"), "Alice");
-        assertEquals((double) row.get("score"), 0.66, 0.01);
+            assertTrue(result.hasNext());
+            row = result.next();
+            assertEquals(row.get("node1"), "Bob");
+            assertEquals(row.get("node2"), "Alice");
+            assertEquals((double) row.get("score"), 0.66, 0.01);
 
-        assertTrue(result.hasNext());
-        row = result.next();
-        assertEquals(row.get("node1"), "Charlie");
-        assertEquals(row.get("node2"), "Alice");
-        assertEquals((double) row.get("score"), 0.33, 0.01);
+            assertTrue(result.hasNext());
+            row = result.next();
+            assertEquals(row.get("node1"), "Charlie");
+            assertEquals(row.get("node2"), "Alice");
+            assertEquals((double) row.get("score"), 0.33, 0.01);
 
-        assertFalse(result.hasNext());
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -335,9 +380,10 @@ public class JaccardTest {
                 "write", true,
                 "similarityCutoff", 0.1));
 
-        Result writeResult = db.executeTransactionally(STATEMENT, params, r -> r);
-        Map<String, Object> writeRow = writeResult.next();
-        assertEquals(-1L, (long) writeRow.get("computations"));
+        testResult(db, STATEMENT, params, writeResult -> {
+            Map<String, Object> writeRow = writeResult.next();
+            assertEquals(-1L, (long) writeRow.get("computations"));
+        });
     }
 
     @Test
@@ -347,9 +393,10 @@ public class JaccardTest {
                 "showComputations", true,
                 "similarityCutoff", 0.1));
 
-        Result writeResult = db.executeTransactionally(STATEMENT, params, r -> r);
-        Map<String, Object> writeRow = writeResult.next();
-        assertEquals(3L, (long) writeRow.get("computations"));
+        testResult(db , STATEMENT, params, writeResult -> {
+            Map<String, Object> writeRow = writeResult.next();
+            assertEquals(3L, (long) writeRow.get("computations"));
+        });
     }
 
     private void assert12(Map<String, Object> row) {

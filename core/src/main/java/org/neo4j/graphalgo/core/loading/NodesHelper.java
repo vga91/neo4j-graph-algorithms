@@ -39,8 +39,6 @@ import org.neo4j.storageengine.api.RelationshipSelection;
  * and for those we need the upper bound during import buffering.
  * <p>
  * The existing methods
- * {@link org.neo4j.internal.kernel.api.helpers.Nodes#countAll(NodeCursor, CursorFactory)} and
- * {@link org.neo4j.internal.kernel.api.helpers.Nodes#countAll(NodeCursor, CursorFactory, int)}
  * return a degree count that, while being technically correct, does not cover the full buffer-size that we require.
  */
 public final class NodesHelper {
@@ -48,7 +46,6 @@ public final class NodesHelper {
     /**
      * Counts all the relationships from node where the cursor is positioned.
      * <p>
-     * NOTE: Is different from {@link org.neo4j.internal.kernel.api.helpers.Nodes#countAll(NodeCursor, CursorFactory)}]
      * in that it counts loops twice. See the class-level docs for the reasoning.
      *
      * @param nodeCursor a cursor positioned at the node whose relationships we're counting
@@ -86,8 +83,8 @@ public final class NodesHelper {
 
     /**
      * Counts all the relationships of the given type from node where the cursor is positioned.
-     * <p>
-     * NOTE: Is different from {@link org.neo4j.internal.kernel.api.helpers.Nodes#countAll(NodeCursor, CursorFactory, int)}
+     * <p> TODO - MAYBE WE CAN GET RID OF THIS.... TRY
+     * NOTE: Is different from {@link org.neo4j.internal.kernel.api.helpers.Nodes#countAll(NodeCursor)}
      * in that it counts loops twice. See the class-level docs for the reasoning.
      *
      * @param nodeCursor a cursor positioned at the node whose relationships we're counting
