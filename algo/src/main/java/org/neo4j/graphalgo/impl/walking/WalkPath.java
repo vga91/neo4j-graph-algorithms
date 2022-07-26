@@ -133,7 +133,6 @@ public class WalkPath implements Path {
     public Iterator<Entity> iterator() {
         return new Iterator<>() {
             int i = 0;
-
             @Override
             public boolean hasNext() {
                 return i < 2 * size;

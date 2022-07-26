@@ -94,6 +94,11 @@ public final class IdMap implements IdMapping, NodeIterator, BatchNodeIterable {
         tracker.add(MemoryUsage.sizeOfIntArray(nodeToGraphIds.values.length));
         tracker.add(MemoryUsage.sizeOfLongArray(size()));
         graphIds = new long[size()];
+        
+//        nodeToGraphIds.forEach(item -> {
+//            System.out.println("item = " + item);
+//        });
+        
         for (final LongIntCursor cursor : nodeToGraphIds) {
             graphIds[cursor.value] = cursor.key;
         }

@@ -50,10 +50,7 @@ public class DegreeProcIssue848IntegrationTest {
     @BeforeClass
     public static void setup() throws KernelException {
         db = TestDatabaseCreator.createTestDatabase();
-        try (Transaction tx = db.beginTx()) {
-            db.executeTransactionally(DB_CYPHER);
-            tx.commit();
-        }
+        db.executeTransactionally(DB_CYPHER);
 
         db.getDependencyResolver()
                 .resolveDependency(GlobalProcedures.class)

@@ -21,7 +21,7 @@ package org.neo4j.graphalgo.api;
 import java.util.NoSuchElementException;
 
 /**
- * TODO
+ * TODO: it's needed?
  */
 public abstract class PrimitiveIntBaseIterator implements PrimitiveIntIterator {
     private boolean hasNextDecided;

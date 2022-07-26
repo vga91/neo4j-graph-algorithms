@@ -41,6 +41,7 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
@@ -54,7 +55,7 @@ public final class EigenvectorCentralityTest {
 
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() {
-        return Arrays.asList(
+        return List.of(
                 new Object[]{HeavyGraphFactory.class, "HeavyGraphFactory"},
                 new Object[]{HeavyCypherGraphFactory.class, "HeavyCypherGraphFactory"},
                 new Object[]{HugeGraphFactory.class, "HugeGraphFactory"},
@@ -148,6 +149,7 @@ public final class EigenvectorCentralityTest {
                     .load(graphImpl);
 
         } else {
+            // todo - il problema è qua
             graph = new GraphLoader(db)
                     .withLabel(label)
                     .withRelationshipType("TYPE1")
