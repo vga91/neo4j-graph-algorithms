@@ -28,9 +28,11 @@ import java.util.List;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.ShortestPathProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
@@ -38,8 +40,9 @@ import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 public class ShortestPathAStarTest {
-	
-	private static GraphDatabaseAPI db;
+
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 	
 	@BeforeClass
     public static void setup() throws KernelException {
@@ -85,7 +88,6 @@ public class ShortestPathAStarTest {
                         "  (nO)-[:TYPE {cost:603.0}]->(nP),\n" +
                         "  (nP)-[:TYPE {cost:847.0}]->(nX)";
 
-        db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
             db.executeTransactionally(createGraph);
             tx.commit();

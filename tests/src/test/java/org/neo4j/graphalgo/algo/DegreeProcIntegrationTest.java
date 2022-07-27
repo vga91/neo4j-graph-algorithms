@@ -20,11 +20,13 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.DegreeCentralityProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
@@ -41,7 +43,9 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 @RunWith(Parameterized.class)
 public class DegreeProcIntegrationTest {
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
+    
     private static Map<Long, Double> incomingExpected = new HashMap<>();
     private static Map<Long, Double> bothExpected = new HashMap<>();
     private static Map<Long, Double> outgoingExpected = new HashMap<>();
@@ -66,7 +70,6 @@ public class DegreeProcIntegrationTest {
 
     @BeforeClass
     public static void setup() throws KernelException {
-        db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
             db.executeTransactionally(DB_CYPHER);
             tx.commit();

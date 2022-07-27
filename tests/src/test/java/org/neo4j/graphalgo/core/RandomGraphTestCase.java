@@ -20,25 +20,29 @@ package org.neo4j.graphalgo.core;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public abstract class RandomGraphTestCase {
     private static boolean hasFailures = false;
 
-    protected static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     static final int NODE_COUNT = 100;
 
@@ -53,9 +57,13 @@ public abstract class RandomGraphTestCase {
     };
 
     private static final String RANDOM_GRAPH_TPL =
-            "FOREACH (x IN range(1, %d) | CREATE (:Label)) " +
+            "FOREACH (x IN range(1, %d) | CREATE (:Label)) ";
+    
+    private static final String RANDOM_GRAPH_TPL2 =
                     "WITH 0.1 AS p " +
-                    "MATCH (n1),(n2) WITH n1,n2,p LIMIT 1000 WHERE rand() < p " +
+                    "MATCH (n1) WHERE rand() < p WITH p, n1 LIMIT 1000 \n" +
+                            "MATCH (n2) WHERE rand() < p  \n" +
+                            "WITH n1,n2 LIMIT 1000 " +
                     "CREATE (n1)-[:TYPE {weight:ceil(10*rand())/10}]->(n2)";
 
     private static final String RANDOM_LABELS =
@@ -63,7 +71,10 @@ public abstract class RandomGraphTestCase {
 
     @BeforeClass
     public static void setupGraph() {
-        db = buildGraph(NODE_COUNT);
+//        db = (DatabaseRule) 
+        
+        // todo - decommentare
+//                buildGraph(NODE_COUNT);
     }
 
     @AfterClass
@@ -82,21 +93,23 @@ public abstract class RandomGraphTestCase {
 //        if (db!=null) db.shutdown();
     }
 
-    static GraphDatabaseAPI buildGraph(int nodeCount) {
+    static void buildGraph(int nodeCount) {
         String createGraph = String.format(RANDOM_GRAPH_TPL, nodeCount);
-        List<String> cyphers = Arrays.asList(createGraph, RANDOM_LABELS);
+        List<String> cyphers = Arrays.asList(createGraph, RANDOM_GRAPH_TPL2, RANDOM_LABELS);
 
-        final GraphDatabaseService db = TestDatabaseCreator.createTestDatabase();
+//        db.executeTransactionally(cyphers.get(0), Map.of(), Result::resultAsString);
+//        db.executeTransactionally(cyphers.get(1), Map.of(), Result::resultAsString);
+//        db.executeTransactionally(cyphers.get(2), Map.of(), Result::resultAsString);
         for (String cypher : cyphers) {
             try (Transaction tx = db.beginTx()) {
-                 tx.execute(cypher);
+                tx.execute(cypher);
                 tx.commit();
             } catch (Exception e) {
                 markFailure();
                 throw e;
             }
         }
-        return (GraphDatabaseAPI) db;
+//        return (GraphDatabaseAPI) db;
     }
 
     static void markFailure() {

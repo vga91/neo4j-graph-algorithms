@@ -19,9 +19,12 @@
 package org.neo4j.graphalgo.algo.linkprediction;
 
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.neo4j.configuration.GraphDatabaseSettings;
 import org.neo4j.graphalgo.linkprediction.LinkPrediction;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Result;
@@ -44,12 +47,12 @@ public class SameCommunityProcIntegrationTest {
             "SET praveena.community=1\n" +
             "CREATE (jennifer:Person {name: 'Jennifer'})\n";
 
-    private static GraphDatabaseService db;
+    @ClassRule
+    public static DatabaseRule db  = new ImpermanentDatabaseRule()
+            .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of("algo.*"));
 
     @BeforeClass
     public static void setUp() throws Exception {
-        db = new ImpermanentDatabaseRule()
-                .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of("algo.*"));
 
         ((GraphDatabaseAPI) db).getDependencyResolver()
                 .resolveDependency(GlobalProcedures.class)

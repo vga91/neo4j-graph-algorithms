@@ -19,7 +19,8 @@
 package org.neo4j.graphalgo.walking;
 
 import org.junit.*;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.*;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.internal.helpers.collection.Iterators;
@@ -40,30 +41,14 @@ public class RandomWalkLargeResultTest {
 
     private static final int NODE_COUNT = 20000;
 
-    private static GraphDatabaseAPI db;
-    private Transaction tx;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void beforeClass() throws KernelException {
-        db = TestDatabaseCreator.createTestDatabase();
         db.getDependencyResolver().resolveDependency(GlobalProcedures.class).registerProcedure(NodeWalkerProc.class);
 
         db.executeTransactionally(buildDatabaseQuery(), Collections.singletonMap("count",NODE_COUNT));
-    }
-//
-//    @AfterClass
-//    public static void AfterClass() {
-//        db.shutdown();
-//    }
-
-    @Before
-    public void setUp() throws Exception {
-        tx = db.beginTx();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        tx.close();
     }
 
     private static String buildDatabaseQuery() {

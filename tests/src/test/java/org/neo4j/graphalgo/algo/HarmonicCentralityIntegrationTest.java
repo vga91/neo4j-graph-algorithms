@@ -28,6 +28,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.neo4j.graphalgo.HarmonicCentralityProc;
 import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Result;
@@ -38,6 +39,7 @@ import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.*;
 import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.rebind;
 
 
 /**
@@ -49,7 +51,7 @@ public class HarmonicCentralityIntegrationTest {
     public static final String TYPE = "TYPE";
 
     @ClassRule
-    public static final ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public static final DatabaseRule db = new ImpermanentDatabaseRule();
 
     private static DefaultBuilder builder;
     private static long centerNodeId;
@@ -86,13 +88,17 @@ public class HarmonicCentralityIntegrationTest {
 
         builder.newRingBuilder()
                 .createRing(5)
-                .forEachNodeInTx(node -> {
-                    node.createRelationshipTo(center, type);
+                .forEachNodeInTx((node, tx) -> {
+                    Node nodeBound = rebind(tx, node);
+                    Node centerBound = rebind(tx, center);
+                    nodeBound.createRelationshipTo(centerBound, type);
                 })
                 .newRingBuilder()
                 .createRing(5)
-                .forEachNodeInTx(node -> {
-                    center.createRelationshipTo(node, type);
+                .forEachNodeInTx((node, tx) -> {
+                    Node nodeBound = rebind(tx, node);
+                    Node centerBound = rebind(tx, center);
+                    centerBound.createRelationshipTo(nodeBound, type);
                 });
 
         db.getDependencyResolver()

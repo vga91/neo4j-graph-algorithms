@@ -20,11 +20,13 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.ShortestPathDeltaSteppingProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
@@ -53,7 +55,8 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 @RunWith(Parameterized.class)
 public final class ShortestPathDeltaSteppingProcUndirectedTest {
 
-    private static GraphDatabaseAPI api;
+    @ClassRule
+    public static DatabaseRule api = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setup() throws KernelException {
@@ -85,8 +88,6 @@ public final class ShortestPathDeltaSteppingProcUndirectedTest {
                         " (g)-[:TYPE {cost:2}]->(h),\n" +
                         " (h)-[:TYPE {cost:2}]->(i),\n" +
                         " (i)-[:TYPE {cost:2}]->(x)";
-
-        api = TestDatabaseCreator.createTestDatabase();
 
         api.getDependencyResolver()
                 .resolveDependency(GlobalProcedures.class)

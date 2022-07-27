@@ -20,16 +20,18 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.StronglyConnectedComponentsProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,7 +47,9 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 public class StronglyConnectedComponentsProcIntegrationTest {
 
     private static final RelationshipType type = RelationshipType.withName("TYPE");
-    private static GraphDatabaseAPI db;
+
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setup() throws KernelException {
@@ -65,8 +69,6 @@ public class StronglyConnectedComponentsProcIntegrationTest {
                 // group 2
                 "CREATE (d)-[:TYPE]->(e) " +
                 "CREATE (d)<-[:TYPE]-(e) " ;
-
-        db = TestDatabaseCreator.createTestDatabase();
 
         try (Transaction tx = db.beginTx()) {
             db.executeTransactionally(cypher);

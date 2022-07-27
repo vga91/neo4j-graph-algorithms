@@ -28,7 +28,6 @@ import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.impl.triangle.TriangleCountQueue;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -60,8 +59,6 @@ public class ClusteringCoefficientWikiTest {
 
     @BeforeClass
     public static void setup() throws Exception {
-
-        db = TestDatabaseCreator.createTestDatabase();
 
         final String cypher =
                 "CREATE (a:Node {name:'a'})\n" +

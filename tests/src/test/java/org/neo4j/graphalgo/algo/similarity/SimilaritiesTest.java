@@ -20,9 +20,11 @@ package org.neo4j.graphalgo.algo.similarity;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.similarity.Similarities;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
@@ -57,11 +59,11 @@ public class SimilaritiesTest {
     // euclid similarity taken from here: http://stats.stackexchange.com/a/158285
     // pearson similarity taken from here: http://guides.neo4j.com/sandbox/recommendations
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setUp() throws Exception {
-        db = TestDatabaseCreator.createTestDatabase();
         db.getDependencyResolver()
                 .resolveDependency(GlobalProcedures.class)
                 .registerFunction(Similarities.class);

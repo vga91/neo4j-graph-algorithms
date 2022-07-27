@@ -21,12 +21,12 @@ package org.neo4j.graphalgo.algo;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.neo4j.graphalgo.BetweennessCentralityProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
@@ -36,6 +36,8 @@ import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.impl.betweenness.BetweennessCentrality;
 import org.neo4j.graphalgo.impl.betweenness.BetweennessCentralitySuccessorBrandes;
 import org.neo4j.graphalgo.impl.betweenness.ParallelBetweennessCentrality;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Result;
@@ -47,6 +49,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.*;
 import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.rebind;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withEmptyTx;
 
 
 /**
@@ -57,7 +61,9 @@ public class BetweennessCentralityIntegrationTest {
 
     public static final String TYPE = "TYPE";
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
+    
     private static Graph graph;
     private static DefaultBuilder builder;
     private static long centerNodeId;
@@ -67,8 +73,6 @@ public class BetweennessCentralityIntegrationTest {
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
-
-        db = TestDatabaseCreator.createTestDatabase();
 
         builder = GraphBuilder.create(db)
                 .setLabel("Node")
@@ -89,13 +93,17 @@ public class BetweennessCentralityIntegrationTest {
 
         builder.newRingBuilder()
                 .createRing(5)
-                .forEachNodeInTx(node -> {
-                    node.createRelationshipTo(center, type);
+                .forEachNodeInTx((node, tx) -> {
+                    Node nodeBound = rebind(tx, node);
+                    Node centerBound = rebind(tx, center);
+                    nodeBound.createRelationshipTo(centerBound, type);
                 })
                 .newRingBuilder()
                 .createRing(5)
-                .forEachNodeInTx(node -> {
-                    center.createRelationshipTo(node, type);
+                .forEachNodeInTx((node, tx) -> {
+                    Node nodeBound = rebind(tx, node);
+                    Node centerBound = rebind(tx, center);
+                    centerBound.createRelationshipTo(nodeBound, type);
                 });
 
         graph = new GraphLoader(db)

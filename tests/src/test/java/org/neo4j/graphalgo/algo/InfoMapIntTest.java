@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.neo4j.graphalgo.InfoMapProc;
 import org.neo4j.graphalgo.PageRankProc;
 import org.neo4j.graphalgo.api.Graph;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Node;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
@@ -53,7 +54,7 @@ public class InfoMapIntTest {
 
 
     @ClassRule
-    public static ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     private static Graph graph;
 

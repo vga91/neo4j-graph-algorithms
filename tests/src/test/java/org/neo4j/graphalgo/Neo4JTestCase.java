@@ -20,6 +20,9 @@ package org.neo4j.graphalgo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -36,12 +39,8 @@ public abstract class Neo4JTestCase {
     public static final String WEIGHT_PROPERTY = "weight";
     public static final String RELATION = "RELATION";
 
-    protected static GraphDatabaseService db;
-
-    @BeforeClass
-    public static void setup() {
-        db = TestDatabaseCreator.createTestDatabase();
-    }
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     public static int newNode() {
         try (Transaction transaction = db.beginTx()) {

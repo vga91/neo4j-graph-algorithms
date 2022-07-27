@@ -35,7 +35,7 @@ public interface PageRankAlgorithm {
         if (graph instanceof HugeGraph) {
             HugeGraph huge = (HugeGraph) graph;
             return new HugePageRank(AllocationTracker.EMPTY, huge, 1.0, sourceNodeIds, pageRankVariant);
-        } // todo - qui non arrivano i nodeIdMap
+        }
 
         return new PageRank(graph, 1.0, sourceNodeIds, pageRankVariant);
     }

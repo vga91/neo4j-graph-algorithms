@@ -28,6 +28,7 @@ import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.internal.helpers.collection.Pair;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
@@ -72,7 +73,7 @@ public final class MultiSourceBFSTest {
             "  (f)-[:BAR]->(d)\n";
 
     @Rule
-    public ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public DatabaseRule db = new ImpermanentDatabaseRule();
 
     @Test
     public void testPaperExample() {

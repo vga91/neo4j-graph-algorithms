@@ -19,7 +19,8 @@
 package org.neo4j.graphalgo.walking;
 
 import org.junit.*;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.*;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.internal.helpers.collection.Iterators;
@@ -37,12 +38,12 @@ public class Node2VecWalkTest {
 
     private static final int NODE_COUNT = 54;
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
     private Transaction tx;
 
     @BeforeClass
     public static void beforeClass() throws KernelException {
-        db = TestDatabaseCreator.createTestDatabase();
         db.getDependencyResolver().resolveDependency(GlobalProcedures.class).registerProcedure(NodeWalkerProc.class);
 
         db.executeTransactionally(buildDatabaseQuery(), Collections.singletonMap("count",NODE_COUNT-4));

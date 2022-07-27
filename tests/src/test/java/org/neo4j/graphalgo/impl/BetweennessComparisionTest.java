@@ -30,12 +30,14 @@ import org.neo4j.graphalgo.core.utils.ProgressTimer;
 import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphalgo.impl.betweenness.*;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.rebind;
 
 /**
  * @author mknblch
@@ -44,7 +46,7 @@ import static org.junit.Assert.assertEquals;
 public class BetweennessComparisionTest {
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     public static final String TYPE = "TYPE";
     public static final int NODE_COUNT = 500;
@@ -67,13 +69,15 @@ public class BetweennessComparisionTest {
             defaultBuilder
                     .newCompleteGraphBuilder()
                     .createCompleteGraph(NODE_COUNT - 1)
-                    .forEachRelInTx(r -> {
+                    .forEachRelInTx((r, tx) -> {
                         if (Math.random() > 0.005) { // keep ~2.5 connections per node
                             r.delete();
                         }
                     })
-                    .forEachNodeInTx(n -> {
-                        defaultBuilder.createRelationship(n, center);
+                    .forEachNodeInTx((n, tx) -> {
+                        final Node nBound = rebind(tx, n);
+                        final Node centerBound = rebind(tx, center);
+                        defaultBuilder.createRelationship(nBound, centerBound);
                     });
 
             cId = center.getId();

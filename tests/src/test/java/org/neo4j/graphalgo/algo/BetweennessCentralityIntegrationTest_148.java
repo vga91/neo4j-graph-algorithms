@@ -20,19 +20,20 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.AdditionalMatchers;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.neo4j.graphalgo.BetweennessCentralityProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -51,12 +52,11 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 @RunWith(MockitoJUnitRunner.class)
 public class BetweennessCentralityIntegrationTest_148 {
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
-
-        db = TestDatabaseCreator.createTestDatabase();
 
         db.getDependencyResolver()
                 .resolveDependency(GlobalProcedures.class)
@@ -75,18 +75,10 @@ public class BetweennessCentralityIntegrationTest_148 {
                         ",(nMark)-[:FRIEND]->(nDoug)\n";
 
         try (ProgressTimer timer = ProgressTimer.start(l -> System.out.printf("Setup took %d ms%n", l))) {
-            try (Transaction tx = db.beginTx()) {
-                db.executeTransactionally(importQuery);
-                tx.commit();
-            }
+            db.executeTransactionally(importQuery);
         }
 
     }
-
-//    @AfterClass
-//    public static void tearDown() throws Exception {
-//        if (db != null) db.shutdown();
-//    }
 
     private String name(long id) {
         String[] name = {""};

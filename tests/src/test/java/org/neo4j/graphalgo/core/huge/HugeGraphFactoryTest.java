@@ -25,6 +25,7 @@ import org.neo4j.graphalgo.PropertyMapping;
 import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
@@ -39,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 public class HugeGraphFactoryTest {
 
     @ClassRule
-    public static ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static DatabaseRule DB = new ImpermanentDatabaseRule();
 
     private static long id1;
     private static long id2;

@@ -20,15 +20,18 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.configuration.GraphDatabaseSettings;
+import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphalgo.EigenvectorCentralityProc;
 import org.neo4j.graphalgo.PageRankProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Label;
-import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
@@ -38,16 +41,36 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.test.TestDatabaseManagementServiceBuilder;
 
 import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Consumer;
 
 import static org.junit.Assert.*;
+import static org.neo4j.configuration.GraphDatabaseSettings.DEFAULT_DATABASE_NAME;
+import static org.neo4j.configuration.GraphDatabaseSettings.load_csv_file_url_root;
 import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 @RunWith(Parameterized.class)
 public class EigenvectorCentralityProcIntegrationTest {
+    public static final URL RESOURCE = Thread.currentThread().getContextClassLoader().getResource("got/got-s1-nodes.csv");
+    
+    @ClassRule
+    public static DatabaseRule db;
 
-    private static GraphDatabaseAPI db;
+    static {
+        try {
+            db = new ImpermanentDatabaseRule()
+                        .setConfig(load_csv_file_url_root, Path.of(RESOURCE.toURI()).getParent());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+//    private static final URL loadTest = Thread.currentThread().getContextClassLoader().getResource("got/got-s1-nodes.csv");//.getPath();
+
+    
     private static Map<Long, Double> expected = new HashMap<>();
     private static Map<Long, Double> weightedExpected = new HashMap<>();
 
@@ -57,13 +80,14 @@ public class EigenvectorCentralityProcIntegrationTest {
 //    }
 
     @BeforeClass
-    public static void setup() throws KernelException {
+    public static void setup() throws Exception {
         ClassLoader classLoader = EigenvectorCentralityProcIntegrationTest.class.getClassLoader();
-        File file = new File(classLoader.getResource("got/got-s1-nodes.csv").getFile());
+//        File file = new File(classLoader.getResource("got/got-s1-nodes.csv").getFile());
 
-        db = (GraphDatabaseAPI) new TestDatabaseManagementServiceBuilder(new File(UUID.randomUUID().toString()).toPath())
-                .setConfig(GraphDatabaseSettings.load_csv_file_url_root, file.getParentFile().toPath())
-                .build();
+//        final DatabaseManagementService databaseManagementService = new TestDatabaseManagementServiceBuilder(file.getParentFile().toPath())
+//                .setConfig(GraphDatabaseSettings.load_csv_file_url_root, file.getParentFile().toPath())
+//                .build();
+//        db = (GraphDatabaseAPI) databaseManagementService.database(DEFAULT_DATABASE_NAME);
         
 
         try (Transaction tx = db.beginTx()) {

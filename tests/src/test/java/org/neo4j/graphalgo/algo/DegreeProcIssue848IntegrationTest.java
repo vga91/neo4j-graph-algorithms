@@ -20,11 +20,13 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.DegreeCentralityProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
@@ -41,7 +43,8 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 @RunWith(Parameterized.class)
 public class DegreeProcIssue848IntegrationTest {
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     private static final String DB_CYPHER = "" +
             "UNWIND range(1,10001) as s\n" +
@@ -49,7 +52,6 @@ public class DegreeProcIssue848IntegrationTest {
 
     @BeforeClass
     public static void setup() throws KernelException {
-        db = TestDatabaseCreator.createTestDatabase();
         db.executeTransactionally(DB_CYPHER);
 
         db.getDependencyResolver()

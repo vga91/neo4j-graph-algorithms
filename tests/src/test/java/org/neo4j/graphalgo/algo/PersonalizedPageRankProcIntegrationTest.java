@@ -20,11 +20,13 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.PageRankProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Result;
@@ -42,7 +44,8 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 @RunWith(Parameterized.class)
 public class PersonalizedPageRankProcIntegrationTest {
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
     private static Map<Long, Double> expected = new HashMap<>();
 
     private static final String DB_CYPHER = "" +
@@ -92,7 +95,6 @@ public class PersonalizedPageRankProcIntegrationTest {
 
     @BeforeClass
     public static void setup() throws KernelException {
-        db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
             db.executeTransactionally(DB_CYPHER);
             tx.commit();

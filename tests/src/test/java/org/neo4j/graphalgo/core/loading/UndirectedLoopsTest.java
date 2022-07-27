@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
@@ -35,7 +36,7 @@ import static org.junit.Assert.assertArrayEquals;
 public final class UndirectedLoopsTest {
 
     @Rule
-    public ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public DatabaseRule DB = new ImpermanentDatabaseRule();
 
     private static final String DB_CYPHER = "" +
             "CREATE (a:Label1 {name:\"a\"})\n" +

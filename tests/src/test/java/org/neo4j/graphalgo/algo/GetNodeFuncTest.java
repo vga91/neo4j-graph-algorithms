@@ -19,9 +19,11 @@
 package org.neo4j.graphalgo.algo;
 
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.configuration.GraphDatabaseSettings;
 import org.neo4j.graphalgo.GetNodeFunc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Result;
@@ -34,13 +36,12 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 public class GetNodeFuncTest {
-    public static GraphDatabaseService DB;
+    @ClassRule
+    public static DatabaseRule DB = new ImpermanentDatabaseRule()
+            .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of("algo.*"));
 
     @BeforeClass
     public static void setUp() throws Exception {
-        DB = new ImpermanentDatabaseRule()
-                .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of("algo.*"));
-
         GlobalProcedures proceduresService = ((GraphDatabaseAPI) DB).getDependencyResolver().resolveDependency(GlobalProcedures.class);
 
         proceduresService.registerProcedure(GlobalProcedures.class, true);

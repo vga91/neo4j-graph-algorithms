@@ -22,6 +22,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.IsFiniteFunc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
@@ -36,7 +37,7 @@ import static org.junit.Assert.assertTrue;
 
 public class IsFiniteFuncTest {
     @ClassRule
-    public static ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setUp() throws Exception {

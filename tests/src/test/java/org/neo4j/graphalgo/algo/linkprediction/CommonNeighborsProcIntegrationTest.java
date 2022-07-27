@@ -22,6 +22,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.neo4j.configuration.GraphDatabaseSettings;
 import org.neo4j.graphalgo.linkprediction.LinkPrediction;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Result;
@@ -57,12 +58,11 @@ public class CommonNeighborsProcIntegrationTest {
 
             "MERGE (praveena)-[:FRIENDS]-(michael)";
 
-    private static GraphDatabaseService db;
+    private static final DatabaseRule db = new ImpermanentDatabaseRule()
+            .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of("algo.*"));
 
     @BeforeClass
     public static void setUp() throws Exception {
-        db = new ImpermanentDatabaseRule()
-                .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of("algo.*"));
 
         ((GraphDatabaseAPI) db).getDependencyResolver()
                 .resolveDependency(GlobalProcedures.class)

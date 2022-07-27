@@ -20,6 +20,7 @@ package org.neo4j.graphalgo.core.heavyweight;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -30,9 +31,10 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.RelationshipConsumer;
 import org.neo4j.graphalgo.api.WeightedRelationshipConsumer;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyInt;
@@ -48,7 +50,8 @@ import static org.mockito.Mockito.verify;
 @RunWith(MockitoJUnitRunner.class)
 public class HeavyGraphFactoryTest {
 
-    private static GraphDatabaseService db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     private static long id1;
     private static long id2;
@@ -62,8 +65,6 @@ public class HeavyGraphFactoryTest {
 
     @BeforeClass
     public static void setup() {
-
-        db = TestDatabaseCreator.createTestDatabase();
 
         try (final Transaction transaction = db.beginTx()) {
             final Node node1 = transaction.createNode(Label.label("Node1"));

@@ -25,7 +25,10 @@ import org.neo4j.internal.kernel.api.Read;
 import org.neo4j.internal.kernel.api.TokenRead;
 import org.neo4j.kernel.api.KernelTransaction;
 //import org.neo4j.kernel.impl.newapi.InternalReadOps;
+import org.neo4j.kernel.impl.newapi.InternalReadOps;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
+
+import java.util.Arrays;
 
 public final class GraphDimensions extends StatementFunction<GraphDimensions> {
     private final GraphSetup setup;
@@ -150,7 +153,7 @@ public final class GraphDimensions extends StatementFunction<GraphDimensions> {
         nodePropId = propertyKey(tokenRead, setup.shouldLoadNodeProperty(), setup.nodePropertyName);
 
         nodeCount = dataRead.countsForNode(labelId);
-        allNodesCount = 1L;//InternalReadOps.getHighestPossibleNodeCount(dataRead, api);
+        allNodesCount = InternalReadOps.getHighestPossibleNodeCount(dataRead, api);
         maxRelCount = Math.max(
                 dataRead.countsForRelationshipWithoutTxState(
                         labelId,
@@ -163,7 +166,8 @@ public final class GraphDimensions extends StatementFunction<GraphDimensions> {
                         labelId
                 )
         );
-        allRelsCount = 1L;//InternalReadOps.getHighestPossibleRelationshipCount(dataRead, api);
+        allRelsCount = InternalReadOps.getHighestPossibleRelationshipCount(dataRead, api);
+        System.out.println("this.toString() = " + this.toString());
         return this;
     }
 
@@ -171,4 +175,20 @@ public final class GraphDimensions extends StatementFunction<GraphDimensions> {
         return load ? tokenRead.propertyKey(propertyName) : TokenRead.NO_TOKEN;
     }
 
+    @Override
+    public String toString() {
+        return "GraphDimensions{" +
+                "setup=" + setup +
+                ", nodeCount=" + nodeCount +
+                ", allNodesCount=" + allNodesCount +
+                ", maxRelCount=" + maxRelCount +
+                ", allRelsCount=" + allRelsCount +
+                ", labelId=" + labelId +
+                ", relationId=" + Arrays.toString(relationId) +
+                ", relWeightId=" + relWeightId +
+                ", nodeWeightId=" + nodeWeightId +
+                ", nodePropId=" + nodePropId +
+                ", nodePropIds=" + Arrays.toString(nodePropIds) +
+                '}';
+    }
 }

@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.neo4j.graphalgo.linkprediction.NeighborsFinder;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
@@ -39,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 public class NeighborsFinderTest {
 
     @Rule
-    public final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     private GraphDatabaseAPI api;
     public static final RelationshipType FRIEND = RelationshipType.withName("FRIEND");

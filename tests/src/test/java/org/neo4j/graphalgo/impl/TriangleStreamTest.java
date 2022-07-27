@@ -33,6 +33,7 @@ import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
 import org.neo4j.graphalgo.impl.triangle.TriangleStream;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
@@ -46,6 +47,9 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.rebind;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withEmptyTx;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withTx;
 
 /**
  * @author mknblch
@@ -58,7 +62,7 @@ public class TriangleStreamTest {
     private static final long TRIANGLES = 1000;
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     private static long centerId;
 
@@ -85,7 +89,11 @@ public class TriangleStreamTest {
             final Node center = builder.createNode();
             builder.newRingBuilder()
                     .createRing((int) TRIANGLES)
-                    .forEachNodeInTx(node -> center.createRelationshipTo(node, type));
+                    .forEachNodeInTx((node, tx) -> {
+                        Node nodeBound = rebind(tx, node);
+                        Node centerBound = rebind(tx, center);
+                        centerBound.createRelationshipTo(nodeBound, type);
+                    });
             centerId = center.getId();
         }
     }

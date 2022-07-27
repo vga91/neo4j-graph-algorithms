@@ -20,7 +20,9 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.*;
 import org.junit.rules.ExpectedException;
+import org.neo4j.configuration.GraphDatabaseInternalSettings;
 import org.neo4j.graphalgo.TraverseProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Node;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
@@ -45,10 +47,10 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
  * @author mknblch
  */
 public class BFSDFSIntegrationTest {
-
-
+    
     @ClassRule
-    public static ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public static DatabaseRule db = new ImpermanentDatabaseRule()
+            .setConfig(GraphDatabaseInternalSettings.track_cursor_close, false);
 
     @BeforeClass
     public static void setupGraph() throws KernelException {

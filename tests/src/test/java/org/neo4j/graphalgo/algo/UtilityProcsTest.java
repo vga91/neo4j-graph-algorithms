@@ -25,9 +25,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.graphalgo.UtilityProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
+import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
@@ -35,6 +37,7 @@ import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.StreamSupport;
 
 import static java.util.stream.Collectors.toList;
@@ -56,7 +59,7 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 public class UtilityProcsTest {
 
     @ClassRule
-    public static ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
@@ -121,7 +124,7 @@ public class UtilityProcsTest {
         exception.expect(RuntimeException.class);
         exception.expectMessage(CoreMatchers.containsString("'weights' contains 1 values, but 2 values were expected"));
 
-        DB.executeTransactionally(cypher);
+        DB.executeTransactionally(cypher, Map.of(), Result::resultAsString);
     }
 
     @Test
@@ -152,7 +155,7 @@ public class UtilityProcsTest {
         exception.expect(RuntimeException.class);
         exception.expectMessage(CoreMatchers.containsString("'weights' contains 2 values, but 3 values were expected"));
 
-        DB.executeTransactionally(cypher);
+        DB.executeTransactionally(cypher, Map.of(), Result::resultAsString);
     }
 
     private List<Node> getNodes(String... nodes) {

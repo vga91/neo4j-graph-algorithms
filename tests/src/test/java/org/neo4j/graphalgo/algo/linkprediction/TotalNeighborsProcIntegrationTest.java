@@ -20,20 +20,25 @@ package org.neo4j.graphalgo.algo.linkprediction;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.configuration.GraphDatabaseSettings;
 import org.neo4j.graphalgo.linkprediction.LinkPrediction;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.kernel.database.Database;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
+import javax.xml.crypto.Data;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.configuration.GraphDatabaseInternalSettings.track_cursor_close;
 import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 public class TotalNeighborsProcIntegrationTest {
@@ -48,24 +53,19 @@ public class TotalNeighborsProcIntegrationTest {
             "MERGE (jennifer)-[:FOLLOWS]->(praveena)\n" +
             "MERGE (praveena)-[:FOLLOWS]->(michael)";
 
-    private static GraphDatabaseService db;
+    @ClassRule
+    public static final DatabaseRule db = new ImpermanentDatabaseRule()
+            .setConfig(track_cursor_close, false)
+            .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of("algo.*"));
 
     @BeforeClass
     public static void setUp() throws Exception {
-        db = new ImpermanentDatabaseRule()
-                .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of("algo.*"));
-
         ((GraphDatabaseAPI) db).getDependencyResolver()
                 .resolveDependency(GlobalProcedures.class)
                 .registerFunction(LinkPrediction.class);
 
         db.executeTransactionally(SETUP);
     }
-
-//    @AfterClass
-//    public static void tearDown() {
-//        db.shutdown();
-//    }
 
     @Test
     public void sameNodesHaveNeighborCount() throws Exception {

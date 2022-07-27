@@ -18,12 +18,14 @@
  */
 package org.neo4j.graphalgo;
 
+import org.junit.ClassRule;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 /**
  * Builds a simple test graph.
@@ -38,19 +40,14 @@ public class SimpleGraphSetup {
     public static final String RELATION = "RELATION";
     public static final String PROPERTY = "weight";
 
-    private final GraphDatabaseService db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     private long n0, n1, n2;
     private long r0, r1, r2;
     private int v0, v1, v2;
 
-    public SimpleGraphSetup(GraphDatabaseService db) {
-        this.db = db;
-        setupGraph();
-    }
-
     public SimpleGraphSetup() {
-        this.db = TestDatabaseCreator.createTestDatabase();
         setupGraph();
     }
 

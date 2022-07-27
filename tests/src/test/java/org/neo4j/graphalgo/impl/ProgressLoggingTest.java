@@ -21,6 +21,7 @@ package org.neo4j.graphalgo.impl;
 import org.eclipse.jetty.util.log.Slf4jLog;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -36,10 +37,11 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Level;
 import org.neo4j.logging.Log;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.logging.NullLog;
 import org.neo4j.logging.log4j.Log4jLog;
 import org.slf4j.LoggerFactory;
@@ -61,7 +63,8 @@ public class ProgressLoggingTest {
     private static final String LABEL = "Node";
     private static final String RELATIONSHIP = "REL";
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() {
@@ -79,15 +82,13 @@ public class ProgressLoggingTest {
     @BeforeClass
     public static void setup() throws Exception {
 
-        db = TestDatabaseCreator.createTestDatabase();
-
         try (ProgressTimer timer = ProgressTimer.start(t -> System.out.println("setup took " + t + "ms"))) {
             final GridBuilder gridBuilder = GraphBuilder.create(db)
                     .setLabel(LABEL)
                     .setRelationship(RELATIONSHIP)
                     .newGridBuilder()
                     .createGrid(100, 10)
-                    .forEachRelInTx(rel -> {
+                    .forEachRelInTx((rel, tx) -> {
                         rel.setProperty(PROPERTY, Math.random() * 5); // (0-5)
                     });
         }

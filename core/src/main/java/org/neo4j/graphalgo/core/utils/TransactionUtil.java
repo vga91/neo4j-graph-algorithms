@@ -18,7 +18,10 @@
  */
 package org.neo4j.graphalgo.core.utils;
 
+import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.internal.helpers.collection.Iterators;
@@ -30,9 +33,7 @@ import java.util.function.Function;
 
 import static java.util.Collections.emptyMap;
 
-/**
- * TODO
- */
+
 public class TransactionUtil {
 
     public static void testResult(GraphDatabaseService db, String call, Consumer<Result> resultConsumer) {
@@ -55,17 +56,10 @@ public class TransactionUtil {
         return db.executeTransactionally(cypher, params, Iterators::count);
     }
 
-//    public static  <T> T withTx(GraphDatabaseService db, Function<Transaction, T> action) {
-//        
-//    }
-
-//    public static  <T> T withTx(GraphDatabaseService db, Function<Transaction, T> action, Map<String,Object> params, ) {
-//        try (Transaction tx = db.beginTx()) {
-//            T result = action.apply(tx);
-//            tx.commit();
-//            return result;
-//        }
-//    }
+    public static <T extends Entity> T withTxAndRebind(GraphDatabaseService db, Function<Transaction, T> action) {
+        final T t = withTx(db, action);
+        return withTx(db, tx -> rebind(tx, t));
+    }
     
     public static  <T> T withTx(GraphDatabaseService db, Function<Transaction, T> action) {
         try (Transaction tx = db.beginTx()) {
@@ -75,15 +69,27 @@ public class TransactionUtil {
         }
     }
 
-    // 
-    // 
-    // todo - usare questa dove serve
-    // 
-    //
+    // todo - use this where needed
     public static void withEmptyTx(GraphDatabaseService db, Consumer<Transaction> consumer) {
         try (Transaction tx = db.beginTx()) {
             consumer.accept(tx);
             tx.commit();
         }
+    }
+    
+    public static <T extends Entity> T rebind(Transaction tx, T e) {
+        if (e instanceof Node) {
+            return (T) rebind(tx, (Node) e);
+        } else {
+            return (T) rebind(tx, (Relationship) e);
+        }
+    }
+
+    public static Node rebind(Transaction tx, Node node) {
+        return tx.getNodeById(node.getId());
+    }
+
+    public static Relationship rebind(Transaction tx, Relationship rel) {
+        return tx.getRelationshipById(rel.getId());
     }
 }

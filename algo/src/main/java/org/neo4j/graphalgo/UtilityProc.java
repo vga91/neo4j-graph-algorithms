@@ -45,8 +45,8 @@ public class UtilityProc {
     @Procedure("algo.asPath")
     @Description("CALL algo.asPath - returns a path for the provided node ids and weights")
     public Stream<PathResult> list(
-            @Name(value = "nodeIds", defaultValue = "") List<Long> nodeIds,
-            @Name(value = "weights", defaultValue = "") List<Double> weights,
+            @Name(value = "nodeIds", defaultValue = "[]") List<Long> nodeIds,
+            @Name(value = "weights", defaultValue = "[]") List<Double> weights,
             @Name(value = "config", defaultValue = "{}") Map<String, Object> rawConfig) {
 
         if (nodeIds.size() <= 0) {

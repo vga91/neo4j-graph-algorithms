@@ -26,7 +26,9 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
@@ -39,6 +41,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 /**
  * @author mknblch
@@ -46,7 +49,7 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 public class ShortestPathTest_152 {
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     private static long startNodeId;
     private static long endNodeId;
@@ -140,8 +143,17 @@ public class ShortestPathTest_152 {
                 "CALL algo.shortestPath.stream(from, to, 'd', {relationshipQuery:'ROAD', defaultValue:999999.0}) " +
                 "YIELD nodeId, cost with nodeId, cost MATCH(n) WHERE id(n) = nodeId RETURN n.name as name, cost;";
 
+        testResult(DB, cypher, r -> {
+            r.forEachRemaining(rr -> {
+                
+                System.out.println("uno " + rr.get("name") + ":" + rr.get("cost"));
+//                mock.accept(row.getNumber("cost").doubleValue());
+//                return true;
+            });
+        });
+        
         executeAndAccept(DB, cypher, row -> {
-            System.out.println(row.get("name") + ":" + row.get("cost"));
+            System.out.println("due " + row.get("name") + ":" + row.get("cost"));
             mock.accept(row.getNumber("cost").doubleValue());
             return true;
         });

@@ -27,6 +27,7 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.yens.WeightedPath;
 import org.neo4j.graphalgo.impl.yens.YensKShortestPaths;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.exceptions.KernelException;
@@ -37,6 +38,7 @@ import java.util.function.DoubleConsumer;
 
 import static org.mockito.AdditionalMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.neo4j.configuration.GraphDatabaseInternalSettings.track_cursor_close;
 import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
@@ -55,7 +57,8 @@ public class YensDebugTest {
     public static final double DELTA = 0.001;
 
     @ClassRule
-    public static ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public static DatabaseRule db = new ImpermanentDatabaseRule()
+            .setConfig(track_cursor_close, false);
 
     private static Graph graph;
 

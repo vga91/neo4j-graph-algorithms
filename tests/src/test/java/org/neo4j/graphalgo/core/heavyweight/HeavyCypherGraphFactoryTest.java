@@ -20,13 +20,15 @@ package org.neo4j.graphalgo.core.heavyweight;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.PropertyMapping;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,7 +38,8 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 public class HeavyCypherGraphFactoryTest {
 
-    private static GraphDatabaseService db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     private static int id1;
     private static int id2;
@@ -44,8 +47,6 @@ public class HeavyCypherGraphFactoryTest {
 
     @BeforeClass
     public static void setUp() {
-
-        db = TestDatabaseCreator.createTestDatabase();
 
         
         executeAndAccept(db, "CREATE (n1 {partition: 6})-[:REL  {prop:1}]->(n2 {foo: 4})-[:REL {prop:2}]->(n3) " +

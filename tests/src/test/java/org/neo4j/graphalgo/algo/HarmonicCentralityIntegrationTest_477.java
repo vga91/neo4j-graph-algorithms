@@ -25,6 +25,7 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.neo4j.graphalgo.HarmonicCentralityProc;
 import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
@@ -40,7 +41,7 @@ public class HarmonicCentralityIntegrationTest_477 {
     public static final String TYPE = "TYPE";
 
     @ClassRule
-    public static final ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public static final DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {

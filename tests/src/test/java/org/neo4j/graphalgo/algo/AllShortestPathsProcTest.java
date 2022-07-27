@@ -20,18 +20,20 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.AllShortestPathsProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,7 +57,9 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 @RunWith(Parameterized.class)
 public final class AllShortestPathsProcTest {
 
-    private static GraphDatabaseAPI api;
+    @ClassRule
+    public static DatabaseRule api = new ImpermanentDatabaseRule();
+    
     private static long startNodeId;
     private static long targetNodeId;
 
@@ -91,8 +95,6 @@ public final class AllShortestPathsProcTest {
                         " (g)-[:TYPE {cost:2}]->(h),\n" +
                         " (h)-[:TYPE {cost:2}]->(i),\n" +
                         " (i)-[:TYPE {cost:2}]->(x)";
-
-        api = TestDatabaseCreator.createTestDatabase();
 
         api.getDependencyResolver()
                 .resolveDependency(GlobalProcedures.class)

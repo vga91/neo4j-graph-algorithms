@@ -21,11 +21,13 @@ package org.neo4j.graphalgo.core.heavyweight;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.DuplicateRelationshipsStrategy;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -40,12 +42,14 @@ import static org.junit.Assert.assertEquals;
 public class HeavyCypherGraphSequentialFactoryTest {
 
     private static final int COUNT = 10000;
-    private static GraphDatabaseService db;
+    
+    @Rule
+    private static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setUp() {
 
-        db = new ImpermanentDatabaseRule();
+        
 
         db.executeTransactionally("UNWIND range(1," + COUNT + ") AS id CREATE (n {id:id})-[:REL {prop:id%10}]->(n)", Map.of(), Result::resultAsString);
     }

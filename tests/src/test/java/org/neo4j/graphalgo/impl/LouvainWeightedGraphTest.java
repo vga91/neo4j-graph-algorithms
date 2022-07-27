@@ -36,6 +36,7 @@ import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.core.utils.paged.HugeLongArray;
 import org.neo4j.graphalgo.impl.louvain.*;
 import org.neo4j.graphalgo.TestProgressLogger;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
@@ -89,7 +90,7 @@ public class LouvainWeightedGraphTest {
     public static final String ABCDEFGHZ = "abcdefghz";
 
     @Rule
-    public ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @Rule
     public ErrorCollector collector = new ErrorCollector();

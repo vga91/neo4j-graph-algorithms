@@ -20,11 +20,13 @@ package org.neo4j.graphalgo.core.heavyweight;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.PropertyMapping;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.core.DuplicateRelationshipsStrategy;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
@@ -36,15 +38,14 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 public class HeavyCypherGraphFactoryDeduplicationTest {
 
-    private static GraphDatabaseService db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     private static int id1;
     private static int id2;
 
     @BeforeClass
     public static void setUp() {
-
-        db = TestDatabaseCreator.createTestDatabase();
 
         executeAndAccept(db, "MERGE (n1 {id: 1}) " + "" +
                 "MERGE (n2 {id: 2}) " +

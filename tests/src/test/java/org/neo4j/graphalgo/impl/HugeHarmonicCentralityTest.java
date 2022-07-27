@@ -29,6 +29,7 @@ import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.graphalgo.impl.closeness.HugeHarmonicCentrality;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.mockito.Matchers.anyLong;
@@ -63,7 +64,7 @@ import static org.mockito.Mockito.*;
 public class HugeHarmonicCentralityTest {
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {

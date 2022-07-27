@@ -26,11 +26,13 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.graphalgo.LouvainProc;
 import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.assertEquals;
 import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 /**
  *
@@ -38,7 +40,7 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 public class LouvainClusteringPreDefinedCommunitiesIntegrationTest {
 
     @ClassRule
-    public static ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
@@ -62,11 +64,22 @@ public class LouvainClusteringPreDefinedCommunitiesIntegrationTest {
         final String cypher = "CALL algo.louvain.stream('', '', {concurrency:1, community: 'community', randomNeighbor:false}) " +
                 "YIELD nodeId, community, communities";
         final IntIntScatterMap testMap = new IntIntScatterMap();
+        
+        testResult(DB, cypher, r -> {
+            r.forEachRemaining(row -> {
+                final long nodeId = (long) row.get("nodeId");
+                final long community = (long) row.get("community");
+                testMap.addTo((int) community, 1);
+                System.out.println("forEachRemaining community = " + community);
+            });
+        });
+        
         executeAndAccept(DB, cypher, row -> {
             final long nodeId = (long) row.get("nodeId");
             final long community = (long) row.get("community");
             testMap.addTo((int) community, 1);
-            return false;
+            System.out.println("accept community = " + community);
+            return true;
         });
         assertEquals(3, testMap.size());
     }

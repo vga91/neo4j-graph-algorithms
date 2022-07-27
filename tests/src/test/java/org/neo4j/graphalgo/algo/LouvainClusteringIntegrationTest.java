@@ -23,6 +23,7 @@ import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.neo4j.graphalgo.LouvainProc;
 import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
@@ -49,7 +50,7 @@ public class LouvainClusteringIntegrationTest {
     private final static String[] NODES = {"a", "b", "c", "d", "e", "f", "g", "h", "z"};
 
     @ClassRule
-    public static ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
@@ -179,7 +180,7 @@ public class LouvainClusteringIntegrationTest {
             final long community = (long) row.get("community");
             System.out.println(nodeId + ": " + community);
             testMap.addTo((int) community, 1);
-            return false;
+            return true;
         });
         assertEquals(3, testMap.size());
     }
@@ -220,7 +221,7 @@ public class LouvainClusteringIntegrationTest {
             final long community = ((List<Long>) row.get("communities")).get(0);
             System.out.println(community);
             testMap.addTo((int) community, 1);
-            return false;
+            return true;
         });
         assertEquals(3, testMap.size());
     }

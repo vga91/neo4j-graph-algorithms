@@ -21,7 +21,6 @@ package org.neo4j.graphalgo.impl;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
@@ -38,6 +37,7 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.rebind;
 
 /**
  *     1
@@ -71,16 +71,14 @@ public class AllShortestPathsTest {
     @BeforeClass
     public static void setup() throws Exception {
 
-        db = TestDatabaseCreator.createTestDatabase();
-
         try (ProgressTimer timer = ProgressTimer.start(t -> System.out.println("setup took " + t + "ms"))) {
             GraphBuilder.create(db)
                     .setLabel(LABEL)
                     .setRelationship(RELATIONSHIP)
                     .newGridBuilder()
                     .createGrid(width, height)
-                    .forEachRelInTx(rel -> {
-                        rel.setProperty(PROPERTY, 1.0);
+                    .forEachRelInTx((rel, tx) -> {
+                        rebind(tx, rel).setProperty(PROPERTY, 1.0);
                     });
         }
 

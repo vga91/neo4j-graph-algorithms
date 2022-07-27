@@ -24,6 +24,7 @@ import org.neo4j.kernel.availability.AvailabilityGuard;
 import org.neo4j.kernel.impl.coreapi.InternalTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
@@ -61,6 +62,16 @@ public final class TransactionWrapper {
             return result;
         }
     }
+
+    
+    public <T> T applyBiFun(BiFunction<KernelTransaction, Transaction, T> block) {
+        try (final Transaction tx = db.beginTx()) {
+            T result = block.apply(getKernelTx(tx), tx);
+            tx.commit();
+            return result;
+        }
+    }
+
 
     public int applyAsInt(ToIntFunction<KernelTransaction> block) {
         try (final Transaction tx = db.beginTx()) {

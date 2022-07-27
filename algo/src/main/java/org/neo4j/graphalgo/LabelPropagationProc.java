@@ -169,7 +169,7 @@ public final class LabelPropagationProc {
             graphLoader.withDirection(direction);
         }
         LabelPropagationStats.Builder stats = new LabelPropagationStats.Builder();
-// todo - funziona uguale??
+        // todo - work in the same way??
         AllocationTracker tracker = AllocationTracker.create();
         Graph graph = load(graphLoader.withAllocationTracker(tracker), configuration, stats);
 

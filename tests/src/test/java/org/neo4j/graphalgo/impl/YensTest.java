@@ -31,6 +31,7 @@ import org.neo4j.graphalgo.core.utils.RawValues;
 import org.neo4j.graphalgo.impl.yens.Dijkstra;
 import org.neo4j.graphalgo.impl.yens.WeightedPath;
 import org.neo4j.graphalgo.impl.yens.YensKShortestPaths;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.exceptions.KernelException;
@@ -65,7 +66,7 @@ public class YensTest {
     public static final double DELTA = 0.001;
 
     @ClassRule
-    public static ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     private static Graph graph;
 

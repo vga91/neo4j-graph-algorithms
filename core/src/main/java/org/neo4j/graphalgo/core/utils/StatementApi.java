@@ -37,8 +37,9 @@ public abstract class StatementApi {
         // todo - execute transactionally ??
         
         try (Transaction tx = db.beginTx()) {
-            final Result result = tx.execute(cypher, params);
-            result.accept(visitor);
+            try (Result result = tx.execute(cypher, params)) {
+                result.accept(visitor);
+            }
             tx.commit();
         }
     }

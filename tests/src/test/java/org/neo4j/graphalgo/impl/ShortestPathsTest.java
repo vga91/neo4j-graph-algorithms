@@ -21,15 +21,16 @@ package org.neo4j.graphalgo.impl;
 import com.carrotsearch.hppc.IntDoubleMap;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import static org.junit.Assert.assertEquals;
 import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
@@ -46,7 +47,8 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
  */
 public final class ShortestPathsTest {
 
-    private static GraphDatabaseAPI api;
+    @ClassRule
+    public static DatabaseRule api = new ImpermanentDatabaseRule();
 
     private static Graph graph;
 
@@ -93,7 +95,6 @@ public final class ShortestPathsTest {
 
                         " (x)-[:TYPE {cost:2}]->(s)"; // create cycle
 
-        api = TestDatabaseCreator.createTestDatabase();
         api.executeTransactionally(cypher);
 
         head = getNode("s").getId();

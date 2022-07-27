@@ -30,7 +30,6 @@ import org.neo4j.kernel.api.exceptions.Status;
 import org.neo4j.kernel.impl.api.KernelTransactions;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -51,14 +50,13 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
  */
 public class TerminationTest {
 //
-//    private static GraphDatabaseAPI api;
+//        @ClassRule
+//    public static DatabaseRule db = new ImpermanentDatabaseRule();
 //
 //    private static KernelTransactions kernelTransactions;
 //
 //    @BeforeClass
 //    public static void setup() throws KernelException {
-//
-//        api = TestDatabaseCreator.createTestDatabase();
 //
 //        final GlobalProcedures procedures = api.getDependencyResolver()
 //                .resolveDependency(GlobalProcedures.class);

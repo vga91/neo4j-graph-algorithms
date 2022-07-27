@@ -18,7 +18,9 @@
  */
 package org.neo4j.graphalgo.core.loading;
 
+import org.junit.Ignore;
 import org.junit.Test;
+import org.neo4j.storageengine.api.StubStorageCursors;
 //import org.neo4j.internal.kernel.api.RelationshipTraversalCursor;
 //import org.neo4j.internal.kernel.api.helpers.StubCursorFactory;
 //import org.neo4j.internal.kernel.api.helpers.StubNodeCursor;
@@ -30,12 +32,12 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.assertEquals;
 
+
+@Ignore
 public class LoadRelationshipsTest {
 //    @Test
 //    public void allRelationshipsUnique() {
 //        final StubStorageCursors.NodeData stubNodeCursor = new StubStorageCursors().withNode(ThreadLocalRandom.current().nextInt());
-//
-//
 //
 //        StubStorageNodeCursor stubCursorFactory = new StubCursorFactory();
 //
@@ -90,6 +92,5 @@ public class LoadRelationshipsTest {
 //        int degreeBoth = loadAllRelationships.degreeBoth(stubNodeCursor);
 //        assertEquals(1, degreeBoth);
 //    }
-
-
+    
 }

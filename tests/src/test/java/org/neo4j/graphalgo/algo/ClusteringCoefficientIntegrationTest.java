@@ -20,10 +20,12 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.AdditionalMatchers;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.TriangleProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
@@ -48,7 +50,8 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
  */
 public class ClusteringCoefficientIntegrationTest {
 
-    private static GraphDatabaseAPI api;
+    @ClassRule
+    public static DatabaseRule api = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setup() throws KernelException {
@@ -76,8 +79,6 @@ public class ClusteringCoefficientIntegrationTest {
                         " (g)-[:TYPE]->(h),\n" +
                         " (h)-[:TYPE]->(i),\n" +
                         " (i)-[:TYPE]->(g)";
-
-        api = TestDatabaseCreator.createTestDatabase();
 
         api.getDependencyResolver()
                 .resolveDependency(GlobalProcedures.class)

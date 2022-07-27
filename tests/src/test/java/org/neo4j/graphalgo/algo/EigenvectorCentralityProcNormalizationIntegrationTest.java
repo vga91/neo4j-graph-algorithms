@@ -20,6 +20,7 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -28,7 +29,9 @@ import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphalgo.EigenvectorCentralityProc;
 import org.neo4j.graphalgo.GetNodeFunc;
 import org.neo4j.graphalgo.PageRankProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
@@ -42,11 +45,15 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import static org.junit.Assert.*;
+import static org.neo4j.configuration.GraphDatabaseSettings.load_csv_file_url_root;
 import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 public class EigenvectorCentralityProcNormalizationIntegrationTest {
 
+//    @ClassRule
+//    public static DatabaseRule db = new ImpermanentDatabaseRule();
     private static GraphDatabaseAPI db;
+
     private static Map<Long, Double> expected = new HashMap<>();
     private static Map<Long, Double> maxNormExpected = new HashMap<>();
     private static Map<Long, Double> l2NormExpected = new HashMap<>();
@@ -57,16 +64,24 @@ public class EigenvectorCentralityProcNormalizationIntegrationTest {
 //        if (db != null) db.shutdown();
 //    }
 
+
+
     @BeforeClass
     public static void setup() throws KernelException {
         ClassLoader classLoader = EigenvectorCentralityProcNormalizationIntegrationTest.class.getClassLoader();
         File file = new File(classLoader.getResource("got/got-s1-nodes.csv").getFile());
 
-        final DatabaseManagementService managementService = new TestDatabaseManagementServiceBuilder(new File(UUID.randomUUID().toString()).toPath())
-                .setConfig(GraphDatabaseSettings.load_csv_file_url_root, file.toPath().toAbsolutePath())
-                .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of("algo.*"))
+        final DatabaseManagementService databaseManagementService = new TestDatabaseManagementServiceBuilder(file.getParentFile().toPath())
+//                .setConfig(apoc_jobs_pool_num_threads, 10L)
                 .build();
-        db = (GraphDatabaseAPI) managementService.database(GraphDatabaseSettings.DEFAULT_DATABASE_NAME);
+        db = (GraphDatabaseAPI) databaseManagementService.database(GraphDatabaseSettings.DEFAULT_DATABASE_NAME);
+        
+//        // todo - needed??
+//        final DatabaseManagementService managementService = new TestDatabaseManagementServiceBuilder(new File(UUID.randomUUID().toString()).toPath())
+//                .setConfig(GraphDatabaseSettings.load_csv_file_url_root, file.toPath().toAbsolutePath())
+//                .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of("algo.*"))
+//                .build();
+//        db = (GraphDatabaseAPI) managementService.database(GraphDatabaseSettings.DEFAULT_DATABASE_NAME);
 
 
         db.executeTransactionally("CREATE CONSTRAINT ON (c:Character) ASSERT c.id IS UNIQUE;");

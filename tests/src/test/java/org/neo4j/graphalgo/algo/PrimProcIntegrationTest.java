@@ -20,14 +20,16 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.PrimProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import java.util.Map;
 
@@ -51,7 +53,8 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 public class PrimProcIntegrationTest {
 
     private static final RelationshipType type = RelationshipType.withName("TYPE");
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
 //    @AfterClass
 //    public static void tearDown() throws Exception {
@@ -73,8 +76,6 @@ public class PrimProcIntegrationTest {
                 "CREATE (b)-[:TYPE {cost:4.0}]->(d) " +
                 "CREATE (c)-[:TYPE {cost:5.0}]->(e) " +
                 "CREATE (d)-[:TYPE {cost:6.0}]->(e)";
-
-        db = TestDatabaseCreator.createTestDatabase();
 
         try (Transaction tx = db.beginTx()) {
             db.executeTransactionally(cypher);
@@ -104,7 +105,6 @@ public class PrimProcIntegrationTest {
             return true;
         });
 
-        // todo - common con count???
         final long relCount = db.executeTransactionally("MATCH (a)-[:MST]->(b) RETURN id(a) as a, id(b) as b", Map.of(), 
                 r -> r.stream().peek(m -> System.out.println(m.get("a") + " -> " + m.get("b")))
                             .count());
@@ -130,7 +130,6 @@ public class PrimProcIntegrationTest {
             return true;
         });
 
-        // todo - common con count???
         final long relCount = db.executeTransactionally("MATCH (a)-[:MAX]->(b) RETURN id(a) as a, id(b) as b", Map.of(), r ->
                 r.stream()
                 .peek(m -> System.out.println(m.get("a") + " -> " + m.get("b")))

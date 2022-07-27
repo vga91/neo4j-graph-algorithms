@@ -20,9 +20,13 @@ package org.neo4j.graphalgo.core.heavyweight;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.utils.Intersections;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Result;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
@@ -36,12 +40,8 @@ import static org.junit.Assert.assertEquals;
 import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 public class HeavyGraphIntersectTest {
-    private GraphDatabaseAPI gdb;
-
-    @Before
-    public void setUp() throws Exception {
-        gdb = org.neo4j.graphalgo.TestDatabaseCreator.createTestDatabase();
-    }
+    @Rule
+    public static DatabaseRule gdb = new ImpermanentDatabaseRule();
 
 //    @After
 //    public void tearDown() throws Exception {

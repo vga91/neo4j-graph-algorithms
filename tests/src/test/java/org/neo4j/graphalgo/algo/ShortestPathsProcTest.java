@@ -26,6 +26,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.Matchers;
 import org.neo4j.graphalgo.ShortestPathsProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.graphdb.Transaction;
@@ -59,7 +60,7 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 public final class ShortestPathsProcTest {
 
     @ClassRule
-    public static ImpermanentDatabaseRule api = new ImpermanentDatabaseRule();
+    public static DatabaseRule api = new ImpermanentDatabaseRule();
     private static long startNode;
     private static long endNode;
 

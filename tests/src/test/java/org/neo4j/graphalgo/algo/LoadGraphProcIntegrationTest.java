@@ -29,6 +29,7 @@ import org.neo4j.graphalgo.LabelPropagationProc;
 import org.neo4j.graphalgo.LoadGraphProc;
 import org.neo4j.graphalgo.PageRankProc;
 import org.neo4j.graphalgo.core.loading.LoadGraphFactory;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.QueryExecutionException;
 import org.neo4j.graphdb.Result;
 import org.neo4j.exceptions.KernelException;
@@ -74,7 +75,7 @@ public class LoadGraphProcIntegrationTest {
     }
 
     @Rule
-    public ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public DatabaseRule db = new ImpermanentDatabaseRule();
 
     @Rule
     public ExpectedException exceptions = ExpectedException.none();

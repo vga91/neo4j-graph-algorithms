@@ -26,6 +26,7 @@ import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.impl.closeness.MSClosenessCentrality;
 import org.neo4j.graphalgo.impl.DangalchevClosenessCentrality;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
@@ -37,7 +38,7 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 public class ClosenessCentralityIntegrationTest_546 {
 
     @Rule
-    public ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public DatabaseRule db = new ImpermanentDatabaseRule();
 
     private String name(long id) {
         String[] name = {""};

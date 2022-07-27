@@ -23,21 +23,31 @@ import org.neo4j.graphalgo.core.utils.paged.HugeLongArray;
 import org.neo4j.graphalgo.core.utils.paged.HugeLongArrayBuilder;
 import org.neo4j.graphalgo.core.utils.paged.SparseLongArray;
 
+import java.util.Arrays;
+
 final class HugeIdMapBuilder {
 
     static HugeIdMap build(
             HugeLongArrayBuilder idMapBuilder,
             long highestNodeId,
             AllocationTracker tracker) {
+        System.out.println("idMapBuilder = " + idMapBuilder + ", highestNodeId = " + highestNodeId + ", tracker = " + tracker);
         HugeLongArray graphIds = idMapBuilder.build();
+        System.out.println("graphIds = " + graphIds);
         SparseLongArray nodeToGraphIds = SparseLongArray.newArray(highestNodeId, tracker);
+        System.out.println("nodeToGraphIds.toString() = " + nodeToGraphIds.toString());
 
         try (HugeLongArray.Cursor cursor = graphIds.cursor(graphIds.newCursor())) {
             while (cursor.next()) {
+                // todo -???
                 long[] array = cursor.array;
+                System.out.println("array = " + Arrays.toString(array));
                 int offset = cursor.offset;
+                System.out.println("offset = " + offset);
                 int limit = cursor.limit;
+                System.out.println("limit = " + limit);
                 long internalId = cursor.base + offset;
+                System.out.println("internalId = " + internalId);
                 for (int i = offset; i < limit; ++i, ++internalId) {
                     nodeToGraphIds.set(array[i], internalId);
                 }
@@ -46,6 +56,23 @@ final class HugeIdMapBuilder {
 
         return new HugeIdMap(graphIds, nodeToGraphIds, idMapBuilder.size());
     }
+
+//    private Long getaLong(long element, HugeCursor<long[]> cursor) {
+//        long[] internalArray = cursor.array;
+//        int offset = cursor.offset;
+//        int localLimit = cursor.limit - 4;
+//        for (; offset <= localLimit; offset += 4) {
+//            if (internalArray[offset] == element) return offset + cursor.base;
+//            if (internalArray[offset + 1] == element) return offset + 1 + cursor.base;
+//            if (internalArray[offset + 2] == element) return offset + 2 + cursor.base;
+//            if (internalArray[offset + 3] == element) return offset + 3 + cursor.base;
+//        }
+//        for (; offset < cursor.limit; ++offset) {
+//            if (internalArray[offset] == element) return offset + cursor.base;
+//        }
+//        return null;
+//    }
+
 
     private HugeIdMapBuilder() {
     }

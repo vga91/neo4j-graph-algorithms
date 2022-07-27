@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.neo4j.graphalgo.ListProc;
 import org.neo4j.graphalgo.PageRankProc;
 import org.neo4j.graphalgo.linkprediction.LinkPrediction;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
@@ -45,7 +46,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class ListProcTest {
     @ClassRule
-    public static ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static DatabaseRule DB = new ImpermanentDatabaseRule();
     public static final List<String> PROCEDURES = asList("algo.pageRank", "algo.pageRank.stream");
     public static final List<String> FUNCTIONS = Arrays.asList("algo.linkprediction.adamicAdar", "algo.linkprediction.commonNeighbors", "algo.linkprediction.preferentialAttachment", "algo.linkprediction.resourceAllocation", "algo.linkprediction.sameCommunity",
             "algo.linkprediction.totalNeighbors");

@@ -37,6 +37,7 @@ import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
 import org.neo4j.graphalgo.impl.triangle.TriangleCountAlgorithm;
 import org.neo4j.graphalgo.impl.triangle.TriangleCountForkJoin;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
@@ -48,6 +49,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.rebind;
 
 /**
  *
@@ -64,7 +66,7 @@ public class TriangleCountExpTest {
     private static long centerId;
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() {
@@ -85,8 +87,10 @@ public class TriangleCountExpTest {
             final Node center = builder.createNode();
             builder.newRingBuilder()
                     .createRing((int) TRIANGLE_COUNT)
-                    .forEachNodeInTx(node -> {
-                        center.createRelationshipTo(node, type);
+                    .forEachNodeInTx((node, tx) -> {
+                        Node nodeBound = rebind(tx, node);
+                        Node centerBound = rebind(tx, center);
+                        centerBound.createRelationshipTo(nodeBound, type);
                     });
             centerId = center.getId();
         }

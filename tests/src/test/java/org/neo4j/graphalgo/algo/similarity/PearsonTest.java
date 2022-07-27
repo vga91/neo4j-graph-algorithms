@@ -19,10 +19,12 @@
 package org.neo4j.graphalgo.algo.similarity;
 
 import org.junit.*;
+import org.junit.rules.TestName;
 import org.neo4j.graphalgo.IsFiniteFunc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.similarity.CosineProc;
 import org.neo4j.graphalgo.similarity.PearsonProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
@@ -38,8 +40,9 @@ import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 public class PearsonTest {
 
-    private static GraphDatabaseAPI db;
-    private Transaction tx;
+    @Rule
+    public DatabaseRule db = new ImpermanentDatabaseRule();
+    
     public static final String STATEMENT_STREAM = "MATCH (i:Item) WITH i ORDER BY i MATCH (p:Person) OPTIONAL MATCH (p)-[r:LIKES]->(i)\n" +
             "WITH p, i, r " +
             "ORDER BY id(p), id(i) " +
@@ -73,32 +76,16 @@ public class PearsonTest {
             "CALL algo.similarity.pearson(data, $config) " +
             "yield p25, p50, p75, p90, p95, p99, p999, p100, nodes, similarityPairs " +
             "RETURN *";
-
-    @BeforeClass
-    public static void beforeClass() throws KernelException {
-        db = TestDatabaseCreator.createTestDatabase();
+    
+    @Before
+    public void before() throws KernelException {
+        db.executeTransactionally(buildDatabaseQuery());
         GlobalProcedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(PearsonProc.class);
         procedures.registerFunction(IsFiniteFunc.class);
-        db.executeTransactionally(buildDatabaseQuery());
-    }
-//
-//    @AfterClass
-//    public static void AfterClass() {
-//        db.shutdown();
-//    }
-
-    @Before
-    public void setUp() throws Exception {
-        tx = db.beginTx();
     }
 
-    @After
-    public void tearDown() throws Exception {
-        tx.close();
-    }
-
-    private static void buildRandomDB(int size) {
+    private void buildRandomDB(int size) {
         db.executeTransactionally("MATCH (n) DETACH DELETE n");
         db.executeTransactionally("UNWIND range(1,$size/10) as _ CREATE (:Person) CREATE (:Item) ",singletonMap("size",size));
         String statement =

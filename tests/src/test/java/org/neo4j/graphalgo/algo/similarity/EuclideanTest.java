@@ -19,8 +19,9 @@
 package org.neo4j.graphalgo.algo.similarity;
 
 import org.junit.*;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.similarity.EuclideanProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
@@ -37,8 +38,9 @@ import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 public class EuclideanTest {
 
-    private static GraphDatabaseAPI db;
-    private Transaction tx;
+    @Rule
+    public DatabaseRule db = new ImpermanentDatabaseRule();
+    
     public static final String STATEMENT_STREAM = "MATCH (i:Item) WITH i ORDER BY id(i) MATCH (p:Person) OPTIONAL MATCH (p)-[r:LIKES]->(i)\n" +
             "WITH {item:id(p), weights: collect(coalesce(r.stars,$missingValue))} AS userData\n" +
             "WITH collect(userData) AS data\n" +
@@ -72,29 +74,13 @@ public class EuclideanTest {
             "YIELD p25, p50, p75, p90, p95, p99, p999, p100, nodes, similarityPairs " +
             "RETURN *";
 
-    @BeforeClass
-    public static void beforeClass() throws KernelException {
-        db = TestDatabaseCreator.createTestDatabase();
+    @Before
+    public void before() throws KernelException {
         db.getDependencyResolver().resolveDependency(GlobalProcedures.class).registerProcedure(EuclideanProc.class);
         db.executeTransactionally(buildDatabaseQuery());
     }
 
-//    @AfterClass
-//    public static void AfterClass() {
-//        db.shutdown();
-//    }
-
-    @Before
-    public void setUp() throws Exception {
-        tx = db.beginTx();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        tx.close();
-    }
-
-    private static void buildRandomDB(int size) {
+    private void buildRandomDB(int size) {
         db.executeTransactionally("MATCH (n) DETACH DELETE n");
         db.executeTransactionally("UNWIND range(1,$size/10) AS _ CREATE (:Person) CREATE (:Item) ", singletonMap("size", size));
         String statement =

@@ -19,8 +19,9 @@
 package org.neo4j.graphalgo.algo.similarity;
 
 import org.junit.*;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.similarity.OverlapProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.exceptions.KernelException;
@@ -36,8 +37,6 @@ import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 public class OverlapTest {
 
-    private static GraphDatabaseAPI db;
-    private Transaction tx;
     public static final String STATEMENT_STREAM = "MATCH (p:Person)-[:LIKES]->(i:Item) \n" +
             "WITH {item:id(p), categories: collect(distinct id(i))} as userData\n" +
             "WITH collect(userData) as data\n" +
@@ -64,25 +63,16 @@ public class OverlapTest {
             "yield p25, p50, p75, p90, p95, p99, p999, p100, nodes, similarityPairs " +
             "RETURN p25, p50, p75, p90, p95, p99, p999, p100, nodes, similarityPairs";
 
-    @BeforeClass
-    public static void beforeClass() throws KernelException {
-        db = TestDatabaseCreator.createTestDatabase();
-        db.getDependencyResolver().resolveDependency(GlobalProcedures.class).registerProcedure(OverlapProc.class);
-        db.executeTransactionally(buildDatabaseQuery());
-    }
+    @Rule
+    public DatabaseRule db = new ImpermanentDatabaseRule();
     
-
     @Before
-    public void setUp() throws Exception {
-        tx = db.beginTx();
+    public void before() throws KernelException {
+        db.executeTransactionally(buildDatabaseQuery());
+        db.getDependencyResolver().resolveDependency(GlobalProcedures.class).registerProcedure(OverlapProc.class);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        tx.close();
-    }
-
-    private static void buildRandomDB(int size) {
+    private void buildRandomDB(int size) {
         db.executeTransactionally("MATCH (n) DETACH DELETE n");
         db.executeTransactionally("UNWIND range(1,$size/10) as _ CREATE (:Person) CREATE (:Item) ",singletonMap("size",size));
         String statement =
@@ -266,7 +256,7 @@ public class OverlapTest {
     @Test
     public void topK4overlapStreamTest() {
         Map<String, Object> params = Map.of("config", Map.of("topK", 4, "concurrency", 4, "similarityCutoff", -0.1));
-        System.out.println(db.executeTransactionally(STATEMENT_STREAM,params, Result::resultAsString));
+        System.out.println(db.executeTransactionally(STATEMENT_STREAM, params, Result::resultAsString));
 
         testResult(db, STATEMENT_STREAM,params, results -> {
             assertSameSource(results, 0, 0L);

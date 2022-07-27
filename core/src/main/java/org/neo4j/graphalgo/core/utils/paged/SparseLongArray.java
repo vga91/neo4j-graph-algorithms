@@ -41,6 +41,7 @@ public final class SparseLongArray {
         long[][] pages = new long[numPages][];
         tracker.add(MemoryUsage.shallowSizeOfInstance(SparseLongArray.class));
         tracker.add(MemoryUsage.sizeOfObjectArray(numPages));
+        // todo - c'è qualcuno in più in 3.5
         return new SparseLongArray(capacity, pages, tracker);
     }
 
@@ -97,5 +98,14 @@ public final class SparseLongArray {
         final long[] page = new long[PAGE_SIZE];
         Arrays.fill(page, NOT_FOUND);
         return page;
+    }
+
+    @Override
+    public String toString() {
+        return "SparseLongArray{" +
+                "capacity=" + capacity +
+                ", pages=" + Arrays.toString(pages) +
+                ", tracker=" + tracker +
+                '}';
     }
 }
