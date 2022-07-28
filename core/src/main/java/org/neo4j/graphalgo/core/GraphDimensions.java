@@ -153,7 +153,9 @@ public final class GraphDimensions extends StatementFunction<GraphDimensions> {
         nodePropId = propertyKey(tokenRead, setup.shouldLoadNodeProperty(), setup.nodePropertyName);
 
         nodeCount = dataRead.countsForNode(labelId);
-        allNodesCount = InternalReadOps.getHighestPossibleNodeCount(dataRead, api);
+        // We need to allocate space for `highestNode + 1` since we
+        // need to be able to store a node with `id = highestNodeId`.
+        allNodesCount = InternalReadOps.getHighestPossibleNodeCount(dataRead, api) + 1;
         maxRelCount = Math.max(
                 dataRead.countsForRelationshipWithoutTxState(
                         labelId,
@@ -166,7 +168,7 @@ public final class GraphDimensions extends StatementFunction<GraphDimensions> {
                         labelId
                 )
         );
-        allRelsCount = InternalReadOps.getHighestPossibleRelationshipCount(dataRead, api);
+        allRelsCount = InternalReadOps.getHighestPossibleRelationshipCount(dataRead, api) + 1;
         System.out.println("this.toString() = " + this.toString());
         return this;
     }

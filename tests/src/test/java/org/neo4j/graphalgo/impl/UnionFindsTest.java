@@ -43,6 +43,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withEmptyTx;
 
 /**
  * @author mknblch
@@ -90,7 +91,7 @@ public class UnionFindsTest {
     }
 
     private static void createTestGraph(int... setSizes) {
-        DB.executeAndCommit(tx -> {
+        withEmptyTx(DB, tx -> {
             for (int setSize : setSizes) {
                 createLine(tx, setSize);
             }

@@ -38,9 +38,9 @@ public class HeavyGraphFactory extends GraphFactory {
 
     public HeavyGraphFactory(
             GraphDatabaseAPI api,
-            GraphSetup setup/*,
-            KernelTransaction tx*/) {
-        super(api, setup/*, tx*/);
+            GraphSetup setup,
+            KernelTransaction ktx) {
+        super(api, setup, ktx);
     }
 
     @Override

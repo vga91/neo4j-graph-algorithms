@@ -47,6 +47,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withEmptyTx;
 import static org.neo4j.graphdb.Direction.OUTGOING;
 
 public final class MultiSourceBFSTest {
@@ -287,7 +288,7 @@ public final class MultiSourceBFSTest {
     private void withGrid(
             Consumer<? super GraphBuilder<?>> build,
             Consumer<? super Graph> block) {
-        db.executeAndCommit((dba) -> {
+        withEmptyTx(db, tx -> {
             DefaultBuilder graphBuilder = GraphBuilder.create(db)
                     .setLabel("Foo")
                     .setRelationship("BAR");

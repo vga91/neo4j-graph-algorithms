@@ -68,7 +68,7 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
         /**
          * Create a new scanner for the selected access type
          */
-        AbstractStorePageCacheScanner<Record> newScanner(GraphDatabaseAPI api, int prefetchSize);
+        AbstractStorePageCacheScanner<Record> newScanner(GraphDatabaseAPI api, int prefetchSize, KernelTransaction ktx);
     }
 
     public interface RecordConsumer<Record extends AbstractBaseRecord> {
@@ -106,8 +106,9 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
         Cursor(PageCursor pageCursor, Record record) {
             this.lastPage = Math.max((((maxId - 1L) + ((long) recordsPerPage - 1L)) / (long) recordsPerPage) - 1L, 0L);
             
-            // TODO --- SHOULD BE configuration.get( GraphDatabaseInternalSettings.reserved_page_header_bytes ) INSTEAD OF 0
-            this.lastOffset = offsetForId(maxId, pageSize, recordSize, 0);
+            // TODO --- SHOULD BE configuration.get( GraphDatabaseInternalSettings.reserved_page_header_bytes ) INSTEAD OF 10
+            this.lastOffset = (int) ((maxId * recordSize) % pageSize);
+//            this.lastOffset = offsetForId(maxId, pageSize, recordSize, 10);
             this.pageCursor = pageCursor;
             this.record = record;
             this.offset = pageSize; // trigger page load as first action
@@ -299,13 +300,13 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
     private final RecordStore<Record> store;
     private final PagedFile pagedFile;
 //    private final CursorContext cursorContext;
-//    private final KernelTransaction tx;
+    private final KernelTransaction ktx;
 
     AbstractStorePageCacheScanner(
             int prefetchSize,
             GraphDatabaseAPI api,
-            Access<Record> access/*,
-            KernelTransaction tx*/) {
+            Access<Record> access,
+            KernelTransaction ktx) {
 
         DependencyResolver resolver = api.getDependencyResolver();
         NeoStores neoStores = resolver
@@ -340,9 +341,10 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
         this.recordSize = recordSize;
         this.recordsPerPage = recordsPerPage;
         // todo - maybe not needed
-//        this.tx = tx;
+        this.ktx = ktx;
 //        this.cursorContext = tx.cursorContext();
-        this.maxId = 1L + store.getHighestPossibleIdInUse(CursorContext.NULL);
+        this.maxId = 1L + store.getHighestPossibleIdInUse(ktx == null ? CursorContext.NULL : ktx.cursorContext());
+//        this.maxId = 1L + store.getHighestPossibleIdInUse(CursorContext.NULL);
         this.pageSize = pageSize;
         this.recordFormat = access.recordFormat(neoStores.getRecordFormats());
         this.store = store;
@@ -362,11 +364,11 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
             try {
                 if (pagedFile != null) {
                     // todo - CursorContext.NULL
-                    pageCursor = pagedFile.io(next, PagedFile.PF_READ_AHEAD | PagedFile.PF_SHARED_READ_LOCK, CursorContext.NULL);
+                    pageCursor = pagedFile.io(next, PagedFile.PF_READ_AHEAD | PagedFile.PF_SHARED_READ_LOCK, ktx == null ? CursorContext.NULL : ktx.cursorContext());
                 } else {
                     long recordId = next * (long) recordSize;
                     // todo - CursorContext.NULL
-                    pageCursor = store.openPageCursorForReading(recordId, CursorContext.NULL);
+                    pageCursor = store.openPageCursorForReading(recordId, ktx == null ? CursorContext.NULL : ktx.cursorContext());
                 }
             } catch (IOException e) {
                 throw new UnderlyingStorageException(e);
@@ -389,7 +391,7 @@ public class AbstractStorePageCacheScanner<Record extends AbstractBaseRecord> {
             }
         }
         // todo - CursorContext.NULL
-        long recordsInUse = 1L + store.getHighestPossibleIdInUse(CursorContext.NULL);
+        long recordsInUse = 1L + store.getHighestPossibleIdInUse(ktx.cursorContext());
         long idsInPages = ((recordsInUse + (recordsPerPage - 1L)) / recordsPerPage) * recordsPerPage;
         return idsInPages * (long) recordSize;
     }

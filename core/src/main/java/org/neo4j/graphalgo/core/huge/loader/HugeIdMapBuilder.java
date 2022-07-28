@@ -35,6 +35,7 @@ final class HugeIdMapBuilder {
         HugeLongArray graphIds = idMapBuilder.build();
         System.out.println("graphIds = " + graphIds);
         SparseLongArray nodeToGraphIds = SparseLongArray.newArray(highestNodeId, tracker);
+//        SparseLongArray nodeToGraphIds = SparseLongArray.newArray(highestNodeId + 10, tracker);
         System.out.println("nodeToGraphIds.toString() = " + nodeToGraphIds.toString());
 
         try (HugeLongArray.Cursor cursor = graphIds.cursor(graphIds.newCursor())) {

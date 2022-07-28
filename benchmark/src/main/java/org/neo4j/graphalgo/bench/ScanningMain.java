@@ -34,6 +34,7 @@ import org.neo4j.kernel.impl.store.RecordStore;
 import org.neo4j.kernel.impl.store.record.AbstractBaseRecord;
 import org.neo4j.kernel.impl.store.record.RecordLoad;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.logging.Log;
 
 import java.io.File;
@@ -330,10 +331,11 @@ class ScanningMain<Record extends AbstractBaseRecord> extends BaseMain {
             GraphDatabaseAPI db,
             RecordStore<Record> recordStore,
             int recordsPerPage,
-            long highestRecordId) {
+            long highestRecordId,
+            KernelTransaction ktx) {
         long total = 0L;
         Predicate<Record> alwaysTrue = Predicates.alwaysTrue();
-        AbstractStorePageCacheScanner<Record> scanner = access.newScanner(db, prefetchSize);
+        AbstractStorePageCacheScanner<Record> scanner = access.newScanner(db, prefetchSize, ktx);
         try (AbstractStorePageCacheScanner<Record>.Cursor cursor = scanner.getCursor()) {
             while (cursor.next(alwaysTrue)) {
                 ++total;
@@ -372,9 +374,10 @@ class ScanningMain<Record extends AbstractBaseRecord> extends BaseMain {
             GraphDatabaseAPI db,
             RecordStore<Record> recordStore,
             int recordsPerPage,
-            long highestRecordId) {
+            long highestRecordId,
+            KernelTransaction ktx) {
         Predicate<Record> alwaysTrue = Predicates.alwaysTrue();
-        AbstractStorePageCacheScanner<Record> scanner = access.newScanner(db, prefetchSize);
+        AbstractStorePageCacheScanner<Record> scanner = access.newScanner(db, prefetchSize, ktx);
         List<Future<Long>> futures = new ArrayList<>();
         for (int i = 0; i < Pools.DEFAULT_CONCURRENCY; i++) {
             futures.add(Pools.DEFAULT.submit(() -> {

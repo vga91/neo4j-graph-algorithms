@@ -53,16 +53,16 @@ final class ScanningRelationshipsImporter extends ScanningRecordsImporter<Relati
             HugeAdjacencyBuilder outAdjacency,
             HugeAdjacencyBuilder inAdjacency,
             ExecutorService threadPool,
-            int concurrency/*,
-            KernelTransaction tx*/) {
+            int concurrency,
+            KernelTransaction ktx) {
         super(
                 RelationshipStoreScanner.RELATIONSHIP_ACCESS,
                 "Relationship",
                 api,
                 dimensions,
                 threadPool,
-                concurrency/*,
-                tx*/);
+                concurrency,
+                ktx);
         this.setup = setup;
         this.progress = progress;
         this.tracker = tracker;

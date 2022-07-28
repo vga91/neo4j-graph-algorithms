@@ -30,6 +30,8 @@ import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.getKernelTx;
+
 /**
  * Runs code blocks wrapped in {@link KernelTransaction}s.
  * <p>
@@ -87,9 +89,5 @@ public final class TransactionWrapper {
             tx.commit();
             return result;
         }
-    }
-
-    private KernelTransaction getKernelTx(Transaction tx) {
-        return ((InternalTransaction) tx).kernelTransaction();
     }
 }

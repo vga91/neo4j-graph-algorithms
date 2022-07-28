@@ -20,9 +20,12 @@ package org.neo4j.graphalgo.core.neo4jview;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.neo4j.graphalgo.SimpleGraphSetup;
 import org.neo4j.graphalgo.SimpleGraphTestCase;
 import org.neo4j.graphalgo.api.GraphSetup;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 /**
@@ -31,13 +34,15 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 //@Ignore("weights faulty")
 public class GraphViewTest extends SimpleGraphTestCase {
 
-    private static SimpleGraphSetup setup = new SimpleGraphSetup();
+
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() {
         GraphSetup graphSetup = new GraphSetup(LABEL, RELATION, WEIGHT_PROPERTY, 0.0, null);
         // todo - null mocked, investigate
-        graph = new GraphViewFactory((GraphDatabaseAPI) setup.getDb(), graphSetup/*, null*/).build();
+        graph = new GraphViewFactory((GraphDatabaseAPI) setup.getDb(), graphSetup, null).build();
         v0 = 0;
         v1 = 1;
         v2 = 2;

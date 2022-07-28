@@ -19,6 +19,7 @@
 package org.neo4j.graphalgo.core.huge.loader;
 
 import org.neo4j.io.layout.recordstorage.RecordDatabaseFile;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.impl.store.NeoStores;
 import org.neo4j.kernel.impl.store.NodeStore;
 import org.neo4j.kernel.impl.store.RecordStore;
@@ -48,22 +49,23 @@ public final class NodeStoreScanner extends AbstractStorePageCacheScanner<NodeRe
         @Override
         public AbstractStorePageCacheScanner<NodeRecord> newScanner(
                 final GraphDatabaseAPI api,
-                final int prefetchSize) {
-            return new NodeStoreScanner(prefetchSize, api);
+                final int prefetchSize,
+                final KernelTransaction ktx) {
+            return new NodeStoreScanner(prefetchSize, api, ktx);
         }
     };
 
-    public static NodeStoreScanner of(GraphDatabaseAPI api) {
-        return of(api, AbstractStorePageCacheScanner.DEFAULT_PREFETCH_SIZE);
+    public static NodeStoreScanner of(GraphDatabaseAPI api, KernelTransaction ktx) {
+        return of(api, AbstractStorePageCacheScanner.DEFAULT_PREFETCH_SIZE, ktx);
     }
 
-    public static NodeStoreScanner of(GraphDatabaseAPI api, int prefetchSize) {
-        return new NodeStoreScanner(prefetchSize, api);
+    public static NodeStoreScanner of(GraphDatabaseAPI api, int prefetchSize, KernelTransaction ktx) {
+        return new NodeStoreScanner(prefetchSize, api, ktx);
     }
 
-    private NodeStoreScanner(final int prefetchSize, final GraphDatabaseAPI api) {
+    private NodeStoreScanner(final int prefetchSize, final GraphDatabaseAPI api, final KernelTransaction ktx) {
         // todo - null mocked, investigate
-        super(prefetchSize, api, NODE_ACCESS/*, null*/);
+        super(prefetchSize, api, NODE_ACCESS, ktx);
     }
 
     @Override

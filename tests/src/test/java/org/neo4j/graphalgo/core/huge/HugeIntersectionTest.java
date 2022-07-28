@@ -37,6 +37,9 @@ import java.util.PrimitiveIterator;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.getKernelTx;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withEmptyTx;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withTx;
 
 public final class HugeIntersectionTest {
 
@@ -52,8 +55,9 @@ public final class HugeIntersectionTest {
     @BeforeClass
     public static void setup() {
         long[] neoStarts = new long[2];
-        long[] neoTargets = DB.executeAndCommit(db -> {
-            try (KernelTransaction st = DB.resolveDependency(KernelTransaction.class)) {
+        long[] neoTargets = withTx(DB, tx -> {
+            try {
+                KernelTransaction st = getKernelTx(tx);
                 TokenWrite token = st.tokenWrite();
                 int type = token.relationshipTypeGetOrCreateForName("TYPE");
                 Write write = st.dataWrite();

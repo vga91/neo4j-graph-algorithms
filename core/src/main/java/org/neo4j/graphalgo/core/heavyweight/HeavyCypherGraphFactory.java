@@ -46,9 +46,9 @@ public class HeavyCypherGraphFactory extends GraphFactory {
 
     public HeavyCypherGraphFactory(
             GraphDatabaseAPI api,
-            GraphSetup setup/*,
-            KernelTransaction tx*/) {
-        super(api, setup/*, tx*/);
+            GraphSetup setup,
+            KernelTransaction ktx) {
+        super(api, setup, ktx);
         this.nodeLoader = new CypherNodeLoader(api, setup, dimensions);
         this.relationshipLoader = new CypherRelationshipLoader(api, setup);
     }

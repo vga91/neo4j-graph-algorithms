@@ -29,11 +29,8 @@ import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
  */
 public class HugeGraphTest extends SimpleGraphTestCase {
 
-    private static SimpleGraphSetup setup;
-
     @BeforeClass
     public static void setupGraph() {
-        setup = new SimpleGraphSetup();
         graph = setup.build(HugeGraphFactory.class);
         v0 = setup.getV0();
         v1 = setup.getV1();

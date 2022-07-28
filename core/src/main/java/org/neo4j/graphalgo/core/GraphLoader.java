@@ -89,6 +89,8 @@ public class GraphLoader {
     private boolean loadAsUndirected = false;
     private PropertyMapping[] nodePropertyMappings = new PropertyMapping[0];
 
+    
+    // todo - forse qua..???
     /**
      * Creates a new serial GraphLoader.
      */

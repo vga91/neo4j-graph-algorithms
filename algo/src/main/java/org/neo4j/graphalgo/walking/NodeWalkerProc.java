@@ -117,7 +117,7 @@ public class NodeWalkerProc  {
             try (NodeLabelIndexCursor cursor = kernelTransaction.cursors().allocateNodeLabelIndexCursor(kernelTransaction.cursorContext())) {
                 final Scan<NodeLabelIndexCursor> nodeLabelIndexCursorScan = kernelTransaction.dataRead().nodeLabelScan(labelId);
                 // todo - investigate about 100
-                nodeLabelIndexCursorScan.reserveBatch(cursor, 100, kernelTransaction.cursorContext(), AccessMode.Static.READ);
+                nodeLabelIndexCursorScan.reserveBatch(cursor, 1000000, kernelTransaction.cursorContext(), AccessMode.Static.READ);
                 cursor.next();
                 LongStream ids;
                 if (limit == -1) {

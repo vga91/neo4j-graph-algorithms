@@ -36,8 +36,13 @@ public final class HugeGraphFactory extends GraphFactory {
     // TODO: make this configurable from somewhere
     private static final boolean LOAD_DEGREES = false;
 
-    public HugeGraphFactory(GraphDatabaseAPI api, GraphSetup setup/*, KernelTransaction tx*/) {
-        super(api, setup/*, tx*/);
+    // todo - maybe we can do differently
+    public HugeGraphFactory(GraphDatabaseAPI api, GraphSetup setup) {
+        super(api, setup, null);
+    }
+    
+    public HugeGraphFactory(GraphDatabaseAPI api, GraphSetup setup, KernelTransaction ktx) {
+        super(api, setup, ktx);
     }
 
     @Override
@@ -88,8 +93,8 @@ public final class HugeGraphFactory extends GraphFactory {
                 tracker,
                 threadPool,
                 concurrency,
-                setup.nodePropertyMappings/*,
-                tx*/)
+                setup.nodePropertyMappings,
+                ktx)
                 .call(setup.log);
     }
 
@@ -118,7 +123,7 @@ public final class HugeGraphFactory extends GraphFactory {
 
         new ScanningRelationshipsImporter(
                 setup, api, dimensions, progress, tracker, idsAndProperties.hugeIdMap, weightsBuilder,
-                LOAD_DEGREES, outAdjacency, inAdjacency, threadPool, concurrency/*, tx*/)
+                LOAD_DEGREES, outAdjacency, inAdjacency, threadPool, concurrency, ktx)
                 .call(setup.log);
 
         HugeWeightMapping weights = weightsBuilder.build();

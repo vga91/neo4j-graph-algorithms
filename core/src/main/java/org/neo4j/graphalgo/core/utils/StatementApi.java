@@ -29,6 +29,7 @@ import java.util.Map;
 
 public abstract class StatementApi {
 
+    // todo - move on TransactionUtil
     public static void executeAndAccept(GraphDatabaseService db, String cypher, Result.ResultVisitor<RuntimeException> visitor) {
         executeAndAccept(db, cypher, Map.of(), visitor);
     }

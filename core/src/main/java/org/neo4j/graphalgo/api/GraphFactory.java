@@ -52,12 +52,12 @@ public abstract class GraphFactory {
     protected final ImportProgress progress;
     protected final Log log;
     protected final ProgressLogger progressLogger;
-//    protected final KernelTransaction tx;
+    protected final KernelTransaction ktx;
 
-    public GraphFactory(GraphDatabaseAPI api, GraphSetup setup/*, KernelTransaction tx*/) {
+    public GraphFactory(GraphDatabaseAPI api, GraphSetup setup, KernelTransaction ktx) {
         this.threadPool = setup.executor;
         this.api = api;
-//        this.tx = tx;
+        this.ktx = ktx;
         this.setup = setup;
         this.log = setup.log;
         this.progressLogger = progressLogger(log, setup.logMillis);

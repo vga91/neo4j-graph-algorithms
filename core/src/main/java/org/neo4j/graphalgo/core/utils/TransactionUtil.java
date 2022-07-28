@@ -25,6 +25,8 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.internal.helpers.collection.Iterators;
+import org.neo4j.kernel.api.KernelTransaction;
+import org.neo4j.kernel.impl.coreapi.InternalTransaction;
 
 import java.util.Collections;
 import java.util.Map;
@@ -35,6 +37,10 @@ import static java.util.Collections.emptyMap;
 
 
 public class TransactionUtil {
+
+    public static KernelTransaction getKernelTx(Transaction tx) {
+        return ((InternalTransaction) tx).kernelTransaction();
+    }
 
     public static void testResult(GraphDatabaseService db, String call, Consumer<Result> resultConsumer) {
         testResult(db, call, emptyMap(), resultConsumer);
@@ -69,7 +75,6 @@ public class TransactionUtil {
         }
     }
 
-    // todo - use this where needed
     public static void withEmptyTx(GraphDatabaseService db, Consumer<Transaction> consumer) {
         try (Transaction tx = db.beginTx()) {
             consumer.accept(tx);

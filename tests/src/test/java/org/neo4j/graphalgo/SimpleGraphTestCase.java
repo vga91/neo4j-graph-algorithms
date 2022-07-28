@@ -18,8 +18,8 @@
  */
 package org.neo4j.graphalgo;
 
+import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -40,6 +40,8 @@ import static org.neo4j.graphdb.Direction.OUTGOING;
 @RunWith(MockitoJUnitRunner.class)
 public abstract class SimpleGraphTestCase extends Neo4JTestCase {
 
+    protected static SimpleGraphSetup setup = new SimpleGraphSetup();
+    
     protected static Graph graph;
 
     protected static int v0, v1, v2;
@@ -54,6 +56,11 @@ public abstract class SimpleGraphTestCase extends Neo4JTestCase {
     public void setupMocks() {
         when(nodeConsumer.test(anyInt())).thenReturn(true);
         when(relationConsumer.accept(anyInt(), anyInt(), anyLong())).thenReturn(true);
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        setup.deleteFolder();
     }
 
     @Test

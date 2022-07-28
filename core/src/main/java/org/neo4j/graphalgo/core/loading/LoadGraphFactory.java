@@ -32,9 +32,9 @@ public final class LoadGraphFactory extends GraphFactory {
 
     public LoadGraphFactory(
             final GraphDatabaseAPI api,
-            final GraphSetup setup/*,
-            KernelTransaction tx*/) {
-        super(api, setup/*, tx*/);
+            final GraphSetup setup,
+            KernelTransaction ktx) {
+        super(api, setup, ktx);
     }
 
     @Override

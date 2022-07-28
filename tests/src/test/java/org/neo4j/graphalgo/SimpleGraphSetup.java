@@ -19,6 +19,9 @@
 package org.neo4j.graphalgo;
 
 import org.junit.ClassRule;
+import org.junit.rules.TemporaryFolder;
+import org.neo4j.configuration.GraphDatabaseSettings;
+import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
@@ -26,6 +29,10 @@ import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
+import org.neo4j.test.TestDatabaseManagementServiceBuilder;
+
+import java.io.File;
+import java.util.UUID;
 
 /**
  * Builds a simple test graph.
@@ -40,14 +47,24 @@ public class SimpleGraphSetup {
     public static final String RELATION = "RELATION";
     public static final String PROPERTY = "weight";
 
-    @ClassRule
-    public static DatabaseRule db = new ImpermanentDatabaseRule();
+//    @ClassRule
+//    public static TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    
+    public static GraphDatabaseService db;// = new ImpermanentDatabaseRule();
 
     private long n0, n1, n2;
     private long r0, r1, r2;
     private int v0, v1, v2;
+    
+    private final File file = new File(UUID.randomUUID().toString());
 
     public SimpleGraphSetup() {
+        // todo - delete folder 
+        DatabaseManagementService databaseManagementService = new TestDatabaseManagementServiceBuilder(file.toPath())
+//                .setConfig(apoc_jobs_pool_num_threads, 10L)
+                .build();
+        db = databaseManagementService.database(GraphDatabaseSettings.DEFAULT_DATABASE_NAME);
         setupGraph();
     }
 
@@ -129,5 +146,9 @@ public class SimpleGraphSetup {
 
     public long getN2() {
         return n2;
+    }
+
+    public void deleteFolder() {
+        file.delete();
     }
 }

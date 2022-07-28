@@ -28,8 +28,6 @@ import org.neo4j.graphalgo.core.utils.paged.MemoryUsage;
 import org.neo4j.graphalgo.core.utils.paged.PageUtil;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Transaction;
 import org.neo4j.internal.kernel.api.TokenWrite;
 import org.neo4j.internal.kernel.api.Write;
 import org.neo4j.kernel.api.KernelTransaction;
@@ -39,6 +37,8 @@ import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.values.storable.Values;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.getKernelTx;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withEmptyTx;
 
 public final class HugeGraphWeightTest {
 
@@ -55,6 +55,7 @@ public final class HugeGraphWeightTest {
         HugeGraph graph = loadGraph(db);
 
         graph.forEachNode((long node) -> {
+            System.out.println("node = " + node);
             graph.forEachOutgoing(node, (src, tgt) -> {
                 long weight = (long) graph.weightOf(src, tgt);
                 int fakeId = ((int) src << 16) | (int) tgt & 0xFFFF;
@@ -74,8 +75,9 @@ public final class HugeGraphWeightTest {
     }
 
     private void mkDb(final int nodes, final int relsPerNode) {
-        db.executeAndCommit((Transaction __) -> {
-            try (KernelTransaction st = db.resolveDependency(KernelTransaction.class)) {
+        withEmptyTx(db, tx -> {
+            try {
+                KernelTransaction st = getKernelTx(tx);
                 TokenWrite token = st.tokenWrite();
                 int type = token.relationshipTypeGetOrCreateForName("TYPE");
                 int key = token.propertyKeyGetOrCreateForName("weight");
@@ -102,7 +104,7 @@ public final class HugeGraphWeightTest {
                         }
                     }
                 }
-            } catch (KernelException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });

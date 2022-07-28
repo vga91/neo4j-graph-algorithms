@@ -45,6 +45,9 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.getKernelTx;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withEmptyTx;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withTx;
 
 /**
  * @author mknblch
@@ -76,8 +79,8 @@ public class MultiStepColoringTest {
     }
 
     private static void createTestGraph() throws Exception {
-        final int rIdx = DB.executeAndCommit((Transaction tx) -> {
-            KernelTransaction transaction = DB.resolveDependency(KernelTransaction.class);
+        final int rIdx = withTx(DB, tx -> {
+            KernelTransaction transaction = getKernelTx(tx);
             try {
                 return transaction.tokenWrite().relationshipTypeGetOrCreateForName(RELATIONSHIP_TYPE.name());
             } catch (Exception e) {
@@ -94,9 +97,9 @@ public class MultiStepColoringTest {
 
     private static Runnable createRing(int rIdx) {
         return () -> {
-            DB.executeAndCommit((Transaction __) -> {
+            withTx(DB, (Transaction tx) -> {
                 try {
-                    KernelTransaction transaction = DB.resolveDependency(KernelTransaction.class);
+                    KernelTransaction transaction = getKernelTx(tx);
                     final Write op = transaction.dataWrite();
                     long node = op.nodeCreate();
                     long start = node;

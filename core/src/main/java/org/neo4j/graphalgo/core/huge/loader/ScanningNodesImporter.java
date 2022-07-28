@@ -52,9 +52,9 @@ final class ScanningNodesImporter extends ScanningRecordsImporter<NodeRecord, Id
             AllocationTracker tracker,
             ExecutorService threadPool,
             int concurrency,
-            PropertyMapping[] propertyMappings/*,
-            KernelTransaction tx*/) {
-        super(NodeStoreScanner.NODE_ACCESS, "Node", api, dimensions, threadPool, concurrency/*, tx*/);
+            PropertyMapping[] propertyMappings,
+            KernelTransaction tx) {
+        super(NodeStoreScanner.NODE_ACCESS, "Node", api, dimensions, threadPool, concurrency, tx);
         this.progress = progress;
         this.tracker = tracker;
 //        this.tx = tx;

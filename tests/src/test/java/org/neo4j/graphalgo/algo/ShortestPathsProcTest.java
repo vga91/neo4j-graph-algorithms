@@ -45,6 +45,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withEmptyTx;
 
 
 /**         5     5      5
@@ -100,7 +101,7 @@ public final class ShortestPathsProcTest {
         api.resolveDependency(GlobalProcedures.class)
                 .registerProcedure(ShortestPathsProc.class);
 
-        api.executeAndCommit((Transaction tx) -> {
+        withEmptyTx(api, tx -> {
             tx.execute(cypher);
             startNode = tx.findNode(Label.label("Node"), "name", "s").getId();
             endNode = tx.findNode(Label.label("Node"), "name", "x").getId();

@@ -108,8 +108,8 @@ public class ParallelGraphLoadingTest extends RandomGraphTestCase {
     public void shouldLoadSparseNodes() throws Exception {
 //        GraphDatabaseAPI largerGraph = 
 //        buildGraph(30);
-//        buildGraph(PageUtil.pageSizeFor(Long.BYTES) << 1);
-        buildGraph(10000);
+        buildGraph((PageUtil.pageSizeFor(Long.BYTES) << 1));
+//        buildGraph(10000);
 //        try {
             Graph sparseGraph = load(db, l -> l.withLabel("Label2"));
             try (Transaction tx = db.beginTx();

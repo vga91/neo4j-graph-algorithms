@@ -52,6 +52,7 @@ import java.util.Objects;
 
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.is;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withEmptyTx;
 
 @RunWith(Parameterized.class)
 public class AllShortestPaths427Test {
@@ -446,10 +447,10 @@ public class AllShortestPaths427Test {
     private List<Result> calculateExpected(boolean withWeights) {
         List<Result> expected = new ArrayList<>();
         ShortestPathDijkstra spd = new ShortestPathDijkstra(graph);
-        DB.executeAndCommit((db) -> {
+        withEmptyTx(DB, tx -> {
             graph.forEachNode(start -> {
                 long s = graph.toOriginalNodeId(start);
-                TestDijkstra dijkstra = new TestDijkstra(db.getNodeById(s), withWeights);
+                TestDijkstra dijkstra = new TestDijkstra(tx.getNodeById(s), withWeights);
                 graph.forEachNode(end -> {
                     if (start == end) {
                         return true;
@@ -460,7 +461,7 @@ public class AllShortestPaths427Test {
 
                     dijkstra.reset();
                     long t = graph.toOriginalNodeId(end);
-                    Node targetNode = db.getNodeById(t);
+                    Node targetNode = tx.getNodeById(t);
                     List<Node> path = dijkstra.getPathAsNodes(targetNode);
 
                     if (path != null) {
@@ -495,7 +496,6 @@ public class AllShortestPaths427Test {
 
                 return true;
             });
-            return true;
         });
 
         expected.sort(Comparator.naturalOrder());

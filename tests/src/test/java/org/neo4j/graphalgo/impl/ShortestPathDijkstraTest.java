@@ -43,6 +43,7 @@ import java.util.stream.Stream;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withTx;
 
 @RunWith(Parameterized.class)
 public final class ShortestPathDijkstraTest {
@@ -255,7 +256,7 @@ public final class ShortestPathDijkstraTest {
             Label label,
             RelationshipType type,
             String... kvPairs) {
-        return DB.executeAndCommit(tx -> {
+        return withTx(DB, tx -> {
             double weight = 0.0;
             Node prev = null;
             long[] nodeIds = new long[kvPairs.length / 2];
