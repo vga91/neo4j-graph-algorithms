@@ -26,6 +26,7 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.heavyweight.HeavyCypherGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
@@ -60,7 +61,7 @@ public class GraphLoaderCypherTest {
                 " (a)-[:REL]->(b)," +
                 " (b)-[:REL]->(c)," +
                 " (b)-[:REL]->(d)");
-        GraphLoader graphLoader = new GraphLoader(db, Pools.DEFAULT);
+        GraphLoader graphLoader = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, Pools.DEFAULT, ktx));
         Graph graph = graphLoader.withLabel("MATCH (n) RETURN id(n) AS id")
                 .withRelationshipType("MATCH (a)--(b) RETURN id(a) AS source, id(b) AS target")
                 .direction(Direction.BOTH)
@@ -83,7 +84,7 @@ public class GraphLoaderCypherTest {
                 " (a)-[:REL]->(b)," +
                 " (b)-[:REL]->(c)," +
                 " (b)-[:REL]->(d)");
-        GraphLoader graphLoader = new GraphLoader(db, Pools.DEFAULT);
+        GraphLoader graphLoader = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, Pools.DEFAULT, ktx));
         Graph graph = graphLoader.withLabel("MATCH (n) RETURN id(n) AS id")
                 .withRelationshipType("MATCH (a)-->(b) RETURN id(a) AS source, id(b) AS target")
                 .direction(Direction.OUTGOING)
@@ -106,7 +107,7 @@ public class GraphLoaderCypherTest {
                 " (a)-[:REL]->(b)," +
                 " (b)-[:REL]->(c)," +
                 " (b)-[:REL]->(d)");
-        GraphLoader graphLoader = new GraphLoader(db, Pools.DEFAULT);
+        GraphLoader graphLoader = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, Pools.DEFAULT, ktx));
         Graph graph = graphLoader.withLabel("MATCH (n) RETURN id(n) AS id")
                 .withRelationshipType("MATCH (a)<--(b) RETURN id(a) AS source, id(b) AS target")
                 .direction(Direction.INCOMING)

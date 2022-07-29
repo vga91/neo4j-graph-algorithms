@@ -24,6 +24,7 @@ import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.MemoryUsage;
 import org.neo4j.graphalgo.core.utils.paged.PageUtil;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
@@ -51,6 +52,7 @@ public final class HugeGraphWeightTest {
 
     @Test
     public void shouldLoadCorrectWeights() throws Exception {
+//        mkDb(30, 2);
         mkDb(WEIGHT_BATCH_SIZE << 1, 2);
         HugeGraph graph = loadGraph(db);
 
@@ -111,12 +113,12 @@ public final class HugeGraphWeightTest {
     }
 
     private HugeGraph loadGraph(final GraphDatabaseAPI db) {
-        return (HugeGraph) new GraphLoader(db)
+        return (HugeGraph) new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withRelationshipWeightsFromProperty("weight", 0)
                 .withDirection(Direction.OUTGOING)
                 .withExecutorService(Pools.DEFAULT)
                 .withBatchSize(BATCH_SIZE)
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
     }
 
     private interface NewRel {

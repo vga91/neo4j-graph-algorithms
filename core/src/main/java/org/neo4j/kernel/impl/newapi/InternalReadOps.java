@@ -20,10 +20,11 @@ package org.neo4j.kernel.impl.newapi;
 
 import org.neo4j.internal.id.IdType;
 //import org.neo4j.internal.recordstorage.RecordIdType;
-//import org.neo4j.kernel.impl.store.id.IdGenerator;
-//import org.neo4j.kernel.impl.store.id.IdGeneratorFactory;
-//import org.neo4j.kernel.impl.store.id.IdType;
+import org.neo4j.internal.id.IdGenerator;
+import org.neo4j.internal.id.IdGeneratorFactory;
+import org.neo4j.internal.id.IdType;
 //import org.neo4j.kernel.impl.util.UnsatisfiedDependencyException;
+import org.neo4j.internal.recordstorage.RecordIdType;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.OptionalLong;
@@ -39,33 +40,36 @@ public final class InternalReadOps {
     }
 
     private static long nodeCountByIdGenerator(org.neo4j.internal.kernel.api.Read read, GraphDatabaseAPI api) {
-        return read.nodesGetCount();
-//        return countByIdGenerator(api, RecordIdType.NODE).orElseGet(read::nodesGetCount);
+//        return read.nodesGetCount();
+        return countByIdGenerator(api, RecordIdType.NODE).orElseGet(read::nodesGetCount);
     }
 
     private static long relationshipCountByIdGenerator(org.neo4j.internal.kernel.api.Read read, GraphDatabaseAPI api) {
-        return read.relationshipsGetCount();
-//        return countByIdGenerator(api, IdType.RELATIONSHIP).orElseGet(read::relationshipsGetCount);
+//        return read.relationshipsGetCount();
+        return countByIdGenerator(api, RecordIdType.RELATIONSHIP).orElseGet(read::relationshipsGetCount);
     }
 
-//    private static OptionalLong countByIdGenerator(GraphDatabaseAPI api, RecordIdType idType) {
-//        if (api != null) {
-//            idType.highActivity()
-//            try {
-//                IdGeneratorFactory idGeneratorFactory = api
-//                        .getDependencyResolver()
-//                        .resolveDependency(IdGeneratorFactory.class);
-//                if (idGeneratorFactory != null) {
-//                    final IdGenerator idGenerator = idGeneratorFactory.get(idType);
-//                    if (idGenerator != null) {
-//                        return OptionalLong.of(idGenerator.getHighId());
-//                    }
-//                }
-//            } catch (IllegalArgumentException | UnsatisfiedDependencyException ignored) {
-//            }
-//        }
+    public static OptionalLong countByIdGenerator(GraphDatabaseAPI api, IdType idType) {
+        if (api != null) {
+            try {
+                try {
+                    IdGeneratorFactory idGeneratorFactory = api
+                            .getDependencyResolver()
+                            .resolveDependency(IdGeneratorFactory.class);
+                    if (idGeneratorFactory != null) {
+                        final IdGenerator idGenerator = idGeneratorFactory.get(idType);
+                        if (idGenerator != null) {
+                            return OptionalLong.of(idGenerator.getHighId());
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        throw new RuntimeException("aaaaa");
 //        return OptionalLong.empty();
-//    }
+    }
 
     private InternalReadOps() {
         throw new UnsupportedOperationException("No instances");

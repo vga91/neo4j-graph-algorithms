@@ -90,7 +90,7 @@ public class ShortestPathProc {
 
         Direction direction = configuration.getDirection(Direction.BOTH);
 
-        GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT)
+        GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT, kernelTransaction)
                 .init(log, configuration.getNodeLabelOrQuery(), configuration.getRelationshipOrQuery(), configuration)
                 .withOptionalRelationshipWeightsFromProperty(
                         propertyName,
@@ -138,7 +138,7 @@ public class ShortestPathProc {
 
         Direction direction = configuration.getDirection(Direction.BOTH);
         try (ProgressTimer timer = builder.timeLoad()) {
-            GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT)
+            GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT, kernelTransaction)
                     .init(log, configuration.getNodeLabelOrQuery(), configuration.getRelationshipOrQuery(), configuration)
                     .withOptionalRelationshipWeightsFromProperty(
                             propertyName,
@@ -205,7 +205,7 @@ public class ShortestPathProc {
         ProcedureConfiguration configuration = ProcedureConfiguration.create(config);
         Direction direction = configuration.getDirection(Direction.BOTH);
 
-        GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT)
+        GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT, kernelTransaction)
                 .init(log, configuration.getNodeLabelOrQuery(), configuration.getRelationshipOrQuery(), configuration)
                 .withOptionalRelationshipWeightsFromProperty(propertyName, configuration.getWeightPropertyDefaultValue(1.0))
                 .withDirection(direction);

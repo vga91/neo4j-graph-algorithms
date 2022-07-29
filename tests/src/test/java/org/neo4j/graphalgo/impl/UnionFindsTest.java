@@ -31,6 +31,7 @@ import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -83,11 +84,11 @@ public class UnionFindsTest {
     public UnionFindsTest(
             Class<? extends GraphFactory> graphImpl,
             String name) {
-        graph = new GraphLoader(DB)
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withExecutorService(Pools.DEFAULT)
                 .withAnyLabel()
                 .withRelationshipType(RELATIONSHIP_TYPE)
-                .load(graphImpl);
+                .load(graphImpl));
     }
 
     private static void createTestGraph(int... setSizes) {

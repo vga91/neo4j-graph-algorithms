@@ -27,6 +27,7 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.DuplicateRelationshipsStrategy;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Direction;
@@ -91,13 +92,13 @@ public class HeavyCypherGraphSequentialFactoryTest {
     }
 
     private void loadAndTestGraph(String nodeStatement, String relStatement, boolean accumulateWeights) {
-        final Graph graph = new GraphLoader((GraphDatabaseAPI) db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withBatchSize(1000)
                 .withDuplicateRelationshipsStrategy(accumulateWeights ? DuplicateRelationshipsStrategy.SUM : DuplicateRelationshipsStrategy.SKIP)
                 .withRelationshipWeightsFromProperty("prop",0d)
                 .withLabel(nodeStatement)
                 .withRelationshipType(relStatement)
-                .load(HeavyCypherGraphFactory.class);
+                .load(HeavyCypherGraphFactory.class));
 
         Assert.assertEquals(COUNT, graph.nodeCount());
         AtomicInteger relCount = new AtomicInteger();

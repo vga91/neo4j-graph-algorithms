@@ -169,7 +169,7 @@ public class LouvainProc {
 
     public Graph graph(String label, String relationship, ProcedureConfiguration config) {
 
-        GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT)
+        GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, label, relationship, config)
                 .withNodeStatement(config.getNodeLabelOrQuery())
                 .withRelationshipStatement(config.getRelationshipOrQuery())

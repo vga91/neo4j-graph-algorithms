@@ -88,7 +88,7 @@ public class KShortestPathsProc {
         Direction direction = configuration.getDirection(Direction.BOTH);
         // load
         try (ProgressTimer timer = builder.timeLoad()) {
-            final GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT)
+            final GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT, kernelTx)
                     .init(log, configuration.getNodeLabelOrQuery(), configuration.getRelationshipOrQuery(), configuration)
                     .withOptionalRelationshipWeightsFromProperty(
                             propertyName,
@@ -154,7 +154,7 @@ public class KShortestPathsProc {
         Direction direction = configuration.getDirection(Direction.BOTH);
         // load
         try (ProgressTimer timer = builder.timeLoad()) {
-            final GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT)
+            final GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT, kernelTx)
                     .init(log, configuration.getNodeLabelOrQuery(), configuration.getRelationshipOrQuery(), configuration)
                     .withOptionalRelationshipWeightsFromProperty(
                             propertyName,

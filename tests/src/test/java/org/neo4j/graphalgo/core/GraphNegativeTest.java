@@ -32,6 +32,7 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
 import org.neo4j.graphalgo.core.utils.RawValues;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Relationship;
@@ -74,61 +75,61 @@ public final class GraphNegativeTest extends RandomGraphTestCase {
 
     @Test
     public void shouldLoadAllNodesForNonExistingStringLabel() {
-        final Graph graph = new GraphLoader(RandomGraphTestCase.db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(RandomGraphTestCase.db, ktx)
                 .withLabel("foo")
-                .load(graphImpl);
+                .load(graphImpl));
         assertEquals(graph.nodeCount(), NODE_COUNT);
     }
 
     @Test
     public void shouldLoadAllNodesForNonExistingLabel() {
-        final Graph graph = new GraphLoader(RandomGraphTestCase.db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(RandomGraphTestCase.db, ktx)
                 .withLabel(Label.label("foo"))
-                .load(graphImpl);
+                .load(graphImpl));
         assertEquals(graph.nodeCount(), NODE_COUNT);
     }
 
     @Test
     public void shouldLoadRelationshipsNodesForNonExistingStringTypes() {
-        final Graph graph = new GraphLoader(RandomGraphTestCase.db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(RandomGraphTestCase.db, ktx)
                 .withRelationshipType("foo")
-                .load(graphImpl);
+                .load(graphImpl));
         testRelationships(graph);
     }
 
     @Test
     public void shouldLoadRelationshipsNodesForNonExistingTypes() {
-        final Graph graph = new GraphLoader(RandomGraphTestCase.db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(RandomGraphTestCase.db, ktx)
                 .withRelationshipType(RelationshipType.withName("foo"))
-                .load(graphImpl);
+                .load(graphImpl));
         testRelationships(graph);
     }
 
     @Test
     @Ignore("Ignoring until Paul has implemented deduplication logic")
     public void shouldLoadWeightedRelationshipsNodesForNonExistingStringTypes() {
-        final Graph graph = new GraphLoader(RandomGraphTestCase.db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(RandomGraphTestCase.db, ktx)
                 .withRelationshipType("foo")
                 .withRelationshipWeightsFromProperty("weight", 42.0)
-                .load(graphImpl);
+                .load(graphImpl));
         testWeightedRelationships(graph);
     }
 
     @Test
     @Ignore("Ignoring until Paul has implemented deduplication logic")
     public void shouldLoadWeightedRelationshipsNodesForNonExistingTypes() {
-        final Graph graph = new GraphLoader(RandomGraphTestCase.db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(RandomGraphTestCase.db, ktx)
                 .withRelationshipType(RelationshipType.withName("foo"))
                 .withRelationshipWeightsFromProperty("weight", 42.0)
-                .load(graphImpl);
+                .load(graphImpl));
         testWeightedRelationships(graph);
     }
 
     @Test
     public void shouldLoadDefaultWeightForNonExistingProperty() {
-        final Graph graph = new GraphLoader(RandomGraphTestCase.db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(RandomGraphTestCase.db, ktx)
                 .withRelationshipWeightsFromProperty("foo", 13.37)
-                .load(graphImpl);
+                .load(graphImpl));
         graph.forEachNode(node -> {
             graph.forEachRelationship(
                     node,

@@ -31,6 +31,7 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.ParallelUtil;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphalgo.impl.triangle.TriangleCountForkJoin;
 import org.neo4j.graphalgo.impl.triangle.TriangleCountQueue;
@@ -85,7 +86,7 @@ public final class LargerTriangleCountTest {
 
     @Before
     public void setUp() {
-        graph = new GraphLoader(DB)
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withLabel(LABEL)
                 .withRelationshipType(RELATIONSHIP)
                 .withoutRelationshipWeights()
@@ -93,7 +94,7 @@ public final class LargerTriangleCountTest {
                 .withSort(true)
                 .asUndirected(true)
                 .withConcurrency(1)
-                .load(graphImpl);
+                .load(graphImpl));
     }
 
     @Test

@@ -27,6 +27,7 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
@@ -106,14 +107,14 @@ public class DegreesTest {
 
     private void setup(String cypher, Direction direction) {
         DB.executeTransactionally(cypher);
-        graph = new GraphLoader(DB)
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .withoutNodeProperties()
                 .withDirection(direction == null ? Direction.BOTH : direction)
                 .asUndirected(direction == null)
                 .withRelationshipWeightsFromProperty("w", 0.0)
-                .load(graphImpl);
+                .load(graphImpl));
     }
 
     private int nodeId(String name) {

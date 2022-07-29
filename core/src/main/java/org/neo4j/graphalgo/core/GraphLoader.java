@@ -60,8 +60,8 @@ public class GraphLoader {
     private static final MethodType CTOR_METHOD = MethodType.methodType(
             void.class,
             GraphDatabaseAPI.class,
-            GraphSetup.class/*,
-            KernelTransaction.class*/);
+            GraphSetup.class,
+            KernelTransaction.class);
 
     private String name = null;
     private String label = null;
@@ -72,6 +72,7 @@ public class GraphLoader {
     private Direction direction = Direction.BOTH;
 
     private final GraphDatabaseAPI api;
+    private final KernelTransaction ktx;
     private ExecutorService executorService;
     private double relWeightDefault = 0.0;
     private double nodeWeightDefault = 0.0;
@@ -94,8 +95,9 @@ public class GraphLoader {
     /**
      * Creates a new serial GraphLoader.
      */
-    public GraphLoader(GraphDatabaseAPI api) {
+    public GraphLoader(GraphDatabaseAPI api, KernelTransaction ktx) {
         this.api = Objects.requireNonNull(api);
+        this.ktx = Objects.requireNonNull(ktx);
         this.executorService = null;
         this.concurrency = Pools.DEFAULT_CONCURRENCY;
     }
@@ -105,8 +107,9 @@ public class GraphLoader {
      * What exactly parallel means depends on the {@link GraphFactory}
      * implementation provided in {@link #load(Class)}.
      */
-    public GraphLoader(GraphDatabaseAPI api, ExecutorService executorService) {
+    public GraphLoader(GraphDatabaseAPI api, ExecutorService executorService, KernelTransaction ktx) {
         this.api = Objects.requireNonNull(api);
+        this.ktx = Objects.requireNonNull(ktx);
         this.executorService = Objects.requireNonNull(executorService);
         this.concurrency = Pools.DEFAULT_CONCURRENCY;
     }
@@ -502,7 +505,7 @@ public class GraphLoader {
         final GraphSetup setup = toSetup();
 
         try {
-            return (GraphFactory) constructor.invoke(api, setup/*, tx*/);
+            return (GraphFactory) constructor.invoke(api, setup, ktx);
         } catch (Throwable throwable) {
             throw ExceptionUtil.launderedException(
                     throwable.getMessage(),

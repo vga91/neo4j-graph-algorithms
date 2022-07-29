@@ -81,7 +81,7 @@ public class IsFiniteFuncTest {
     @Test
     public void testInfinityAndNaN() throws Exception {
         double[] actual = DB.executeTransactionally(
-                "WITH [42, algo.Infinity(), 13.37, 0, algo.NaN(), 1.7976931348623157e308, -13] AS values RETURN filter(x IN values WHERE algo.isFinite(x)) as xs", Map.of(),
+                "WITH [42, algo.Infinity(), 13.37, 0, algo.NaN(), 1.7976931348623157e308, -13] AS values RETURN [x IN values WHERE algo.isFinite(x)] as xs", Map.of(),
                 r -> r.<List<Number>>columnAs("xs")
                 .stream()
                 .flatMap(Collection::stream)

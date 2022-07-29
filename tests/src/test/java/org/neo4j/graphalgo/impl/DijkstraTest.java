@@ -26,6 +26,7 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.RawValues;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.yens.Dijkstra;
 import org.neo4j.graphalgo.impl.yens.WeightedPath;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
@@ -35,6 +36,7 @@ import org.neo4j.exceptions.KernelException;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.*;
+import static org.neo4j.configuration.GraphDatabaseInternalSettings.track_cursor_close;
 import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
@@ -54,7 +56,8 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 public class DijkstraTest {
 
     @ClassRule
-    public static DatabaseRule db = new ImpermanentDatabaseRule();
+    public static DatabaseRule db = new ImpermanentDatabaseRule()
+            .setConfig(track_cursor_close, false);
 
     private static Graph graph;
     private static LongArrayList edgeBlackList;
@@ -83,13 +86,13 @@ public class DijkstraTest {
 
         db.executeTransactionally(cypher);
 
-        graph = new GraphLoader(db)
+        graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .withoutNodeProperties()
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
                 .asUndirected(true)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         edgeBlackList = new LongArrayList();
 

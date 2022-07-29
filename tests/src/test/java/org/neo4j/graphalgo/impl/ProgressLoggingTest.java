@@ -29,6 +29,7 @@ import org.neo4j.configuration.BufferingLog;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.write.Exporter;
 import org.neo4j.graphalgo.core.write.Translators;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
@@ -96,12 +97,12 @@ public class ProgressLoggingTest {
 
     public ProgressLoggingTest(Class<? extends GraphFactory> graphImpl, String nameIgnored) {
         this.graphImpl = graphImpl;
-        graph = new GraphLoader(db)
+        graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withExecutorService(Pools.DEFAULT)
                 .withLabel(LABEL)
                 .withRelationshipType(RELATIONSHIP)
                 .withRelationshipWeightsFromProperty(PROPERTY, 1.0)
-                .load(graphImpl);
+                .load(graphImpl));
     }
 
     @Test
@@ -110,13 +111,13 @@ public class ProgressLoggingTest {
         final StringWriter buffer = new StringWriter();
 
         try (ProgressTimer timer = ProgressTimer.start(t -> System.out.println("load took " + t + "ms"))) {
-            graph = new GraphLoader(db)
+            graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                     .withLog(testLogger(buffer))
                     .withExecutorService(Pools.DEFAULT)
                     .withLabel(LABEL)
                     .withRelationshipType(RELATIONSHIP)
                     .withRelationshipWeightsFromProperty(PROPERTY, 1.0)
-                    .load(graphImpl);
+                    .load(graphImpl));
         }
 
         System.out.println(buffer);

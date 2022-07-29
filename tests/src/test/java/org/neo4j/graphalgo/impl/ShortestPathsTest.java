@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Node;
@@ -33,6 +34,7 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.configuration.GraphDatabaseInternalSettings.track_cursor_close;
 import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
@@ -48,7 +50,8 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 public final class ShortestPathsTest {
 
     @ClassRule
-    public static DatabaseRule api = new ImpermanentDatabaseRule();
+    public static DatabaseRule api = new ImpermanentDatabaseRule()
+            .setConfig(track_cursor_close, false);
 
     private static Graph graph;
 
@@ -101,11 +104,11 @@ public final class ShortestPathsTest {
         tail = getNode("x").getId();
         outstanding = getNode("q").getId();
 
-        graph = new GraphLoader(api)
+        graph = new TransactionWrapper(api).apply(ktx -> new GraphLoader(api, ktx)
                 .withLabel("Node")
                 .withRelationshipType("TYPE")
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
     }
 
     @AfterClass

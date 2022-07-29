@@ -25,6 +25,7 @@ import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.*;
@@ -51,7 +52,7 @@ public class SimpleGraphSetup {
 //    public static TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     
-    public static GraphDatabaseService db;// = new ImpermanentDatabaseRule();
+    public static GraphDatabaseAPI db;// = new ImpermanentDatabaseRule();
 
     private long n0, n1, n2;
     private long r0, r1, r2;
@@ -64,7 +65,7 @@ public class SimpleGraphSetup {
         DatabaseManagementService databaseManagementService = new TestDatabaseManagementServiceBuilder(file.toPath())
 //                .setConfig(apoc_jobs_pool_num_threads, 10L)
                 .build();
-        db = databaseManagementService.database(GraphDatabaseSettings.DEFAULT_DATABASE_NAME);
+        db = (GraphDatabaseAPI) databaseManagementService.database(GraphDatabaseSettings.DEFAULT_DATABASE_NAME);
         setupGraph();
     }
 
@@ -97,11 +98,11 @@ public class SimpleGraphSetup {
     }
 
     public Graph build(Class<? extends GraphFactory> factory) {
-        final Graph graph = new GraphLoader((GraphDatabaseAPI) db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withLabel(LABEL)
                 .withRelationshipType(RELATION)
                 .withRelationshipWeightsFromProperty(PROPERTY, 0.0)
-                .load(factory);
+                .load(factory));
         v0 = graph.toMappedNodeId(n0);
         v1 = graph.toMappedNodeId(n1);
         v2 = graph.toMappedNodeId(n2);

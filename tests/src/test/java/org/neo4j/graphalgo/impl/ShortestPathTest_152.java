@@ -26,6 +26,7 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Result;
@@ -91,11 +92,11 @@ public class ShortestPathTest_152 {
 
         DoubleConsumer mock = mock(DoubleConsumer.class);
 
-        final Graph graph = new GraphLoader(DB, Pools.DEFAULT)
+        final Graph graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, Pools.DEFAULT, ktx)
                 .withOptionalLabel("Loc")
                 .withRelationshipType("ROAD")
                 .withOptionalRelationshipWeightsFromProperty("d", 0)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         new ShortestPathDijkstra(graph)
                 .compute(startNodeId, endNodeId)
@@ -114,11 +115,11 @@ public class ShortestPathTest_152 {
 
         DoubleConsumer mock = mock(DoubleConsumer.class);
 
-        final Graph graph = new GraphLoader(DB, Pools.DEFAULT)
+        final Graph graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, Pools.DEFAULT, ktx)
                 .withOptionalLabel("Loc")
                 .withAnyRelationshipType()
                 .withOptionalRelationshipWeightsFromProperty("d", 0)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         new ShortestPathDijkstra(graph)
                 .compute(startNodeId, endNodeId)

@@ -26,6 +26,7 @@ import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
@@ -100,14 +101,14 @@ public class TriangleStreamTest {
 
     public TriangleStreamTest(Class<? extends GraphFactory> graphImpl, String name) {
         try (ProgressTimer timer = ProgressTimer.start(t -> System.out.println("load " + name + " took " + t + "ms"))) {
-            graph = new GraphLoader(DB)
+            graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                     .withDirection(Direction.BOTH)
                     .withLabel(LABEL)
                     .withRelationshipType(RELATIONSHIP)
                     .withoutRelationshipWeights()
                     .withoutNodeWeights()
                     .asUndirected(true)
-                    .load(graphImpl);
+                    .load(graphImpl));
         }
     }
 

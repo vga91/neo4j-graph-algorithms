@@ -28,6 +28,7 @@ import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
@@ -338,11 +339,11 @@ public class RelationshipPredicateTest {
     }
 
     private GraphLoader loader() {
-        return new GraphLoader(DB)
+        return new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withAnyLabel()
                 .withAnyRelationshipType()
                 .withoutRelationshipWeights()
                 .withoutNodeWeights()
-                .withoutNodeProperties();
+                .withoutNodeProperties());
     }
 }

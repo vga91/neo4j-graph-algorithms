@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.neo4j.graphalgo.PropertyMapping;
 import org.neo4j.graphalgo.core.DuplicateRelationshipsStrategy;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Direction;
@@ -64,11 +65,11 @@ public class HeavyCypherGraphFactoryDeduplicationTest {
         String nodes = "MATCH (n) RETURN id(n) as id";
         String rels = "MATCH (n)-[r]-(m) RETURN id(n) as source, id(m) as target, r.weight as weight";
 
-        final HeavyGraph graph = (HeavyGraph) new GraphLoader((GraphDatabaseAPI) db)
+        final HeavyGraph graph = (HeavyGraph) new TransactionWrapper(db).apply(ktx -> new GraphLoader((GraphDatabaseAPI) db, ktx)
                 .withLabel(nodes)
                 .withRelationshipType(rels)
                 .withDuplicateRelationshipsStrategy(DuplicateRelationshipsStrategy.SKIP)
-                .load(HeavyCypherGraphFactory.class);
+                .load(HeavyCypherGraphFactory.class));
 
         assertEquals(2, graph.nodeCount());
         assertEquals(1, graph.degree(graph.toMappedNodeId(id1), Direction.OUTGOING));

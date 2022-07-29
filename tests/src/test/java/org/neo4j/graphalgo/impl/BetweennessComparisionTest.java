@@ -27,6 +27,7 @@ import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphalgo.impl.betweenness.*;
@@ -82,15 +83,14 @@ public class BetweennessComparisionTest {
 
             cId = center.getId();
         }
-
-        graph = new GraphLoader(DB)
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withAnyLabel()
                 .withAnyRelationshipType()
                 .withoutRelationshipWeights()
                 .withoutNodeProperties()
                 .withoutNodeWeights()
                 .withDirection(Direction.OUTGOING)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         centerId = graph.toMappedNodeId(cId);
 

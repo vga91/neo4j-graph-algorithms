@@ -102,7 +102,7 @@ public class StronglyConnectedComponentsProc {
         SCCResult.Builder builder = SCCResult.builder();
 
         ProgressTimer loadTimer = builder.timeLoad();
-        Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, label, relationship, configuration)
                 .withOptionalLabel(label)
                 .withOptionalRelationshipType(relationship)
@@ -160,7 +160,7 @@ public class StronglyConnectedComponentsProc {
         SCCResult.Builder builder = SCCResult.builder();
 
         ProgressTimer loadTimer = builder.timeLoad();
-        Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, label, relationship, configuration)
                 .withoutRelationshipWeights()
                 .withDirection(Direction.OUTGOING)
@@ -210,7 +210,7 @@ public class StronglyConnectedComponentsProc {
 
         ProcedureConfiguration configuration = ProcedureConfiguration.create(config);
 
-        Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, label, relationship, configuration)
                 .withoutRelationshipWeights()
                 .withDirection(Direction.OUTGOING)
@@ -241,7 +241,7 @@ public class StronglyConnectedComponentsProc {
         final SCCResult.Builder builder = SCCResult.builder();
 
         final ProgressTimer loadTimer = builder.timeLoad();
-        final Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        final Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, label, relationship, configuration)
                 .withoutRelationshipWeights()
                 .withDirection(Direction.OUTGOING)
@@ -319,7 +319,7 @@ public class StronglyConnectedComponentsProc {
 
         final ProcedureConfiguration configuration = ProcedureConfiguration.create(config);
 
-        final Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        final Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, label, relationship, configuration)
                 .withoutRelationshipWeights()
                 .withDirection(Direction.OUTGOING)
@@ -356,7 +356,7 @@ public class StronglyConnectedComponentsProc {
         SCCResult.Builder builder = SCCResult.builder();
 
         ProgressTimer loadTimer = builder.timeLoad();
-        Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, label, relationship, configuration)
                 .withoutRelationshipWeights()
                 .load(configuration.getGraphImpl());
@@ -412,7 +412,7 @@ public class StronglyConnectedComponentsProc {
             @Name(value = "config", defaultValue = "{}") Map<String, Object> config) {
 
         ProcedureConfiguration configuration = ProcedureConfiguration.create(config);
-        Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, label, relationship, configuration)
                 .withoutRelationshipWeights()
                 .load(configuration.getGraphImpl());
@@ -441,7 +441,7 @@ public class StronglyConnectedComponentsProc {
             @Name(value = "config", defaultValue = "{}") Map<String, Object> config) {
 
         ProcedureConfiguration configuration = ProcedureConfiguration.create(config);
-        Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, label, relationship, configuration)
                 .withoutRelationshipWeights()
                 .load(configuration.getGraphImpl());

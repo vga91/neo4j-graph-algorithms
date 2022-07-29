@@ -33,6 +33,7 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.shortestpath.SingleSourceShortestPathDijkstra;
 import org.neo4j.graphalgo.impl.util.DoubleAdder;
 import org.neo4j.graphalgo.impl.util.DoubleEvaluator;
@@ -417,13 +418,13 @@ public class AllShortestPaths427Test {
     public AllShortestPaths427Test(
             Class<? extends GraphFactory> graphImpl,
             String ignoreParamOnlyForTestNaming) {
-        graph = new GraphLoader(DB, Pools.DEFAULT)
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, Pools.DEFAULT, ktx)
                 .withLabel("Node")
                 .withRelationshipType("TYPE")
                 .withRelationshipWeightsFromProperty("weight", 1.0)
                 .withDirection(Direction.OUTGOING)
                 .withConcurrency(Pools.DEFAULT_CONCURRENCY)
-                .load(graphImpl);
+                .load(graphImpl));
         expected = calculateExpected(true);
         expectedNonWeighted = calculateExpected(false);
     }

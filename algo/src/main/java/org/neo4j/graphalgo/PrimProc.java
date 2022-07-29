@@ -125,7 +125,7 @@ public class PrimProc {
         final Prim.Builder builder = new Prim.Builder();
         final Graph graph;
         try (ProgressTimer timer = builder.timeLoad()) {
-            graph = new GraphLoader(api, Pools.DEFAULT)
+            graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                     .withOptionalLabel(label)
                     .withOptionalRelationshipType(relationship)
                     .withRelationshipWeightsFromProperty(weightProperty, configuration.getWeightPropertyDefaultValue(Double.MAX_VALUE))

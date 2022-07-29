@@ -29,6 +29,7 @@ import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
@@ -80,12 +81,12 @@ public final class LoadingTest {
                 " (b)-[:TYPE2 {prop:7}]->(e),\n" +
                 " (a)-[:TYPE2 {prop:8}]->(e)");
 
-        final Graph graph = new GraphLoader(db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withDirection(Direction.OUTGOING)
                 .withExecutorService(Pools.DEFAULT)
                 .withLabel("Node")
                 .withRelationshipType("TYPE")
-                .load(graphImpl);
+                .load(graphImpl));
 
         assertEquals(3, graph.nodeCount());
 

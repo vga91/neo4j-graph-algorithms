@@ -128,7 +128,7 @@ public final class ArticleRankProc {
             Class<? extends GraphFactory> graphFactory,
             PageRankScore.Stats.Builder statsBuilder,
             ProcedureConfiguration configuration) {
-        GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT)
+        GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, label, relationship, configuration)
                 .withAllocationTracker(tracker)
                 .withoutRelationshipWeights();

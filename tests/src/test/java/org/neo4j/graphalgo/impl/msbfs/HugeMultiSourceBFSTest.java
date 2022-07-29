@@ -29,6 +29,7 @@ import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.HugeDirectIdMapping;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
@@ -306,7 +307,7 @@ public final class HugeMultiSourceBFSTest {
 
 //        try {
                 db.executeTransactionally(cypher);
-            block.accept((HugeGraph) new GraphLoader(db).load(HugeGraphFactory.class));
+            block.accept((HugeGraph) new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx).load(HugeGraphFactory.class)));
 //        } finally {
 //            db.shutdown();
 //        }
@@ -326,7 +327,7 @@ public final class HugeMultiSourceBFSTest {
                 tx.commit();
             }
             try (Transaction tx = db.beginTx()) {
-                HugeGraph graph = (HugeGraph) new GraphLoader(db).load(HugeGraphFactory.class);
+                HugeGraph graph = (HugeGraph) new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx).load(HugeGraphFactory.class));
                 block.accept(graph);
                 tx.commit();
             }

@@ -25,6 +25,7 @@ import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.impl.triangle.HugeBalancedTriads;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
@@ -81,13 +82,13 @@ public class BalancedTriadsTest {
 
         DB.executeTransactionally(cypher);
 
-        graph = (HugeGraph) new GraphLoader(DB, Pools.DEFAULT)
+        graph = (HugeGraph) new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, Pools.DEFAULT, ktx)
                 .withLabel("Node")
                 .withRelationshipStatement("TYPE")
                 .withRelationshipWeightsFromProperty("w", 0.0)
                 .withSort(true)
                 .asUndirected(true)
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
     }
 
     @Test

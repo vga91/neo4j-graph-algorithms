@@ -27,6 +27,7 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.spanningTrees.KSpanningTree;
 import org.neo4j.graphalgo.impl.spanningTrees.SpanningTree;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
@@ -92,12 +93,12 @@ public class KSpanningTreeTest {
     public KSpanningTreeTest(
             Class<? extends GraphFactory> graphImpl,
             String nameIgnoredOnlyForTestName) {
-        graph = new GraphLoader(DB)
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withRelationshipWeightsFromProperty("w", 1.0)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .asUndirected(true)
-                .load(graphImpl);
+                .load(graphImpl));
 
         try (Transaction tx = DB.beginTx()) {
             a = graph.toMappedNodeId(tx.findNode(Label.label("Node"), "name", "a").getId());

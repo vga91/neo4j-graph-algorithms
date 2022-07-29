@@ -139,7 +139,7 @@ public final class DegreeCentralityProc {
             CentralityScore.Stats.Builder statsBuilder,
             ProcedureConfiguration configuration,
             String weightPropertyKey, Direction direction) {
-        GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT)
+        GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, label, relationship, configuration)
                 .withAllocationTracker(tracker)
                 .withOptionalRelationshipWeightsFromProperty(weightPropertyKey, configuration.getWeightPropertyDefaultValue(0.0));

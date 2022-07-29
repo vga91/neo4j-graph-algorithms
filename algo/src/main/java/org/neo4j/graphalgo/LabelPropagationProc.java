@@ -206,7 +206,7 @@ public final class LabelPropagationProc {
     }
 
     private GraphLoader graphLoader(ProcedureConfiguration config,  String partitionProperty, String weightKey, PropertyMapping... propertyMappings) {
-        return new GraphLoader(dbAPI, Pools.DEFAULT)
+        return new GraphLoader(dbAPI, Pools.DEFAULT, transaction)
                 .init(log, config.getNodeLabelOrQuery(), config.getRelationshipOrQuery(), config)
                 .withOptionalRelationshipWeightsFromProperty(weightKey, 1.0d)
                 .withOptionalNodeProperties(propertyMappings)

@@ -40,7 +40,7 @@ final class HugeIdMapBuilder {
 
         try (HugeLongArray.Cursor cursor = graphIds.cursor(graphIds.newCursor())) {
             while (cursor.next()) {
-                // todo -???
+                // todo -??? HERE!!!!!!!
                 long[] array = cursor.array;
                 System.out.println("array = " + Arrays.toString(array));
                 int offset = cursor.offset;
@@ -57,23 +57,6 @@ final class HugeIdMapBuilder {
 
         return new HugeIdMap(graphIds, nodeToGraphIds, idMapBuilder.size());
     }
-
-//    private Long getaLong(long element, HugeCursor<long[]> cursor) {
-//        long[] internalArray = cursor.array;
-//        int offset = cursor.offset;
-//        int localLimit = cursor.limit - 4;
-//        for (; offset <= localLimit; offset += 4) {
-//            if (internalArray[offset] == element) return offset + cursor.base;
-//            if (internalArray[offset + 1] == element) return offset + 1 + cursor.base;
-//            if (internalArray[offset + 2] == element) return offset + 2 + cursor.base;
-//            if (internalArray[offset + 3] == element) return offset + 3 + cursor.base;
-//        }
-//        for (; offset < cursor.limit; ++offset) {
-//            if (internalArray[offset] == element) return offset + cursor.base;
-//        }
-//        return null;
-//    }
-
 
     private HugeIdMapBuilder() {
     }

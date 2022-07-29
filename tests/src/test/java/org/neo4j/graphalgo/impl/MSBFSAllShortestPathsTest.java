@@ -29,6 +29,7 @@ import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
@@ -104,10 +105,10 @@ public class MSBFSAllShortestPathsTest {
             Class<? extends GraphFactory> graphImpl,
             String nameIgnoredOnlyForTestName) {
 
-        graph = new GraphLoader(DB)
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withLabel(LABEL)
                 .withRelationshipType(RELATIONSHIP)
-                .load(graphImpl);
+                .load(graphImpl));
     }
 
     @Test

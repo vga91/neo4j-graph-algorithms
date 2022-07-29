@@ -98,7 +98,7 @@ public class KSpanningTreeProc {
         final Prim.Builder builder = new Prim.Builder();
         final Graph graph;
         try (ProgressTimer timer = builder.timeLoad()) {
-            graph = new GraphLoader(api, Pools.DEFAULT)
+            graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                     .withOptionalLabel(label)
                     .withOptionalRelationshipType(relationship)
                     .withRelationshipWeightsFromProperty(weightProperty, configuration.getWeightPropertyDefaultValue(1.0))

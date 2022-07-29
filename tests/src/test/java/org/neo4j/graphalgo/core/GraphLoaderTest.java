@@ -28,6 +28,7 @@ import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
@@ -74,7 +75,7 @@ public class GraphLoaderTest {
                 " (a)-[:REL]->(b)," +
                 " (b)-[:REL]->(c)," +
                 " (b)-[:REL]->(d)");
-        GraphLoader graphLoader = new GraphLoader(db, Pools.DEFAULT);
+        GraphLoader graphLoader = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, Pools.DEFAULT, ktx));
         Graph graph = graphLoader.withAnyLabel()
                 .withAnyRelationshipType()
                 .direction(Direction.BOTH)
@@ -97,7 +98,7 @@ public class GraphLoaderTest {
                 " (a)-[:REL]->(b)," +
                 " (b)-[:REL]->(c)," +
                 " (b)-[:REL]->(d)");
-        GraphLoader graphLoader = new GraphLoader(db, Pools.DEFAULT);
+        GraphLoader graphLoader = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, Pools.DEFAULT, ktx));
         Graph graph = graphLoader.withAnyLabel()
                 .withAnyRelationshipType()
                 .direction(Direction.OUTGOING)
@@ -120,7 +121,7 @@ public class GraphLoaderTest {
                 " (a)-[:REL]->(b)," +
                 " (b)-[:REL]->(c)," +
                 " (b)-[:REL]->(d)");
-        GraphLoader graphLoader = new GraphLoader(db, Pools.DEFAULT);
+        GraphLoader graphLoader = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, Pools.DEFAULT, ktx));
         Graph graph = graphLoader.withAnyLabel()
                 .withAnyRelationshipType()
                 .direction(Direction.INCOMING)
@@ -137,10 +138,10 @@ public class GraphLoaderTest {
     public void testLargerGraphWithDeletions() {
         db.executeTransactionally("FOREACH (x IN range(1, 4098) | CREATE (:Node {index:x}))");
         db.executeTransactionally("MATCH (n) WHERE n.index IN [1, 2, 3] DELETE n");
-        new GraphLoader(db, Pools.DEFAULT)
+        new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withLabel("Node")
                 .withAnyRelationshipType()
-                .load(graphImpl);
+                .load(graphImpl));
     }
 
     @Test
@@ -165,11 +166,11 @@ public class GraphLoaderTest {
 
     private void runUndirectedNodeWithSelfReference(String cypher) {
         db.executeTransactionally(cypher);
-        final Graph graph = new GraphLoader(db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withAnyLabel()
                 .withAnyRelationshipType()
                 .asUndirected(true)
-                .load(graphImpl);
+                .load(graphImpl));
 
         assertEquals(2L, graph.nodeCount());
         checkRelationships(graph, 0, 0, 1);
@@ -204,11 +205,11 @@ public class GraphLoaderTest {
 
     private void runUndirectedNodesWithMultipleSelfReferences(String cypher) {
         db.executeTransactionally(cypher);
-        final Graph graph = new GraphLoader(db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withAnyLabel()
                 .withAnyRelationshipType()
                 .asUndirected(true)
-                .load(graphImpl);
+                .load(graphImpl));
 
         assertEquals(4L, graph.nodeCount());
         checkRelationships(graph, 0, 0, 1);

@@ -28,6 +28,7 @@ import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.AtomicDoubleArray;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.PagedAtomicDoubleArray;
 import org.neo4j.graphalgo.core.utils.paged.PagedAtomicIntegerArray;
 import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
@@ -103,7 +104,7 @@ public class TriangleCountExpTest {
             Class<? extends GraphFactory> graphImpl,
             String nameIgnoredOnlyForTestName) {
         try (ProgressTimer timer = ProgressTimer.start(t -> System.out.println("load took " + t + "ms"))) {
-            graph = new GraphLoader(DB)
+            graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                     .withLabel(LABEL)
                     .withRelationshipType(RELATIONSHIP)
                     .withoutRelationshipWeights()
@@ -111,7 +112,7 @@ public class TriangleCountExpTest {
                     .withDirection(Direction.BOTH)
                     .withSort(true)
                     .asUndirected(true)
-                    .load(graphImpl);
+                    .load(graphImpl));
         }
     }
 

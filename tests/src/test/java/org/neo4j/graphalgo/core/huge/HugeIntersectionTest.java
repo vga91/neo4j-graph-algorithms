@@ -25,6 +25,7 @@ import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.api.RelationshipIntersect;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.internal.kernel.api.TokenWrite;
 import org.neo4j.internal.kernel.api.Write;
@@ -86,7 +87,7 @@ public final class HugeIntersectionTest {
             }
         });
 
-        final HugeGraph graph = (HugeGraph) new GraphLoader(DB).asUndirected(true).load(HugeGraphFactory.class);
+        final HugeGraph graph = (HugeGraph) new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)).asUndirected(true).load(HugeGraphFactory.class);
         INTERSECT = graph.intersection();
         START1 = graph.toHugeMappedNodeId(neoStarts[0]);
         START2 = graph.toHugeMappedNodeId(neoStarts[1]);

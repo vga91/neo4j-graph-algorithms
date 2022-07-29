@@ -74,7 +74,7 @@ public abstract class RandomGraphTestCase {
 //        db = (DatabaseRule) 
         
         // todo - decommentare
-//                buildGraph(NODE_COUNT);
+                buildGraph(NODE_COUNT);
     }
 
     @AfterClass

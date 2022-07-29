@@ -25,6 +25,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.utils.Intersections;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Result;
@@ -62,10 +63,10 @@ public class HeavyGraphIntersectTest {
     }
 
     private List<Long> assertTriangles() {
-        HeavyGraph graph = (HeavyGraph)new GraphLoader(gdb)
+        HeavyGraph graph = (HeavyGraph) new TransactionWrapper(gdb).apply(ktx -> new GraphLoader(gdb, ktx)
                 .asUndirected(true)
                 .withSort(true)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         String triangleQuery = "MATCH (a)--(b)--(c)--(a) where a <> b and b <> c and c <> a " +
                 " AND id(b) < id(c) " +

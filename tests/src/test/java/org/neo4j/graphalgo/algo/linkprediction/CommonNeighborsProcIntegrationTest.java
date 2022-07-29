@@ -19,6 +19,7 @@
 package org.neo4j.graphalgo.algo.linkprediction;
 
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.configuration.GraphDatabaseSettings;
 import org.neo4j.graphalgo.linkprediction.LinkPrediction;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.configuration.GraphDatabaseInternalSettings.track_cursor_close;
 import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 public class CommonNeighborsProcIntegrationTest {
@@ -58,7 +60,9 @@ public class CommonNeighborsProcIntegrationTest {
 
             "MERGE (praveena)-[:FRIENDS]-(michael)";
 
-    private static final DatabaseRule db = new ImpermanentDatabaseRule()
+    @ClassRule
+    public static final DatabaseRule db = new ImpermanentDatabaseRule()
+            .setConfig(track_cursor_close, false)
             .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of("algo.*"));
 
     @BeforeClass

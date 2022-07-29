@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.neo4j.graphalgo.PropertyMapping;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.*;
@@ -70,7 +71,7 @@ public class HeavyCypherGraphFactoryTest {
         String nodes = "MATCH (n) RETURN id(n) as id, n.partition AS partition, n.foo AS foo";
         String rels = "MATCH (n)-[r]->(m) WHERE type(r) = {rel} RETURN id(n) as source, id(m) as target, r.prop as weight";
 
-        final HeavyGraph graph = (HeavyGraph) new GraphLoader((GraphDatabaseAPI) db)
+        final HeavyGraph graph = (HeavyGraph) new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withParams(Map.of("rel","REL"))
                 .withRelationshipWeightsFromProperty("prop", 0)
                 .withLabel(nodes)
@@ -79,7 +80,7 @@ public class HeavyCypherGraphFactoryTest {
                         PropertyMapping.of("partition", "partition", 0.0),
                         PropertyMapping.of("foo", "foo", 5.0)
                 )
-                .load(HeavyCypherGraphFactory.class);
+                .load(HeavyCypherGraphFactory.class));
 
         assertEquals(3, graph.nodeCount());
         assertEquals(2, graph.degree(graph.toMappedNodeId(id1), Direction.OUTGOING));

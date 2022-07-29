@@ -64,9 +64,11 @@ public final class SparseLongArray {
 
     public void set(long index, long value) {
         System.out.println("index = " + index + ", value = " + value + ", capacity = " + capacity);
+        // TODO - COMMENT...
         if (index >= capacity) {
             throw new RuntimeException("index < capacity");
         }
+//        assert index < capacity; TODO - DECOMMENT...
         final int pageIndex = pageIndex(index);
         final int indexInPage = indexInPage(index);
         long[] page = pages[pageIndex];

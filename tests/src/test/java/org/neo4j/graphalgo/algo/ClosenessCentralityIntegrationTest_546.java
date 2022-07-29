@@ -24,6 +24,7 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.closeness.MSClosenessCentrality;
 import org.neo4j.graphalgo.impl.DangalchevClosenessCentrality;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
@@ -73,11 +74,11 @@ public class ClosenessCentralityIntegrationTest_546 {
 
         db.executeTransactionally(importQuery);
 
-        final Graph graph = new GraphLoader(db, Pools.DEFAULT)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, Pools.DEFAULT, ktx)
                 .withLabel("Person")
                 .withRelationshipType("KNOWS")
                 .asUndirected(true)
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
 
         System.out.println("547:");
         new MSClosenessCentrality(graph, 2, Pools.DEFAULT, false)
@@ -108,11 +109,11 @@ public class ClosenessCentralityIntegrationTest_546 {
 
         db.executeTransactionally(importQuery);
 
-        final Graph graph = new GraphLoader(db, Pools.DEFAULT)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, Pools.DEFAULT, ktx)
                 .withLabel("Person")
                 .withRelationshipType("KNOWS")
                 .asUndirected(true)
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
 
         System.out.println("547 Dangalchev:");
         new DangalchevClosenessCentrality(graph, 2, Pools.DEFAULT)
@@ -140,11 +141,11 @@ public class ClosenessCentralityIntegrationTest_546 {
 
         db.executeTransactionally(importQuery);
 
-        final Graph graph = new GraphLoader(db, Pools.DEFAULT)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, Pools.DEFAULT, ktx)
                 .withLabel("Person")
                 .withRelationshipType("KNOWS")
                 .asUndirected(true)
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
 
         System.out.println("546:");
         new MSClosenessCentrality(graph, 2, Pools.DEFAULT, false)
@@ -172,11 +173,11 @@ public class ClosenessCentralityIntegrationTest_546 {
 
         db.executeTransactionally(importQuery);
 
-        final Graph graph = new GraphLoader(db, Pools.DEFAULT)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, Pools.DEFAULT, ktx)
                 .withLabel("Person")
                 .withRelationshipType("KNOWS")
                 .asUndirected(true)
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
 
         System.out.println("546 Dangalchev:");
         new DangalchevClosenessCentrality(graph, 2, Pools.DEFAULT)

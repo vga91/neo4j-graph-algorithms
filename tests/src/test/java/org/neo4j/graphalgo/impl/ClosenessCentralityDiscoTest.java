@@ -27,6 +27,7 @@ import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.impl.closeness.HugeMSClosenessCentrality;
 import org.neo4j.graphalgo.impl.closeness.MSClosenessCentrality;
@@ -75,11 +76,11 @@ public class ClosenessCentralityDiscoTest {
 
     @Test
     public void testHeavy() throws Exception {
-        final Graph graph = new GraphLoader(DB, Pools.DEFAULT)
+        final Graph graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, Pools.DEFAULT, ktx)
                 .withLabel("Node")
                 .withRelationshipType("TYPE")
                 .asUndirected(true)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
         final MSClosenessCentrality algo = new MSClosenessCentrality(graph, 2, Pools.DEFAULT, true);
         final DoubleConsumer mock = mock(DoubleConsumer.class);
         algo.compute()
@@ -94,11 +95,11 @@ public class ClosenessCentralityDiscoTest {
     public void testHuge() throws Exception {
 
 
-        final HugeGraph graph = (HugeGraph) new GraphLoader(DB, Pools.DEFAULT)
+        final HugeGraph graph = (HugeGraph) new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, Pools.DEFAULT, ktx)
                 .withLabel("Node")
                 .withRelationshipType("TYPE")
                 .asUndirected(true)
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
         final HugeMSClosenessCentrality algo = new HugeMSClosenessCentrality(
                 graph,
                 AllocationTracker.EMPTY,

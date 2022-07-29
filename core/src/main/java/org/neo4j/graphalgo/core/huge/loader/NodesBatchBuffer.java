@@ -26,7 +26,7 @@ import org.neo4j.kernel.impl.store.NodeStore;
 import org.neo4j.kernel.impl.store.record.NodeRecord;
 import org.neo4j.storageengine.api.cursor.StoreCursors;
 
-
+// todo ---- maybe here!!!!?????
 final class NodesBatchBuffer implements RecordConsumer<NodeRecord> {
 
     private final int label;
@@ -56,6 +56,7 @@ final class NodesBatchBuffer implements RecordConsumer<NodeRecord> {
     public void add(final NodeRecord record) {
         if (hasCorrectLabel(record)) {
             int len = length++;
+            // todo - not here....
             buffer[len] = record.getId();
             if (properties != null) {
                 properties[len] = record.getNextProp();

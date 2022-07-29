@@ -71,6 +71,7 @@ abstract class ScanningRecordsImporter<Record extends AbstractBaseRecord, T> {
         AbstractStorePageCacheScanner<Record> scanner =
                 new AbstractStorePageCacheScanner<>(DEFAULT_PREFETCH_SIZE, api, access, ktx);
 
+        // todo ...
         ImportingThreadPool.CreateScanner creator = creator(nodeCount, sizing, scanner);
         ImportingThreadPool pool = new ImportingThreadPool(numberOfThreads, creator);
         ImportResult importResult = pool.run(threadPool);

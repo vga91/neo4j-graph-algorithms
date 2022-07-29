@@ -25,6 +25,7 @@ import org.neo4j.graphalgo.PropertyMapping;
 import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
@@ -64,10 +65,10 @@ public class HugeGraphFactoryTest {
     @Test
     public void testAnyLabel() {
 
-        final HugeGraph graph = (HugeGraph) new GraphLoader(DB)
+        final HugeGraph graph = (HugeGraph) new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withAnyLabel()
                 .withAnyRelationshipType()
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
 
         assertEquals(3L, graph.nodeCount());
     }
@@ -75,22 +76,22 @@ public class HugeGraphFactoryTest {
     @Test
     public void testWithLabel() {
 
-        final HugeGraph graph = (HugeGraph) new GraphLoader(DB)
+        final HugeGraph graph = (HugeGraph) new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withLabel("Node1")
                 .withoutRelationshipWeights()
                 .withAnyRelationshipType()
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
 
         assertEquals(1L, graph.nodeCount());
     }
 
     @Test
     public void testAnyRelation() {
-        final HugeGraph graph = (HugeGraph) new GraphLoader(DB)
+        final HugeGraph graph = (HugeGraph) new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withAnyLabel()
                 .withoutRelationshipWeights()
                 .withAnyRelationshipType()
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
 
         long[] out1 = collectTargetIds(graph, id1);
         assertArrayEquals(expectedIds(graph, id2, id3), out1);
@@ -101,11 +102,11 @@ public class HugeGraphFactoryTest {
 
     @Test
     public void testWithRelation() {
-        final HugeGraph graph = (HugeGraph) new GraphLoader(DB)
+        final HugeGraph graph = (HugeGraph) new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withAnyLabel()
                 .withoutRelationshipWeights()
                 .withRelationshipType("REL1")
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
 
         long[] out1 = collectTargetIds(graph, id1);
         assertArrayEquals(expectedIds(graph, id2), out1);
@@ -117,11 +118,11 @@ public class HugeGraphFactoryTest {
     @Test
     public void testWithProperty() {
 
-        final HugeGraph graph = (HugeGraph) new GraphLoader(DB)
+        final HugeGraph graph = (HugeGraph) new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withAnyLabel()
                 .withAnyRelationshipType()
                 .withRelationshipWeightsFromProperty("prop1", 0.0)
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
 
         double[] out1 = collectTargetWeights(graph, id1);
         assertArrayEquals(expectedWeights(1.0, 0.0), out1, 1e-4);
@@ -129,7 +130,7 @@ public class HugeGraphFactoryTest {
 
     @Test
     public void testWithNodeProperties() {
-        final HugeGraph graph = (HugeGraph) new GraphLoader(DB)
+        final HugeGraph graph = (HugeGraph) new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withoutRelationshipWeights()
                 .withAnyRelationshipType()
                 .withOptionalNodeProperties(
@@ -137,7 +138,7 @@ public class HugeGraphFactoryTest {
                         PropertyMapping.of("prop2", "prop2", 0D),
                         PropertyMapping.of("prop3", "prop3", 0D)
                 )
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
 
         assertEquals(1.0, graph.nodeProperties("prop1").get(graph.toMappedNodeId(0L)), 0.01);
         assertEquals(2.0, graph.nodeProperties("prop2").get(graph.toMappedNodeId(1L)), 0.01);
@@ -146,7 +147,7 @@ public class HugeGraphFactoryTest {
 
     @Test
     public void testWithHugeNodeProperties() {
-        final HugeGraph graph = (HugeGraph) new GraphLoader(DB)
+        final HugeGraph graph = (HugeGraph) new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withoutRelationshipWeights()
                 .withAnyRelationshipType()
                 .withOptionalNodeProperties(
@@ -154,7 +155,7 @@ public class HugeGraphFactoryTest {
                         PropertyMapping.of("prop2", "prop2", 0D),
                         PropertyMapping.of("prop3", "prop3", 0D)
                 )
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
 
         assertEquals(1.0, graph.hugeNodeProperties("prop1").nodeWeight(graph.toHugeMappedNodeId(0L)), 0.01);
         assertEquals(2.0, graph.hugeNodeProperties("prop2").nodeWeight(graph.toHugeMappedNodeId(1L)), 0.01);

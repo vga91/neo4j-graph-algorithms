@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.core.utils.paged.HugeLongArray;
 import org.neo4j.graphalgo.impl.scc.HugeSCCIterativeTarjan;
@@ -39,6 +40,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.neo4j.configuration.GraphDatabaseInternalSettings.track_cursor_close;
 import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**        _______
@@ -54,7 +56,8 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 public class HugeSCCTest {
 
     @ClassRule
-    public static DatabaseRule api = new ImpermanentDatabaseRule();
+    public static DatabaseRule api = new ImpermanentDatabaseRule()
+            .setConfig(track_cursor_close, false);
 
     private static HugeGraph graph;
 
@@ -88,11 +91,11 @@ public class HugeSCCTest {
 
         api.executeTransactionally(cypher);
 
-        graph = (HugeGraph) new GraphLoader(api)
+        graph = (HugeGraph) new TransactionWrapper(api).apply(ktx -> new GraphLoader(api, ktx)
                 .withLabel("Node")
                 .withRelationshipType("TYPE")
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
     }
 
     @AfterClass

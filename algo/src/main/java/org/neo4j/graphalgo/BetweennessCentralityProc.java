@@ -74,7 +74,7 @@ public class BetweennessCentralityProc {
 
         final ProcedureConfiguration configuration = ProcedureConfiguration.create(config);
 
-        final Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        final Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, label, relationship, configuration)
                 .withoutNodeProperties()
                 .withDirection(configuration.getDirection(Direction.OUTGOING))
@@ -112,7 +112,7 @@ public class BetweennessCentralityProc {
 
         final ProcedureConfiguration configuration = ProcedureConfiguration.create(config);
 
-        final Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        final Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, label, relationship, configuration)
                 .withoutNodeProperties()
                 .withDirection(configuration.getDirection(DEFAULT_DIRECTION))
@@ -184,7 +184,7 @@ public class BetweennessCentralityProc {
 
         Graph graph;
         try (ProgressTimer timer = builder.timeLoad()) {
-            graph = new GraphLoader(api, Pools.DEFAULT)
+            graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                     .init(log, label, relationship, configuration)
                     .withOptionalLabel(label)
                     .withOptionalRelationshipType(relationship)
@@ -237,7 +237,7 @@ public class BetweennessCentralityProc {
 
         Graph graph;
         try (ProgressTimer timer = builder.timeLoad()) {
-            graph = new GraphLoader(api, Pools.DEFAULT)
+            graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                     .init(log, label, relationship, configuration)
                     .withoutNodeProperties()
                     .withDirection(configuration.getDirection(Direction.OUTGOING))
@@ -295,7 +295,7 @@ public class BetweennessCentralityProc {
 
         Graph graph;
         try (ProgressTimer timer = builder.timeLoad()) {
-            graph = new GraphLoader(api, Pools.DEFAULT)
+            graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                     .init(log, label, relationship, configuration)
                     .withOptionalLabel(label)
                     .withOptionalRelationshipType(relationship)

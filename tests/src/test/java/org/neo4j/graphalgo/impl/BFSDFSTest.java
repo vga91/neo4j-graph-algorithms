@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.Traverse.ExitPredicate.Result;
 import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
@@ -34,6 +35,7 @@ import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import java.util.Arrays;
 
 import static org.junit.Assert.*;
+import static org.neo4j.configuration.GraphDatabaseInternalSettings.track_cursor_close;
 import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
@@ -51,7 +53,8 @@ import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 public class BFSDFSTest {
 
     @ClassRule
-    public static DatabaseRule db = new ImpermanentDatabaseRule();
+    public static DatabaseRule db = new ImpermanentDatabaseRule()
+            .setConfig(track_cursor_close, false);
 
     private static Graph graph;
 
@@ -78,13 +81,13 @@ public class BFSDFSTest {
 
         db.executeTransactionally(cypher);
 
-        graph = new GraphLoader(db)
+        graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .withoutNodeProperties()
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
                 .withDirection(Direction.BOTH)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
     }
 

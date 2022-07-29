@@ -90,7 +90,7 @@ public final class LoadGraphProc {
         try (ProgressTimer timer = ProgressTimer.start()) {
             Class<? extends GraphFactory> graphImpl = configuration.getGraphImpl();
 
-            Graph graph = new GraphLoader(dbAPI, Pools.DEFAULT)
+            Graph graph = new GraphLoader(dbAPI, Pools.DEFAULT, transaction)
                     .init(log, configuration.getNodeLabelOrQuery(),
                             configuration.getRelationshipOrQuery(), configuration)
                     .withName(name)

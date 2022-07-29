@@ -24,6 +24,7 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.RelationshipIterator;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.neo4jview.DirectIdMapping;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
@@ -282,7 +283,7 @@ public final class MultiSourceBFSTest {
             String cypher,
             Consumer<? super Graph> block) {
         db.executeTransactionally(cypher);
-        block.accept(new GraphLoader(db).load(HeavyGraphFactory.class));
+        block.accept(new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx).load(HeavyGraphFactory.class)));
     }
 
     private void withGrid(
@@ -294,7 +295,7 @@ public final class MultiSourceBFSTest {
                     .setRelationship("BAR");
             build.accept(graphBuilder);
         });
-        Graph graph = new GraphLoader(db).load(HeavyGraphFactory.class);
+        Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx).load(HeavyGraphFactory.class));
         block.accept(graph);
     }
 

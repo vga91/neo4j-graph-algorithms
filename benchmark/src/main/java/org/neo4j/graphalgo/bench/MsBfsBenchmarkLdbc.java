@@ -24,6 +24,7 @@ import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.helper.ldbc.LdbcDownloader;
 import org.neo4j.graphalgo.impl.msbfs.MultiSourceBFS;
 import org.neo4j.graphdb.Direction;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.FormattedLog;
 import org.neo4j.logging.Level;
@@ -65,11 +66,12 @@ public class MsBfsBenchmarkLdbc {
 
     private GraphDatabaseAPI db;
     private Graph grph;
+    private KernelTransaction ktx;
 
     @Setup
     public void setup() throws IOException {
         db = LdbcDownloader.openDb(graphId);
-        grph = new GraphLoader(db, Pools.DEFAULT)
+        grph = new GraphLoader(db, Pools.DEFAULT, ktx)
                 .withDirection(Direction.OUTGOING)
                 .withoutRelationshipWeights()
                 .load(graph.impl);
