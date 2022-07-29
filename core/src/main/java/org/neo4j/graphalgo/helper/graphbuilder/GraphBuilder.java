@@ -18,20 +18,23 @@
  */
 package org.neo4j.graphalgo.helper.graphbuilder;
 
-import org.neo4j.graphalgo.core.utils.ExceptionUtil;
-import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.internal.kernel.api.Write;
-import org.neo4j.internal.kernel.api.exceptions.InvalidTransactionTypeKernelException;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.HashSet;
 import java.util.Random;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
+
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.rebind;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withEmptyTx;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withTx;
 
 /**
  * The GraphBuilder intends to ease the creation
@@ -47,7 +50,7 @@ public abstract class GraphBuilder<ME extends GraphBuilder<ME>> {
     protected final HashSet<Relationship> relationships;
 
     private final GraphDatabaseAPI api;
-    private final TransactionWrapper tx;
+//    private final TransactionWrapper tx;
     private final Random random;
 
     protected Label label;
@@ -57,7 +60,7 @@ public abstract class GraphBuilder<ME extends GraphBuilder<ME>> {
         this.api = api;
         this.label = label;
         this.relationship = relationship;
-        this.tx = new TransactionWrapper(api);
+//        this.tx = new TransactionWrapper(api);
         nodes = new HashSet<>();
         relationships = new HashSet<>();
         this.self = me();
@@ -103,9 +106,13 @@ public abstract class GraphBuilder<ME extends GraphBuilder<ME>> {
      * @return the relationship object
      */
     public Relationship createRelationship(Node p, Node q) {
-        final Relationship relationshipTo = p.createRelationshipTo(q, relationship);
-        relationships.add(relationshipTo);
-        return relationshipTo;
+        return withTransaction(tx -> {
+            Node pBound = rebind(tx, p);
+            Node qBound = rebind(tx, q);
+            final Relationship relationshipTo = pBound.createRelationshipTo(qBound, relationship);
+            relationships.add(relationshipTo);
+            return relationshipTo;
+        });
     }
 
     /**
@@ -114,12 +121,15 @@ public abstract class GraphBuilder<ME extends GraphBuilder<ME>> {
      * @return the created node
      */
     public Node createNode() {
-        Node node = api.createNode();
-        if (null != label) {
-            node.addLabel(label);
-        }
-        nodes.add(node);
-        return node;
+        Node node = withTransaction(Transaction::createNode);
+        return withTransaction(tx -> {
+            final Node nodeBound = rebind(tx, node);
+            if (null != label) {
+                nodeBound.addLabel(label);
+            }
+            nodes.add(nodeBound);
+            return nodeBound;
+        });
     }
 
     /**
@@ -128,42 +138,58 @@ public abstract class GraphBuilder<ME extends GraphBuilder<ME>> {
      * @param consumer the node consumer
      * @return child instance to make methods of the child class accessible.
      */
-    public ME forEachNodeInTx(Consumer<Node> consumer) {
-        withinTransaction(() -> nodes.forEach(consumer));
+    public ME forEachNodeInTx(BiConsumer<Node, Transaction> consumer) {
+        withEmptyTransaction(tx -> nodes.forEach(node -> consumer.accept(node, tx)));
+//        withinTransaction(() -> nodes.forEach(node -> withEmptyTx(api, tx -> {
+//            consumer.accept(node);
+//        })));
         return self;
     }
 
-    public ME forEachRelInTx(Consumer<Relationship> consumer) {
-        withinTransaction(() -> relationships.forEach(consumer));
+    public ME forEachRelInTx(BiConsumer<Relationship, Transaction> consumer) {
+        withEmptyTransaction(tx -> relationships.forEach(rel -> consumer.accept(rel, tx)));
         return self;
     }
 
-    /**
-     * runs the write consumer in a transaction
-     *
-     * @param consumer the write consumer
-     * @return child instance to make methods of the child class accessible.
-     */
-    public ME writeInTransaction(Consumer<Write> consumer) {
-        tx.accept(ktx -> {
-            try {
-                consumer.accept(ktx.dataWrite());
-            } catch (InvalidTransactionTypeKernelException e) {
-                ExceptionUtil.throwKernelException(e);
-            }
-        });
-        return self;
+    private void withEmptyTransaction(Consumer<Transaction> transactionConsumer) {
+        withEmptyTx(api, transactionConsumer);
     }
 
-    /**
-     * run the runnable in a transaction
-     *
-     * @param runnable the runnable
-     * @return child instance to make methods of the child class accessible.
-     */
-    public ME withinTransaction(Runnable runnable) {
-        tx.accept(__ -> runnable.run());
-        return self;
+    private <T> T withTransaction(Function<Transaction, T> transactionConsumer) {
+        return withTx(api, transactionConsumer);
+    }
+
+//    /**
+//     * runs the write consumer in a transaction
+//     *
+//     * @param consumer the write consumer
+//     * @return child instance to make methods of the child class accessible.
+//     */
+//    public ME writeInTransaction(Consumer<Write> consumer) {
+//        tx.accept(ktx -> {
+//            try {
+//                consumer.accept(ktx.dataWrite());
+//            } catch (InvalidTransactionTypeKernelException e) {
+//                ExceptionUtil.throwKernelException(e);
+//            }
+//        });
+//        return self;
+//    }
+//
+//    public ME withinTransactionBiFun(Runnable runnable) {
+//        tx.applyBiFun((__, tx) -> runnable.run());
+//        return self;
+//    }
+
+//    /**
+//     * run the runnable in a transaction
+//     *
+//     * @param runnable the runnable
+//     */
+    public void withinTransaction(Runnable runnable) {
+        // todo - should not be needed, e.g in createCompleteGraph()
+        runnable.run();
+//        tx.accept(__ -> runnable.run());
     }
 
     /**
@@ -174,7 +200,8 @@ public abstract class GraphBuilder<ME extends GraphBuilder<ME>> {
      * @return child instance to make methods of the child class accessible.
      */
     public <T> T withinTransaction(Supplier<T> supplier) {
-        return tx.apply(__ -> supplier.get());
+        return (T) supplier.get();
+//        return tx.apply((__, __) -> supplier.get());
     }
 
     /**

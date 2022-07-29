@@ -20,21 +20,24 @@ package org.neo4j.graphalgo.impl;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphalgo.helper.graphbuilder.GridBuilder;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
 import org.neo4j.graphalgo.core.utils.traverse.ParallelLocalQueueBFS;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntConsumer;
@@ -54,7 +57,9 @@ public class ParallelTraverseTest {
     private static final String LABEL = "Node";
     private static final String RELATIONSHIP = "REL";
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
+    
     private static GridBuilder gridBuilder;
     private static Graph graph;
     private static int rootNodeId;
@@ -66,8 +71,6 @@ public class ParallelTraverseTest {
     @BeforeClass
     public static void setup() throws Exception {
 
-        db = TestDatabaseCreator.createTestDatabase();
-
         try (ProgressTimer timer = ProgressTimer.start(t -> System.out.println("setup took " + t + "ms"))) {
             gridBuilder = GraphBuilder.create(db)
                     .setLabel(LABEL)
@@ -77,11 +80,11 @@ public class ParallelTraverseTest {
         }
 
         try (ProgressTimer timer = ProgressTimer.start(t -> System.out.println("load took " + t + "ms"))) {
-            graph = new GraphLoader(db)
+            graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                     .withLabel(LABEL)
                     .withRelationshipType(RELATIONSHIP)
                     .withRelationshipWeightsFromProperty(PROPERTY, 1.0)
-                    .load(HeavyGraphFactory.class);
+                    .load(HeavyGraphFactory.class));
 
             nodeCount = (int) graph.nodeCount();
 
@@ -90,11 +93,6 @@ public class ParallelTraverseTest {
                     .get(0)
                     .getId());
         }
-    }
-
-    @AfterClass
-    public static void tearDown() {
-        db.shutdown();
     }
 
 

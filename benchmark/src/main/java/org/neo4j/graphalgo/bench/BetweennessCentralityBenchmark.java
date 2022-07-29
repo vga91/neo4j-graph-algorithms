@@ -24,8 +24,8 @@ import org.neo4j.graphalgo.core.utils.ProgressTimer;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.test.TestGraphDatabaseFactory;
 import org.openjdk.jmh.annotations.*;
@@ -65,7 +65,7 @@ public class BetweennessCentralityBenchmark {
                         .newImpermanentDatabaseBuilder()
                         .newGraphDatabase();
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(BetweennessCentralityProc.class);
 
         try (ProgressTimer start = ProgressTimer.start(l -> System.out.println("setup took " + l + "ms"))) {
@@ -100,7 +100,7 @@ public class BetweennessCentralityBenchmark {
                 }
                 temp = line;
             }
-            tx.success();
+            tx.commit();
         }
     }
 
@@ -121,7 +121,7 @@ public class BetweennessCentralityBenchmark {
     @Benchmark
     public Object _01_benchmark() {
 
-        return db.execute("CALL algo.betweenness('','', {concurrency: $concurrency, write:false, stats:false}) YIELD " +
+        return db.executeTransactionally("CALL algo.betweenness('','', {concurrency: $concurrency, write:false, stats:false}) YIELD " +
                 "nodes, minCentrality, maxCentrality, sumCentrality, loadMillis, computeMillis, writeMillis", params)
                 .stream()
                 .count();

@@ -18,8 +18,8 @@
  */
 package org.neo4j.graphalgo.core.sources;
 
-import org.neo4j.collection.primitive.PrimitiveIntIterator;
 import org.neo4j.graphalgo.api.NodeIterator;
+import org.neo4j.graphalgo.api.PrimitiveIntIterator;
 
 import java.util.Arrays;
 import java.util.Random;

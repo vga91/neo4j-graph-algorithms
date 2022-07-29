@@ -24,15 +24,17 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.graphalgo.KSpanningTreeProc;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  *
@@ -41,7 +43,7 @@ import static org.junit.Assert.assertTrue;
 public class KSpanningTreeTest {
 
     @ClassRule
-    public static ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
@@ -59,8 +61,8 @@ public class KSpanningTreeTest {
                         " (b)-[:TYPE {w:1.0}]->(c),\n" +
                         " (d)-[:TYPE {w:3.0}]->(c)";
 
-        DB.resolveDependency(Procedures.class).registerProcedure(KSpanningTreeProc.class);
-        DB.execute(cypher);
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(KSpanningTreeProc.class);
+        DB.executeTransactionally(cypher);
     }
 
     @Rule
@@ -70,7 +72,7 @@ public class KSpanningTreeTest {
     public void testMax() {
         final String cypher = "MATCH (n:Node {name:'a'}) WITH n CALL algo.spanningTree.kmax(null, null, 'w', id(n), 2, {graph:'huge'}) " +
                 "YIELD loadMillis, computeMillis, writeMillis RETURN loadMillis, computeMillis, writeMillis";
-        DB.execute(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
 
             assertTrue(row.getNumber("loadMillis").longValue() >= 0);
             assertTrue(row.getNumber("writeMillis").longValue() >= 0);
@@ -80,7 +82,7 @@ public class KSpanningTreeTest {
 
         final HashMap<String, Integer> communities = new HashMap<>();
 
-        DB.execute("MATCH (n) WHERE exists(n.partition) RETURN n.name as name, n.partition as p").accept(row -> {
+        executeAndAccept(DB, "MATCH (n) WHERE exists(n.partition) RETURN n.name as name, n.partition as p", row -> {
             final String name = row.getString("name");
             final int p = row.getNumber("p").intValue();
             communities.put(name, p);
@@ -95,7 +97,7 @@ public class KSpanningTreeTest {
     public void testMin() {
         final String cypher = "MATCH (n:Node {name:'a'}) WITH n CALL algo.spanningTree.kmin(null, null, 'w', id(n), 2, {graph:'huge'}) " +
                 "YIELD loadMillis, computeMillis, writeMillis RETURN loadMillis, computeMillis, writeMillis";
-        DB.execute(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
 
             assertTrue(row.getNumber("loadMillis").longValue() >= 0);
             assertTrue(row.getNumber("writeMillis").longValue() >= 0);
@@ -105,7 +107,7 @@ public class KSpanningTreeTest {
 
         final HashMap<String, Integer> communities = new HashMap<>();
 
-        DB.execute("MATCH (n) WHERE exists(n.partition) RETURN n.name as name, n.partition as p").accept(row -> {
+        executeAndAccept(DB, "MATCH (n) WHERE exists(n.partition) RETURN n.name as name, n.partition as p", row -> {
             final String name = row.getString("name");
             final int p = row.getNumber("p").intValue();
             communities.put(name, p);

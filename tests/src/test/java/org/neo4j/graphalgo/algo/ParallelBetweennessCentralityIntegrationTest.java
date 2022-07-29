@@ -21,27 +21,33 @@ package org.neo4j.graphalgo.algo;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.neo4j.graphalgo.BetweennessCentralityProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.betweenness.BetweennessCentrality;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.rebind;
 
 
 /**
@@ -52,7 +58,8 @@ public class ParallelBetweennessCentralityIntegrationTest {
 
     public static final String TYPE = "TYPE";
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
     private static Graph graph;
     private static DefaultBuilder builder;
     private static long centerNodeId;
@@ -62,8 +69,6 @@ public class ParallelBetweennessCentralityIntegrationTest {
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
-
-        db = TestDatabaseCreator.createTestDatabase();;
 
         builder = GraphBuilder.create(db)
                 .setLabel("Node")
@@ -84,23 +89,27 @@ public class ParallelBetweennessCentralityIntegrationTest {
 
         builder.newRingBuilder()
                 .createRing(5)
-                .forEachNodeInTx(node -> {
-                    node.createRelationshipTo(center, type);
+                .forEachNodeInTx((node, tx) -> {
+                    Node nodeBound = rebind(tx, node);
+                    Node centerBound = rebind(tx, center);
+                    nodeBound.createRelationshipTo(centerBound, type);
                 })
                 .newRingBuilder()
                 .createRing(5)
-                .forEachNodeInTx(node -> {
-                    center.createRelationshipTo(node, type);
+                .forEachNodeInTx((node, tx) -> {
+                    Node nodeBound = rebind(tx, node);
+                    Node centerBound = rebind(tx, center);
+                    centerBound.createRelationshipTo(nodeBound, type);
                 });
 
-        graph = new GraphLoader(db)
+        graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .withoutNodeProperties()
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(BetweennessCentralityProc.class);
     }
 
@@ -112,7 +121,7 @@ public class ParallelBetweennessCentralityIntegrationTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
+//        if (db != null) db.shutdown();
         graph = null;
     }
 
@@ -135,7 +144,7 @@ public class ParallelBetweennessCentralityIntegrationTest {
     }
 
     public void testBetweennessWrite(String cypher) {
-        db.execute(cypher).accept(row -> {
+        executeAndAccept(db, cypher, row -> {
             assertNotEquals(-1L, row.getNumber("writeMillis").longValue());
             assertEquals(6.0, row.getNumber("minCentrality"));
             assertEquals(25.0, row.getNumber("maxCentrality"));
@@ -143,7 +152,7 @@ public class ParallelBetweennessCentralityIntegrationTest {
             return true;
         });
 
-        db.execute("MATCH (n:Node) WHERE exists(n.bc) RETURN id(n) as id, n.bc as bc").accept(row -> {
+        executeAndAccept(db, "MATCH (n:Node) WHERE exists(n.bc) RETURN id(n) as id, n.bc as bc", row -> {
             consumer.consume(row.getNumber("id").longValue(),
                     row.getNumber("bc").doubleValue());
             return true;

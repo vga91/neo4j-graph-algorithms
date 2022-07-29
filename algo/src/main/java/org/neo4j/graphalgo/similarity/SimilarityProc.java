@@ -30,6 +30,7 @@ import org.neo4j.graphalgo.similarity.recorder.NonRecordingSimilarityRecorder;
 import org.neo4j.graphalgo.similarity.recorder.RecordingSimilarityRecorder;
 import org.neo4j.graphalgo.similarity.recorder.SimilarityRecorder;
 import org.neo4j.graphdb.Result;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
@@ -41,6 +42,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 import static org.neo4j.graphalgo.similarity.TopKConsumer.topK;
 import static org.neo4j.graphalgo.similarity.Weights.REPEAT_CUTOFF;
 
@@ -50,7 +52,7 @@ public class SimilarityProc {
     @Context
     public Log log;
     @Context
-    public KernelTransaction transaction;
+    public KernelTransaction kernelTransaction;
 
     static TopKConsumer<SimilarityResult>[] initializeTopKConsumers(int length, int topK) {
         Comparator<SimilarityResult> comparator = topK > 0 ? SimilarityResult.DESCENDING : SimilarityResult.ASCENDING;
@@ -120,7 +122,7 @@ public class SimilarityProc {
     }
 
     <T> Stream<SimilarityResult> similarityStream(T[] inputs, int[] sourceIndexIds, int[] targetIndexIds, SimilarityComputer<T> computer, ProcedureConfiguration configuration, Supplier<RleDecoder> decoderFactory, double cutoff, int topK) {
-        TerminationFlag terminationFlag = TerminationFlag.wrap(transaction);
+        TerminationFlag terminationFlag = TerminationFlag.wrap(kernelTransaction);
 
         SimilarityStreamGenerator<T> generator = new SimilarityStreamGenerator<>(terminationFlag, configuration, decoderFactory, computer);
         if (sourceIndexIds.length == 0 && targetIndexIds.length == 0) {
@@ -169,11 +171,10 @@ public class SimilarityProc {
         Long degreeCutoff = getDegreeCutoff(configuration);
         int repeatCutoff = configuration.get("sparseVectorRepeatCutoff", REPEAT_CUTOFF).intValue();
 
-        Result result = api.execute(query, params);
-
         Map<Long, LongDoubleMap> map = new HashMap<>();
         LongSet ids = new LongHashSet();
-        result.accept((Result.ResultVisitor<Exception>) resultRow -> {
+        
+        executeAndAccept(api, query, params, resultRow -> {
             long item = resultRow.getNumber("item").longValue();
             long id = resultRow.getNumber("category").longValue();
             ids.add(id);

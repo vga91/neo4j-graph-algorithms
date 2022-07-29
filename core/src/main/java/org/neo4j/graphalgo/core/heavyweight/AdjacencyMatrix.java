@@ -20,7 +20,6 @@ package org.neo4j.graphalgo.core.heavyweight;
 
 import org.apache.lucene.util.ArrayUtil;
 import org.apache.lucene.util.RamUsageEstimator;
-import org.neo4j.collection.primitive.PrimitiveIntIterator;
 import org.neo4j.graphalgo.api.*;
 import org.neo4j.graphalgo.core.utils.Intersections;
 import org.neo4j.graphalgo.core.utils.ParallelUtil;
@@ -168,7 +167,8 @@ public class AdjacencyMatrix {
     }
 
     private int[] growArray(int[] array, int length) {
-        int newSize = ArrayUtil.oversize(length, RamUsageEstimator.NUM_BYTES_INT);
+        // todo - check if RamUsageEstimator.NUM_BYTES_OBJECT_REF is 4, and why
+        int newSize = ArrayUtil.oversize(length, RamUsageEstimator.NUM_BYTES_OBJECT_REF);
         tracker.remove(MemoryUsage.sizeOfIntArray(array.length));
         tracker.add(MemoryUsage.sizeOfIntArray(newSize));
         return Arrays.copyOf(array, newSize);

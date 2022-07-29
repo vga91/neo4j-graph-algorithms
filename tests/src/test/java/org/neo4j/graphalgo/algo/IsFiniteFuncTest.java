@@ -22,11 +22,13 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.IsFiniteFunc;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertArrayEquals;
@@ -35,11 +37,11 @@ import static org.junit.Assert.assertTrue;
 
 public class IsFiniteFuncTest {
     @ClassRule
-    public static ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setUp() throws Exception {
-        DB.resolveDependency(Procedures.class).registerFunction(IsFiniteFunc.class);
+        DB.resolveDependency(GlobalProcedures.class).registerFunction(IsFiniteFunc.class);
     }
 
     @Test
@@ -78,13 +80,13 @@ public class IsFiniteFuncTest {
 
     @Test
     public void testInfinityAndNaN() throws Exception {
-        double[] actual = DB.execute(
-                "WITH [42, algo.Infinity(), 13.37, 0, algo.NaN(), 1.7976931348623157e308, -13] AS values RETURN filter(x IN values WHERE algo.isFinite(x)) as xs")
-                .<List<Number>>columnAs("xs")
+        double[] actual = DB.executeTransactionally(
+                "WITH [42, algo.Infinity(), 13.37, 0, algo.NaN(), 1.7976931348623157e308, -13] AS values RETURN [x IN values WHERE algo.isFinite(x)] as xs", Map.of(),
+                r -> r.<List<Number>>columnAs("xs")
                 .stream()
                 .flatMap(Collection::stream)
                 .mapToDouble(Number::doubleValue)
-                .toArray();
+                .toArray());
         assertArrayEquals(new double[]{42, 13.37, 0, Double.MAX_VALUE, -13}, actual, 0.001);
     }
 
@@ -98,9 +100,9 @@ public class IsFiniteFuncTest {
 
     private boolean call(Number value, String fun) {
         String query = "RETURN " + fun + "($value) as x";
-        return DB.execute(query, singletonMap("value", value))
-                .<Boolean>columnAs("x")
+        return DB.executeTransactionally(query, singletonMap("value", value),
+                r -> r.<Boolean>columnAs("x")
                 .stream()
-                .allMatch(Boolean::valueOf);
+                .allMatch(Boolean::valueOf));
     }
 }

@@ -20,23 +20,27 @@ package org.neo4j.graphalgo.core.heavyweight;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.PropertyMapping;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.core.DuplicateRelationshipsStrategy;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 public class HeavyCypherGraphFactoryDeduplicationTest {
 
-    private static GraphDatabaseService db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     private static int id1;
     private static int id2;
@@ -44,23 +48,15 @@ public class HeavyCypherGraphFactoryDeduplicationTest {
     @BeforeClass
     public static void setUp() {
 
-        db = TestDatabaseCreator.createTestDatabase();
-
-        db.execute(
-                "MERGE (n1 {id: 1}) " + "" +
-                   "MERGE (n2 {id: 2}) " +
-                   "CREATE (n1)-[:REL {weight: 4}]->(n2) " +
-                   "CREATE (n2)-[:REL {weight: 10}]->(n1) " +
-                   "RETURN id(n1) AS id1, id(n2) AS id2").accept(row -> {
+        executeAndAccept(db, "MERGE (n1 {id: 1}) " + "" +
+                "MERGE (n2 {id: 2}) " +
+                "CREATE (n1)-[:REL {weight: 4}]->(n2) " +
+                "CREATE (n2)-[:REL {weight: 10}]->(n1) " +
+                "RETURN id(n1) AS id1, id(n2) AS id2", row -> {
             id1 = row.getNumber("id1").intValue();
             id2 = row.getNumber("id2").intValue();
             return true;
         });
-    }
-
-    @AfterClass
-    public static void tearDown() {
-        db.shutdown();
     }
 
 
@@ -69,11 +65,11 @@ public class HeavyCypherGraphFactoryDeduplicationTest {
         String nodes = "MATCH (n) RETURN id(n) as id";
         String rels = "MATCH (n)-[r]-(m) RETURN id(n) as source, id(m) as target, r.weight as weight";
 
-        final HeavyGraph graph = (HeavyGraph) new GraphLoader((GraphDatabaseAPI) db)
+        final HeavyGraph graph = (HeavyGraph) new TransactionWrapper(db).apply(ktx -> new GraphLoader((GraphDatabaseAPI) db, ktx)
                 .withLabel(nodes)
                 .withRelationshipType(rels)
                 .withDuplicateRelationshipsStrategy(DuplicateRelationshipsStrategy.SKIP)
-                .load(HeavyCypherGraphFactory.class);
+                .load(HeavyCypherGraphFactory.class));
 
         assertEquals(2, graph.nodeCount());
         assertEquals(1, graph.degree(graph.toMappedNodeId(id1), Direction.OUTGOING));

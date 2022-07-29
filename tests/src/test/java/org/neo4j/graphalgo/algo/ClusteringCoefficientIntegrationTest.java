@@ -20,13 +20,15 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.AdditionalMatchers;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.TriangleProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.junit.Assert.assertEquals;
@@ -34,6 +36,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**        _______
  *        /       \
@@ -47,7 +50,8 @@ import static org.mockito.Mockito.*;
  */
 public class ClusteringCoefficientIntegrationTest {
 
-    private static GraphDatabaseAPI api;
+    @ClassRule
+    public static DatabaseRule api = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setup() throws KernelException {
@@ -76,27 +80,25 @@ public class ClusteringCoefficientIntegrationTest {
                         " (h)-[:TYPE]->(i),\n" +
                         " (i)-[:TYPE]->(g)";
 
-        api = TestDatabaseCreator.createTestDatabase();
-
         api.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(TriangleProc.class);
 
         try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
-            tx.success();
+            tx.execute(cypher);
+            tx.commit();
         }
     }
 
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        api.shutdown();
-    }
+//    @AfterClass
+//    public static void shutdownGraph() throws Exception {
+//        api.shutdown();
+//    }
 
     @Test
     public void testTriangleCountWriteCypher() throws Exception {
         final String cypher = "CALL algo.triangleCount('Node', '', {concurrency:4, write:true, clusterCoefficientProperty:'c'})";
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             final long loadMillis = row.getNumber("loadMillis").longValue();
             final long computeMillis = row.getNumber("computeMillis").longValue();
             final long writeMillis = row.getNumber("writeMillis").longValue();
@@ -117,7 +119,7 @@ public class ClusteringCoefficientIntegrationTest {
         });
 
         final String request = "MATCH (n) WHERE exists(n.clusteringCoefficient) RETURN n.clusteringCoefficient as c";
-        api.execute(request).accept(row -> {
+        executeAndAccept(api, request, row -> {
             final double triangles = row.getNumber("c").doubleValue();
             System.out.println("triangles = " + triangles);
             return true;
@@ -128,7 +130,7 @@ public class ClusteringCoefficientIntegrationTest {
     public void testTriangleCountStream() throws Exception {
         final TriangleCountConsumer mock = mock(TriangleCountConsumer.class);
         final String cypher = "CALL algo.triangleCount.stream('Node', '', {concurrency:4}) YIELD nodeId, triangles, coefficient";
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             final long nodeId = row.getNumber("nodeId").longValue();
             final long triangles = row.getNumber("triangles").longValue();
             final double coefficient = row.getNumber("coefficient").doubleValue();

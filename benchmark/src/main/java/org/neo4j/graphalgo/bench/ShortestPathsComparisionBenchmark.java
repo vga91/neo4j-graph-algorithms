@@ -24,8 +24,8 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.test.TestGraphDatabaseFactory;
 import org.openjdk.jmh.annotations.*;
@@ -61,8 +61,8 @@ public class ShortestPathsComparisionBenchmark {
                 new TestGraphDatabaseFactory()
                         .newImpermanentDatabaseBuilder()
                         .newGraphDatabase();
-        final Procedures procedures = db.getDependencyResolver()
-                .resolveDependency(Procedures.class);
+        final GlobalProcedures procedures = db.getDependencyResolver()
+                .resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(ShortestPathDeltaSteppingProc.class);
         procedures.registerProcedure(ShortestPathsProc.class);
 
@@ -88,7 +88,7 @@ public class ShortestPathsComparisionBenchmark {
                 }
                 temp = line;
             }
-            tx.success();
+            tx.commit();
         }
     }
 
@@ -115,7 +115,7 @@ public class ShortestPathsComparisionBenchmark {
 
     @Benchmark
     public Object _01_benchmark_deltaStepping() {
-        return db.execute("MATCH (n {id:$head}) WITH n CALL algo.deltaStepping.stream(n, 'cost', $delta" +
+        return db.executeTransactionally("MATCH (n {id:$head}) WITH n CALL algo.deltaStepping.stream(n, 'cost', $delta" +
                 ", {concurrency:1})" +
                 " YIELD nodeId, distance RETURN nodeId, distance", params)
                 .stream()
@@ -124,7 +124,7 @@ public class ShortestPathsComparisionBenchmark {
 
     @Benchmark
     public Object _02_benchmark_singleDijkstra() {
-        return db.execute("MATCH (n {id:$head}) WITH n CALL algo.shortestPaths.stream(n, 'cost')" +
+        return db.executeTransactionally("MATCH (n {id:$head}) WITH n CALL algo.shortestPaths.stream(n, 'cost')" +
                 " YIELD nodeId, distance RETURN nodeId, distance", params)
                 .stream()
                 .count();

@@ -21,17 +21,21 @@ package org.neo4j.graphalgo.impl;
 import com.carrotsearch.hppc.procedures.IntProcedure;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * expected path OUTGOING:  abcf
@@ -65,42 +69,37 @@ public class DirectedDijkstraSPTest {
             "  (e)-[:REL {cost:1}]->(d),\n" +
             "  (d)-[:REL {cost:1}]->(a)\n";
 
-    private static GraphDatabaseAPI api;
+    @ClassRule
+    public static DatabaseRule api = new ImpermanentDatabaseRule();
     private static Graph graph;
 
     @BeforeClass
     public static void setup() {
 
-        api = TestDatabaseCreator.createTestDatabase();
+        api.executeTransactionally(cypher);
 
-        try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
-            tx.success();
-        }
-
-        graph = new GraphLoader(api)
+        graph = new TransactionWrapper(api).apply(ktx -> new GraphLoader(api, ktx)
                 .withNodeStatement("Node")
                 .withRelationshipType("REL")
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if (api != null) api.shutdown();
         graph = null;
     }
 
 
     private static long id(String name) {
         try (Transaction transaction = api.beginTx()) {
-            return api.findNode(Label.label("Node"), "name", name).getId();
+            return transaction.findNode(Label.label("Node"), "name", name).getId();
         }
     }
 
     private static String name(long id) {
         final String[] name = {""};
-        api.execute(String.format("MATCH (n:Node) WHERE id(n)=%d RETURN n.name as name", id)).accept(row -> {
+        executeAndAccept(api, String.format("MATCH (n:Node) WHERE id(n)=%d RETURN n.name as name", id), row -> {
             name[0] = row.getString("name");
             return false;
         });

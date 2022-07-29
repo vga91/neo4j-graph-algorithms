@@ -169,7 +169,7 @@ public final class LabelPropagationProc {
             graphLoader.withDirection(direction);
         }
         LabelPropagationStats.Builder stats = new LabelPropagationStats.Builder();
-
+        // todo - work in the same way??
         AllocationTracker tracker = AllocationTracker.create();
         Graph graph = load(graphLoader.withAllocationTracker(tracker), configuration, stats);
 
@@ -206,7 +206,7 @@ public final class LabelPropagationProc {
     }
 
     private GraphLoader graphLoader(ProcedureConfiguration config,  String partitionProperty, String weightKey, PropertyMapping... propertyMappings) {
-        return new GraphLoader(dbAPI, Pools.DEFAULT)
+        return new GraphLoader(dbAPI, Pools.DEFAULT, transaction)
                 .init(log, config.getNodeLabelOrQuery(), config.getRelationshipOrQuery(), config)
                 .withOptionalRelationshipWeightsFromProperty(weightKey, 1.0d)
                 .withOptionalNodeProperties(propertyMappings)

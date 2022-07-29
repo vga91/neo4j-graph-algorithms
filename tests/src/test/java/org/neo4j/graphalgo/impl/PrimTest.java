@@ -29,11 +29,13 @@ import org.neo4j.graphalgo.api.RelationshipConsumer;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.spanningTrees.Prim;
 import org.neo4j.graphalgo.impl.spanningTrees.SpanningTree;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,16 +83,13 @@ public class PrimTest {
             " (d)-[:TYPE {cost:6.0}]->(e)";
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     private final Graph graph;
 
     @BeforeClass
     public static void setupGraph() {
-        try (Transaction tx = DB.beginTx()) {
-            DB.execute(cypher);
-            tx.success();
-        }
+        DB.executeTransactionally(cypher);
     }
 
 
@@ -109,23 +108,23 @@ public class PrimTest {
 
         label = Label.label("Node");
 
-        graph = new GraphLoader(DB)
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withLabel(label)
                 .withRelationshipType("TYPE")
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
                 .withoutNodeWeights()
                 .asUndirected(true)
-                .load(graphImpl);
+                .load(graphImpl));
 
-        try (Transaction transaction = DB.beginTx()) {
-            a = graph.toMappedNodeId(DB.findNode(label, "name", "a").getId());
-            b = graph.toMappedNodeId(DB.findNode(label, "name", "b").getId());
-            c = graph.toMappedNodeId(DB.findNode(label, "name", "c").getId());
-            d = graph.toMappedNodeId(DB.findNode(label, "name", "d").getId());
-            e = graph.toMappedNodeId(DB.findNode(label, "name", "e").getId());
-            y = graph.toMappedNodeId(DB.findNode(label, "name", "y").getId());
-            z = graph.toMappedNodeId(DB.findNode(label, "name", "z").getId());
-            transaction.success();
+        try (Transaction tx = DB.beginTx()) {
+            a = graph.toMappedNodeId(tx.findNode(label, "name", "a").getId());
+            b = graph.toMappedNodeId(tx.findNode(label, "name", "b").getId());
+            c = graph.toMappedNodeId(tx.findNode(label, "name", "c").getId());
+            d = graph.toMappedNodeId(tx.findNode(label, "name", "d").getId());
+            e = graph.toMappedNodeId(tx.findNode(label, "name", "e").getId());
+            y = graph.toMappedNodeId(tx.findNode(label, "name", "y").getId());
+            z = graph.toMappedNodeId(tx.findNode(label, "name", "z").getId());
+            tx.commit();
         }
     }
 

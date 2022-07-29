@@ -33,14 +33,16 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.shortestpath.SingleSourceShortestPathDijkstra;
 import org.neo4j.graphalgo.impl.util.DoubleAdder;
 import org.neo4j.graphalgo.impl.util.DoubleEvaluator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +53,7 @@ import java.util.Objects;
 
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.is;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withEmptyTx;
 
 @RunWith(Parameterized.class)
 public class AllShortestPaths427Test {
@@ -391,18 +394,18 @@ public class AllShortestPaths427Test {
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() {
         return Arrays.asList(
-                new Object[]{HeavyGraphFactory.class, "Heavy"},
+                new Object[]{GraphViewFactory.class, "Heavy"},
                 new Object[]{HugeGraphFactory.class, "Huge"},
                 new Object[]{GraphViewFactory.class, "Kernel"}
         );
     }
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
-        DB.execute(GRAPH).close();
+        DB.executeTransactionally(GRAPH);
     }
 
     @Rule
@@ -415,13 +418,13 @@ public class AllShortestPaths427Test {
     public AllShortestPaths427Test(
             Class<? extends GraphFactory> graphImpl,
             String ignoreParamOnlyForTestNaming) {
-        graph = new GraphLoader(DB, Pools.DEFAULT)
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, Pools.DEFAULT, ktx)
                 .withLabel("Node")
                 .withRelationshipType("TYPE")
                 .withRelationshipWeightsFromProperty("weight", 1.0)
                 .withDirection(Direction.OUTGOING)
                 .withConcurrency(Pools.DEFAULT_CONCURRENCY)
-                .load(graphImpl);
+                .load(graphImpl));
         expected = calculateExpected(true);
         expectedNonWeighted = calculateExpected(false);
     }
@@ -445,10 +448,10 @@ public class AllShortestPaths427Test {
     private List<Result> calculateExpected(boolean withWeights) {
         List<Result> expected = new ArrayList<>();
         ShortestPathDijkstra spd = new ShortestPathDijkstra(graph);
-        DB.executeAndCommit((db) -> {
+        withEmptyTx(DB, tx -> {
             graph.forEachNode(start -> {
                 long s = graph.toOriginalNodeId(start);
-                TestDijkstra dijkstra = new TestDijkstra(db.getNodeById(s), withWeights);
+                TestDijkstra dijkstra = new TestDijkstra(tx.getNodeById(s), withWeights);
                 graph.forEachNode(end -> {
                     if (start == end) {
                         return true;
@@ -459,7 +462,7 @@ public class AllShortestPaths427Test {
 
                     dijkstra.reset();
                     long t = graph.toOriginalNodeId(end);
-                    Node targetNode = db.getNodeById(t);
+                    Node targetNode = tx.getNodeById(t);
                     List<Node> path = dijkstra.getPathAsNodes(targetNode);
 
                     if (path != null) {

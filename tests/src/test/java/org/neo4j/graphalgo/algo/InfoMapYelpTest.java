@@ -24,11 +24,13 @@ import org.neo4j.graphalgo.InfoMapProc;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.helper.ldbc.LdbcDownloader;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.io.IOException;
+
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * @author mknblch
@@ -42,17 +44,17 @@ public class InfoMapYelpTest {
     @BeforeClass
     public static void setupGraph() throws KernelException, IOException {
         db = LdbcDownloader.openDb("Yelp");
-        Procedures proceduresService = ((GraphDatabaseAPI) db).getDependencyResolver().resolveDependency(Procedures.class);
+        GlobalProcedures proceduresService = ((GraphDatabaseAPI) db).getDependencyResolver().resolveDependency(GlobalProcedures.class);
         proceduresService.registerProcedure(InfoMapProc.class, true);
     }
 
     @Test
     public void testWeighted() throws Exception {
-        db.execute("CALL algo.infoMap('MATCH (c:Category) RETURN id(c) AS id',\n" +
+        executeAndAccept(db, "CALL algo.infoMap('MATCH (c:Category) RETURN id(c) AS id',\n" +
                 "  'MATCH (c1:Category)<-[:IN_CATEGORY]-()-[:IN_CATEGORY]->(c2:Category)\n" +
                 "   WHERE id(c1) < id(c2)\n" +
                 "   RETURN id(c1) AS source, id(c2) AS target, count(*) AS w', " +
-                " {graph: 'cypher', iterations:15, writeProperty:'c', threshold:0.01, tau:0.3, weightProperty:'w', concurrency:4})").accept(row -> {
+                " {graph: 'cypher', iterations:15, writeProperty:'c', threshold:0.01, tau:0.3, weightProperty:'w', concurrency:4})", row -> {
             System.out.println("computeMillis = " + row.get("computeMillis"));
             System.out.println("nodeCount = " + row.get("nodeCount"));
             System.out.println("iterations = " + row.get("iterations"));
@@ -63,11 +65,11 @@ public class InfoMapYelpTest {
 
     @Test
     public void testUnweighted() throws Exception {
-        db.execute("CALL algo.infoMap('MATCH (c:Category) RETURN id(c) AS id',\n" +
+        executeAndAccept(db, "CALL algo.infoMap('MATCH (c:Category) RETURN id(c) AS id',\n" +
                 "  'MATCH (c1:Category)<-[:IN_CATEGORY]-()-[:IN_CATEGORY]->(c2:Category)\n" +
                 "   WHERE id(c1) < id(c2)\n" +
                 "   RETURN id(c1) AS source, id(c2) AS target', " +
-                " {graph: 'cypher', iterations:15, writeProperty:'c', threshold:0.01, tau:0.3, concurrency:4})").accept(row -> {
+                " {graph: 'cypher', iterations:15, writeProperty:'c', threshold:0.01, tau:0.3, concurrency:4})", row -> {
             System.out.println("computeMillis = " + row.get("computeMillis"));
             System.out.println("nodeCount = " + row.get("nodeCount"));
             System.out.println("iterations = " + row.get("iterations"));

@@ -29,13 +29,15 @@ import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -69,7 +71,7 @@ import static org.mockito.Mockito.verify;
 public class MSBFSAllShortestPathsTest {
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     private static final int width = 2, height = 5;
 
@@ -103,10 +105,10 @@ public class MSBFSAllShortestPathsTest {
             Class<? extends GraphFactory> graphImpl,
             String nameIgnoredOnlyForTestName) {
 
-        graph = new GraphLoader(DB)
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withLabel(LABEL)
                 .withRelationshipType(RELATIONSHIP)
-                .load(graphImpl);
+                .load(graphImpl));
     }
 
     @Test

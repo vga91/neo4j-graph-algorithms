@@ -22,16 +22,19 @@ import com.carrotsearch.hppc.IntScatterSet;
 import com.carrotsearch.hppc.IntSet;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.multistepscc.MultistepSCC;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,6 +42,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**        _______
  *        /       \
@@ -52,8 +56,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class MultistepSCCTest {
 
-
-    private static GraphDatabaseAPI api;
+    @ClassRule
+    public static DatabaseRule api = new ImpermanentDatabaseRule();
 
     private static Graph graph;
 
@@ -85,28 +89,23 @@ public class MultistepSCCTest {
                         " (h)-[:TYPE {cost:3}]->(i),\n" +
                         " (i)-[:TYPE {cost:3}]->(g)";
 
-        api = TestDatabaseCreator.createTestDatabase();
-        try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
-            tx.success();
-        }
+        api.executeTransactionally(cypher);
 
-        graph = new GraphLoader(api)
+        graph = new TransactionWrapper(api).apply(ktx -> new GraphLoader(api, ktx)
                 .withLabel("Node")
                 .withRelationshipType("TYPE")
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if (api != null) api.shutdown();
         graph = null;
     }
 
     public static int getMappedNodeId(String name) {
         final Node[] node = new Node[1];
-        api.execute("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
+        executeAndAccept(api, "MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n", row -> {
             node[0] = row.getNode("n");
             return false;
         });

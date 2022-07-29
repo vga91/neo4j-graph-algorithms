@@ -26,11 +26,14 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.function.DoubleConsumer;
 
@@ -38,6 +41,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 /**
  * @author mknblch
@@ -45,7 +50,7 @@ import static org.mockito.Mockito.verify;
 public class ShortestPathTest_152 {
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     private static long startNodeId;
     private static long endNodeId;
@@ -70,15 +75,15 @@ public class ShortestPathTest_152 {
                 " (e)-[:ROAD {d:40}]->(f),\n" +
                 " (e)-[:RAIL {d:20}]->(f);";
 
-        DB.resolveDependency(Procedures.class).registerProcedure(ShortestPathProc.class);
-        DB.execute(cypher).close();
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(ShortestPathProc.class);
+        DB.executeTransactionally(cypher);
 
         try (Transaction tx = DB.beginTx()) {
 
-            startNodeId = DB.findNode(Label.label("Loc"), "name", "A").getId();
-            endNodeId = DB.findNode(Label.label("Loc"), "name", "F").getId();
+            startNodeId = tx.findNode(Label.label("Loc"), "name", "A").getId();
+            endNodeId = tx.findNode(Label.label("Loc"), "name", "F").getId();
 
-            tx.success();
+            tx.commit();
         }
     }
 
@@ -87,11 +92,11 @@ public class ShortestPathTest_152 {
 
         DoubleConsumer mock = mock(DoubleConsumer.class);
 
-        final Graph graph = new GraphLoader(DB, Pools.DEFAULT)
+        final Graph graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, Pools.DEFAULT, ktx)
                 .withOptionalLabel("Loc")
                 .withRelationshipType("ROAD")
                 .withOptionalRelationshipWeightsFromProperty("d", 0)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         new ShortestPathDijkstra(graph)
                 .compute(startNodeId, endNodeId)
@@ -110,11 +115,11 @@ public class ShortestPathTest_152 {
 
         DoubleConsumer mock = mock(DoubleConsumer.class);
 
-        final Graph graph = new GraphLoader(DB, Pools.DEFAULT)
+        final Graph graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, Pools.DEFAULT, ktx)
                 .withOptionalLabel("Loc")
                 .withAnyRelationshipType()
                 .withOptionalRelationshipWeightsFromProperty("d", 0)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         new ShortestPathDijkstra(graph)
                 .compute(startNodeId, endNodeId)
@@ -139,8 +144,17 @@ public class ShortestPathTest_152 {
                 "CALL algo.shortestPath.stream(from, to, 'd', {relationshipQuery:'ROAD', defaultValue:999999.0}) " +
                 "YIELD nodeId, cost with nodeId, cost MATCH(n) WHERE id(n) = nodeId RETURN n.name as name, cost;";
 
-        DB.execute(cypher).accept(row -> {
-            System.out.println(row.get("name") + ":" + row.get("cost"));
+        testResult(DB, cypher, r -> {
+            r.forEachRemaining(rr -> {
+                
+                System.out.println("uno " + rr.get("name") + ":" + rr.get("cost"));
+//                mock.accept(row.getNumber("cost").doubleValue());
+//                return true;
+            });
+        });
+        
+        executeAndAccept(DB, cypher, row -> {
+            System.out.println("due " + row.get("name") + ":" + row.get("cost"));
             mock.accept(row.getNumber("cost").doubleValue());
             return true;
         });

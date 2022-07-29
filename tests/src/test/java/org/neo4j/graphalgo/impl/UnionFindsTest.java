@@ -31,16 +31,20 @@ import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphdb.Transaction;
 
 import java.util.Arrays;
 import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withEmptyTx;
 
 /**
  * @author mknblch
@@ -63,7 +67,7 @@ public class UnionFindsTest {
     }
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() {
@@ -80,25 +84,25 @@ public class UnionFindsTest {
     public UnionFindsTest(
             Class<? extends GraphFactory> graphImpl,
             String name) {
-        graph = new GraphLoader(DB)
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withExecutorService(Pools.DEFAULT)
                 .withAnyLabel()
                 .withRelationshipType(RELATIONSHIP_TYPE)
-                .load(graphImpl);
+                .load(graphImpl));
     }
 
     private static void createTestGraph(int... setSizes) {
-        DB.executeAndCommit(db -> {
+        withEmptyTx(DB, tx -> {
             for (int setSize : setSizes) {
-                createLine(db, setSize);
+                createLine(tx, setSize);
             }
         });
     }
 
-    private static void createLine(GraphDatabaseService db, int setSize) {
-        Node temp = db.createNode();
+    private static void createLine(Transaction tx, int setSize) {
+        Node temp = tx.createNode();
         for (int i = 1; i < setSize; i++) {
-            Node t = db.createNode();
+            Node t = tx.createNode();
             temp.createRelationshipTo(t, RELATIONSHIP_TYPE);
             temp = t;
         }

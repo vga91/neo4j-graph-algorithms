@@ -31,11 +31,13 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.impl.closeness.HugeMSClosenessCentrality;
 import org.neo4j.graphalgo.impl.closeness.MSClosenessCentrality;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -72,7 +74,7 @@ public class ClosenessCentralityTest {
     private static final double[] EXPECTED = new double[]{0.4, 0.57, 0.66, 0.57, 0.4};
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() {
@@ -85,7 +87,7 @@ public class ClosenessCentralityTest {
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
-        DB.execute("CREATE (a:Node {name:'a'})\n" +
+        DB.executeTransactionally("CREATE (a:Node {name:'a'})\n" +
                 "CREATE (b:Node {name:'b'})\n" +
                 "CREATE (c:Node {name:'c'})\n" +
                 "CREATE (d:Node {name:'d'})\n" +
@@ -106,11 +108,11 @@ public class ClosenessCentralityTest {
     public ClosenessCentralityTest(
             Class<? extends GraphFactory> graphImpl,
             String nameIgnoredOnlyForTestName) {
-        graph = new GraphLoader(DB)
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .withoutNodeProperties()
-                .load(graphImpl);
+                .load(graphImpl));
     }
 
     @Test

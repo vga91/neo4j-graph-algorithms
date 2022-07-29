@@ -28,18 +28,21 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.neo4j.graphalgo.ClosenessCentralityProc;
 import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Result;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.rebind;
 
 
 /**
@@ -51,7 +54,7 @@ public class ClosenessCentralityIntegrationTest {
     public static final String TYPE = "TYPE";
 
     @ClassRule
-    public static ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static DatabaseRule DB = new ImpermanentDatabaseRule();
 
     private static long centerNodeId;
 
@@ -83,44 +86,45 @@ public class ClosenessCentralityIntegrationTest {
 
         builder.newRingBuilder()
                 .createRing(5)
-                .forEachNodeInTx(node -> {
-                    node.createRelationshipTo(center, type);
+                .forEachNodeInTx((node, tx) -> {
+                    Node nodeBound = rebind(tx, node);
+                    Node centerBound = rebind(tx, center);
+                    nodeBound.createRelationshipTo(centerBound, type);
                 })
                 .newRingBuilder()
                 .createRing(5)
-                .forEachNodeInTx(node -> {
-                    center.createRelationshipTo(node, type);
+                .forEachNodeInTx((node, tx) -> {
+                    Node nodeBound = rebind(tx, node);
+                    Node centerBound = rebind(tx, center);
+                    centerBound.createRelationshipTo(nodeBound, type);
                 });
 
-        DB.resolveDependency(Procedures.class).registerProcedure(ClosenessCentralityProc.class);
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(ClosenessCentralityProc.class);
     }
 
     @Test
     public void testClosenessStream() throws Exception {
-        DB.execute("CALL algo.closeness.stream('Node', 'TYPE') YIELD nodeId, centrality")
-                .accept((Result.ResultVisitor<Exception>) row -> {
-                    consumer.accept(
-                            row.getNumber("nodeId").longValue(),
-                            row.getNumber("centrality").doubleValue());
-                    return true;
-                });
+        executeAndAccept(DB, "CALL algo.closeness.stream('Node', 'TYPE') YIELD nodeId, centrality", row -> {
+            consumer.accept(
+                    row.getNumber("nodeId").longValue(),
+                    row.getNumber("centrality").doubleValue());
+            return true;
+        });
 
         verifyMock();
     }
 
     @Test
     public void testClosenessWrite() throws Exception {
-        DB.execute("CALL algo.closeness('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
-                "nodes, loadMillis, computeMillis, writeMillis")
-                .accept((Result.ResultVisitor<Exception>) row -> {
+        executeAndAccept(DB, "CALL algo.closeness('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
+                "nodes, loadMillis, computeMillis, writeMillis", row -> {
                     assertNotEquals(-1L, row.getNumber("writeMillis"));
                     assertNotEquals(-1L, row.getNumber("computeMillis"));
                     assertNotEquals(-1L, row.getNumber("nodes"));
                     return true;
                 });
 
-        DB.execute("MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality")
-                .accept(row -> {
+        executeAndAccept(DB, "MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality", row -> {
                     System.out.println(
                             row.getNumber("id").longValue() + " " +
                                     row.getNumber("centrality").doubleValue());

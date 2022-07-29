@@ -26,7 +26,9 @@ import org.neo4j.internal.kernel.api.CursorFactory;
 import org.neo4j.internal.kernel.api.PropertyCursor;
 import org.neo4j.internal.kernel.api.Read;
 import org.neo4j.internal.kernel.api.RelationshipScanCursor;
-import org.neo4j.internal.kernel.api.helpers.RelationshipSelectionCursor;
+import org.neo4j.internal.kernel.api.RelationshipTraversalCursor;
+import org.neo4j.io.pagecache.context.CursorContext;
+import org.neo4j.kernel.api.KernelTransaction;
 
 import java.util.Arrays;
 
@@ -52,7 +54,7 @@ abstract class VisitRelationship {
         }
     }
 
-    abstract void visit(RelationshipSelectionCursor cursor);
+    abstract void visit(RelationshipTraversalCursor cursor, KernelTransaction transaction);
 
     final void prepareNextNode(final int sourceGraphId, final int[] targets) {
         this.sourceGraphId = sourceGraphId;
@@ -103,11 +105,12 @@ abstract class VisitRelationship {
             int sourceGraphId,
             int targetGraphId,
             WeightMap weights,
-            long relationshipId) {
+            long relationshipId,
+            KernelTransaction transaction) {
 
         // TODO: make access to rel properties better
-        try (RelationshipScanCursor scanCursor = cursors.allocateRelationshipScanCursor();
-             PropertyCursor pc = cursors.allocatePropertyCursor()) {
+        try (RelationshipScanCursor scanCursor = cursors.allocateRelationshipScanCursor(transaction.cursorContext());
+             PropertyCursor pc = cursors.allocatePropertyCursor(transaction.cursorContext(), transaction.memoryTracker())) {
             readOp.singleRelationship(relationshipId, scanCursor);
             while (scanCursor.next()) {
                 scanCursor.properties(pc);
@@ -126,11 +129,12 @@ abstract class VisitRelationship {
             int sourceGraphId,
             int targetGraphId,
             WeightMap weights,
-            long relationshipId) {
+            long relationshipId,
+            KernelTransaction transaction) {
 
         // TODO: make access to rel properties better
-        try (RelationshipScanCursor scanCursor = cursors.allocateRelationshipScanCursor();
-             PropertyCursor pc = cursors.allocatePropertyCursor()) {
+        try (RelationshipScanCursor scanCursor = cursors.allocateRelationshipScanCursor(transaction.cursorContext());
+             PropertyCursor pc = cursors.allocatePropertyCursor(transaction.cursorContext(), transaction.memoryTracker())) {
             readOp.singleRelationship(relationshipId, scanCursor);
             while (scanCursor.next()) {
                 scanCursor.properties(pc);
@@ -178,7 +182,7 @@ final class VisitOutgoingNoWeight extends VisitRelationship {
     }
 
     @Override
-    void visit(final RelationshipSelectionCursor cursor) {
+    void visit(final RelationshipTraversalCursor cursor, KernelTransaction transaction) {
         addNode(cursor.targetNodeReference());
     }
 }
@@ -190,7 +194,7 @@ final class VisitIncomingNoWeight extends VisitRelationship {
     }
 
     @Override
-    void visit(final RelationshipSelectionCursor cursor) {
+    void visit(final RelationshipTraversalCursor cursor, KernelTransaction transaction) {
         addNode(cursor.sourceNodeReference());
     }
 }
@@ -214,9 +218,9 @@ final class VisitOutgoingWithWeight extends VisitRelationship {
     }
 
     @Override
-    void visit(final RelationshipSelectionCursor cursor) {
+    void visit(final RelationshipTraversalCursor cursor, KernelTransaction transaction) {
         if (addNode(cursor.targetNodeReference())) {
-            visitWeight(readOp, cursors, sourceGraphId, prevTarget, weights, cursor.relationshipReference());
+            visitWeight(readOp, cursors, sourceGraphId, prevTarget, weights, cursor.relationshipReference(), transaction);
         }
     }
 }
@@ -240,9 +244,9 @@ final class VisitIncomingWithWeight extends VisitRelationship {
     }
 
     @Override
-    void visit(final RelationshipSelectionCursor cursor) {
+    void visit(final RelationshipTraversalCursor cursor, KernelTransaction transaction) {
         if (addNode(cursor.sourceNodeReference())) {
-            visitWeight(readOp, cursors, prevTarget, sourceGraphId, weights, cursor.relationshipReference());
+            visitWeight(readOp, cursors, prevTarget, sourceGraphId, weights, cursor.relationshipReference(), transaction);
         }
     }
 }
@@ -266,9 +270,9 @@ final class VisitUndirectedOutgoingWithWeight extends VisitRelationship {
     }
 
     @Override
-    void visit(final RelationshipSelectionCursor cursor) {
+    void visit(final RelationshipTraversalCursor cursor, KernelTransaction transaction) {
         if (addNode(cursor.targetNodeReference())) {
-            visitUndirectedWeight(readOp, cursors, sourceGraphId, prevTarget, weights, cursor.relationshipReference());
+            visitUndirectedWeight(readOp, cursors, sourceGraphId, prevTarget, weights, cursor.relationshipReference(), transaction);
         }
     }
 }

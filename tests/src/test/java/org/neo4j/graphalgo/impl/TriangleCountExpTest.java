@@ -28,6 +28,7 @@ import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.AtomicDoubleArray;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.PagedAtomicDoubleArray;
 import org.neo4j.graphalgo.core.utils.paged.PagedAtomicIntegerArray;
 import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
@@ -37,10 +38,11 @@ import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
 import org.neo4j.graphalgo.impl.triangle.TriangleCountAlgorithm;
 import org.neo4j.graphalgo.impl.triangle.TriangleCountForkJoin;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,6 +50,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.rebind;
 
 /**
  *
@@ -64,7 +67,7 @@ public class TriangleCountExpTest {
     private static long centerId;
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() {
@@ -85,8 +88,10 @@ public class TriangleCountExpTest {
             final Node center = builder.createNode();
             builder.newRingBuilder()
                     .createRing((int) TRIANGLE_COUNT)
-                    .forEachNodeInTx(node -> {
-                        center.createRelationshipTo(node, type);
+                    .forEachNodeInTx((node, tx) -> {
+                        Node nodeBound = rebind(tx, node);
+                        Node centerBound = rebind(tx, center);
+                        centerBound.createRelationshipTo(nodeBound, type);
                     });
             centerId = center.getId();
         }
@@ -99,7 +104,7 @@ public class TriangleCountExpTest {
             Class<? extends GraphFactory> graphImpl,
             String nameIgnoredOnlyForTestName) {
         try (ProgressTimer timer = ProgressTimer.start(t -> System.out.println("load took " + t + "ms"))) {
-            graph = new GraphLoader(DB)
+            graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                     .withLabel(LABEL)
                     .withRelationshipType(RELATIONSHIP)
                     .withoutRelationshipWeights()
@@ -107,7 +112,7 @@ public class TriangleCountExpTest {
                     .withDirection(Direction.BOTH)
                     .withSort(true)
                     .asUndirected(true)
-                    .load(graphImpl);
+                    .load(graphImpl));
         }
     }
 

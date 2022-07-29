@@ -21,7 +21,7 @@ package org.neo4j.graphalgo.core.utils.queue;
 import com.carrotsearch.randomizedtesting.RandomizedTest;
 import com.carrotsearch.randomizedtesting.annotations.ThreadLeakScope;
 import org.junit.Test;
-import org.neo4j.helpers.collection.Pair;
+import org.neo4j.internal.helpers.collection.Pair;
 
 import java.util.ArrayList;
 import java.util.List;

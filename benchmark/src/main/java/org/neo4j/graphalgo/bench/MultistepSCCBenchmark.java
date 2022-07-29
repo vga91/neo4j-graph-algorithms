@@ -132,7 +132,7 @@ public class MultistepSCCBenchmark {
             rIdx = stm
                     .tokenWrite()
                     .relationshipTypeGetOrCreateForName(RELATIONSHIP_TYPE.name());
-            tx.success();
+            tx.commit();
         }
 
         final ArrayList<Runnable> runnables = new ArrayList<>();
@@ -164,7 +164,7 @@ public class MultistepSCCBenchmark {
                 } catch (EntityNotFoundException e) {
                     throw new RuntimeException(e);
                 }
-                tx.success();
+                tx.commit();
             } catch (InvalidTransactionTypeKernelException | TransactionFailureException e) {
                 throw new RuntimeException(e);
             }

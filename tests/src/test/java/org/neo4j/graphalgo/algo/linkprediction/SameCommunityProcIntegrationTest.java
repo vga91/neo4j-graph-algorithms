@@ -18,18 +18,21 @@
  */
 package org.neo4j.graphalgo.algo.linkprediction;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.neo4j.configuration.GraphDatabaseSettings;
 import org.neo4j.graphalgo.linkprediction.LinkPrediction;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.factory.GraphDatabaseSettings;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.test.TestGraphDatabaseFactory;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -44,26 +47,24 @@ public class SameCommunityProcIntegrationTest {
             "SET praveena.community=1\n" +
             "CREATE (jennifer:Person {name: 'Jennifer'})\n";
 
-    private static GraphDatabaseService db;
+    @ClassRule
+    public static DatabaseRule db  = new ImpermanentDatabaseRule()
+            .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of("algo.*"));
 
     @BeforeClass
     public static void setUp() throws Exception {
-        db = new TestGraphDatabaseFactory()
-                .newImpermanentDatabaseBuilder()
-                .setConfig(GraphDatabaseSettings.procedure_unrestricted,"algo.*")
-                .newGraphDatabase();
 
         ((GraphDatabaseAPI) db).getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerFunction(LinkPrediction.class);
 
-        db.execute(SETUP).close();
+        db.executeTransactionally(SETUP);
     }
 
-    @AfterClass
-    public static void tearDown() {
-        db.shutdown();
-    }
+//    @AfterClass
+//    public static void tearDown() {
+//        db.shutdown();
+//    }
 
     @Test
     public void missingProperty() throws Exception {
@@ -74,9 +75,10 @@ public class SameCommunityProcIntegrationTest {
                         "       0.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+            Result result = tx.execute(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
+            tx.commit();
         }
     }
 
@@ -89,9 +91,10 @@ public class SameCommunityProcIntegrationTest {
                         "       1.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+            Result result = tx.execute(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
+            tx.commit();
         }
     }
 
@@ -104,9 +107,10 @@ public class SameCommunityProcIntegrationTest {
                         "       0.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+            Result result = tx.execute(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
+            tx.commit();
         }
     }
 
@@ -119,9 +123,10 @@ public class SameCommunityProcIntegrationTest {
                         "       1.0 AS cypherScore";
 
         try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+            Result result = tx.execute(controlQuery);
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
+            tx.commit();
         }
     }
 

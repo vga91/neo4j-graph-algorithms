@@ -18,11 +18,11 @@
  */
 package org.neo4j.graphalgo.core.heavyweight;
 
-import org.neo4j.collection.primitive.PrimitiveIntIterable;
-import org.neo4j.collection.primitive.PrimitiveIntIterator;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.IntersectionConsumer;
 import org.neo4j.graphalgo.api.NodeProperties;
+import org.neo4j.graphalgo.api.PrimitiveIntIterable;
+import org.neo4j.graphalgo.api.PrimitiveIntIterator;
 import org.neo4j.graphalgo.api.RelationshipConsumer;
 import org.neo4j.graphalgo.api.RelationshipIntersect;
 import org.neo4j.graphalgo.api.RelationshipPredicate;

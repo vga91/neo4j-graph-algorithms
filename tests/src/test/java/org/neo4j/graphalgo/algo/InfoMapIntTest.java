@@ -24,22 +24,19 @@ import org.junit.Test;
 import org.neo4j.graphalgo.InfoMapProc;
 import org.neo4j.graphalgo.PageRankProc;
 import org.neo4j.graphalgo.api.Graph;
-import org.neo4j.graphalgo.impl.pagerank.PageRank;
-import org.neo4j.graphalgo.impl.pagerank.PageRankAlgorithm;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.BitSet;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  *
@@ -57,7 +54,7 @@ public class InfoMapIntTest {
 
 
     @ClassRule
-    public static ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     private static Graph graph;
 
@@ -81,9 +78,9 @@ public class InfoMapIntTest {
                         " (d)-[:TYPE {v:1.0}]->(f),\n" +
                         " (e)-[:TYPE {v:1.0}]->(f)";
 
-        db.execute(cypher);
-        db.resolveDependency(Procedures.class).registerProcedure(InfoMapProc.class);
-        db.resolveDependency(Procedures.class).registerProcedure(PageRankProc.class);
+        db.executeTransactionally(cypher);
+        db.resolveDependency(GlobalProcedures.class).registerProcedure(InfoMapProc.class);
+        db.resolveDependency(GlobalProcedures.class).registerProcedure(PageRankProc.class);
     }
 
     @Test
@@ -91,9 +88,9 @@ public class InfoMapIntTest {
 
         final BitSet bitSet = new BitSet(8);
 
-        db.execute("CALL algo.infoMap('Node', 'TYPE', {iterations:15, writeProperty:'c'})").close();
+        db.executeTransactionally("CALL algo.infoMap('Node', 'TYPE', {iterations:15, writeProperty:'c'})");
 
-        db.execute("MATCH (n) RETURN n").accept(row -> {
+        executeAndAccept(db, "MATCH (n) RETURN n", row -> {
             final Node node = row.getNode("n");
             bitSet.set((Integer) node.getProperty("c"));
             return true;
@@ -108,8 +105,8 @@ public class InfoMapIntTest {
 
         final BitSet bitSet = new BitSet(8);
 
-        db.execute("CALL algo.infoMap.stream('Node', 'TYPE', {iterations:15}) YIELD nodeId, community")
-                .accept(row -> {
+        executeAndAccept(db, "CALL algo.infoMap.stream('Node', 'TYPE', {iterations:15}) YIELD nodeId, community",
+                row -> {
                     bitSet.set((Integer) row.getNumber("community").intValue());
                     return true;
                 });
@@ -124,9 +121,9 @@ public class InfoMapIntTest {
 
         final BitSet bitSet = new BitSet(8);
 
-        db.execute("CALL algo.infoMap('Node', 'TYPE', {weightProperty:'v', writeProperty:'c'})").close();
+        db.executeTransactionally("CALL algo.infoMap('Node', 'TYPE', {weightProperty:'v', writeProperty:'c'})");
 
-        db.execute("MATCH (n) RETURN n").accept(row -> {
+        executeAndAccept(db, "MATCH (n) RETURN n", row -> {
             final Node node = row.getNode("n");
             bitSet.set((Integer) node.getProperty("c"));
             return true;
@@ -142,8 +139,8 @@ public class InfoMapIntTest {
 
         final BitSet bitSet = new BitSet(8);
 
-        db.execute("CALL algo.infoMap.stream('Node', 'TYPE', {iterations:15, weightProperty:'v'}) YIELD nodeId, community")
-                .accept(row -> {
+        executeAndAccept(db, "CALL algo.infoMap.stream('Node', 'TYPE', {iterations:15, weightProperty:'v'}) YIELD nodeId, community",
+        row -> {
                     bitSet.set((Integer) row.getNumber("community").intValue());
                     return true;
                 });
@@ -156,12 +153,12 @@ public class InfoMapIntTest {
     public void testPredefinedPageRankStream() throws Exception {
 
 
-        db.execute("CALL algo.pageRank('Node', 'TYPE', {writeProperty:'p', iterations:1}) YIELD nodes").close();
+        db.executeTransactionally("CALL algo.pageRank('Node', 'TYPE', {writeProperty:'p', iterations:1}) YIELD nodes");
 
         final BitSet bitSet = new BitSet(8);
 
-        db.execute("CALL algo.infoMap.stream('Node', 'TYPE', {pageRankProperty:'p'}) YIELD nodeId, community")
-                .accept(row -> {
+        executeAndAccept(db, "CALL algo.infoMap.stream('Node', 'TYPE', {pageRankProperty:'p'}) YIELD nodeId, community",
+                row -> {
                     bitSet.set((Integer) row.getNumber("community").intValue());
                     return true;
                 });

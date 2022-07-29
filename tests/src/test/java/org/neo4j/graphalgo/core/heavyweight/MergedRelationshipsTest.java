@@ -27,6 +27,7 @@ import org.neo4j.graphalgo.core.WeightMap;
 import org.neo4j.graphalgo.core.utils.RawValues;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphdb.Direction;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.junit.Assert.assertEquals;
@@ -135,7 +136,7 @@ public class MergedRelationshipsTest {
     }
 
     private GraphSetup graphSetupWithRelationships() {
-        return new GraphLoader(mock(GraphDatabaseAPI.class)).withRelationshipWeightsFromProperty("dummy", 0.0).toSetup();
+        return new GraphLoader(mock(GraphDatabaseAPI.class), mock(KernelTransaction.class)).withRelationshipWeightsFromProperty("dummy", 0.0).toSetup();
     }
 
 

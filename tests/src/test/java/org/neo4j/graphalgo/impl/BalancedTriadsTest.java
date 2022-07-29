@@ -25,9 +25,11 @@ import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.impl.triangle.HugeBalancedTriads;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
@@ -47,7 +49,7 @@ public class BalancedTriadsTest {
     }
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     private static HugeGraph graph;
 
@@ -78,15 +80,15 @@ public class BalancedTriadsTest {
                         " (f)-[:TYPE {w:-1.0}]->(g),\n" +
                         " (g)-[:TYPE {w:1.0}]->(b)";
 
-        DB.execute(cypher);
+        DB.executeTransactionally(cypher);
 
-        graph = (HugeGraph) new GraphLoader(DB, Pools.DEFAULT)
+        graph = (HugeGraph) new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, Pools.DEFAULT, ktx)
                 .withLabel("Node")
                 .withRelationshipStatement("TYPE")
                 .withRelationshipWeightsFromProperty("w", 0.0)
                 .withSort(true)
                 .asUndirected(true)
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
     }
 
     @Test

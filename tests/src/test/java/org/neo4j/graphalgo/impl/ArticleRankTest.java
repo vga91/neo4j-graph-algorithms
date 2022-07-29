@@ -20,10 +20,10 @@ package org.neo4j.graphalgo.impl;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
@@ -31,9 +31,12 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyCypherGraphFactory;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.pagerank.PageRankAlgorithm;
 import org.neo4j.graphalgo.impl.pagerank.PageRankResult;
 import org.neo4j.graphalgo.impl.results.CentralityResult;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
@@ -107,22 +110,16 @@ public final class ArticleRankTest {
             "  (j)-[:TYPE2]->(e),\n" +
             "  (k)-[:TYPE2]->(e)\n";
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() {
-        db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            db.execute(DB_CYPHER).close();
-            tx.success();
+            db.executeTransactionally(DB_CYPHER);
+            tx.commit();
         }
     }
-
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        if (db!=null) db.shutdown();
-    }
-
     public ArticleRankTest(
             Class<? extends GraphFactory> graphImpl,
             String nameIgnoredOnlyForTestName) {
@@ -135,32 +132,32 @@ public final class ArticleRankTest {
         final Map<Long, Double> expected = new HashMap<>();
 
         try (Transaction tx = db.beginTx()) {
-            expected.put(db.findNode(label, "name", "a").getId(), 0.2071625);
-            expected.put(db.findNode(label, "name", "b").getId(), 0.4706795);
-            expected.put(db.findNode(label, "name", "c").getId(), 0.3605195);
-            expected.put(db.findNode(label, "name", "d").getId(), 0.195118);
-            expected.put(db.findNode(label, "name", "e").getId(), 0.2071625);
-            expected.put(db.findNode(label, "name", "f").getId(), 0.195118);
-            expected.put(db.findNode(label, "name", "g").getId(), 0.15);
-            expected.put(db.findNode(label, "name", "h").getId(), 0.15);
-            expected.put(db.findNode(label, "name", "i").getId(), 0.15);
-            expected.put(db.findNode(label, "name", "j").getId(), 0.15);
-            tx.close();
+            expected.put(tx.findNode(label, "name", "a").getId(), 0.2071625);
+            expected.put(tx.findNode(label, "name", "b").getId(), 0.4706795);
+            expected.put(tx.findNode(label, "name", "c").getId(), 0.3605195);
+            expected.put(tx.findNode(label, "name", "d").getId(), 0.195118);
+            expected.put(tx.findNode(label, "name", "e").getId(), 0.2071625);
+            expected.put(tx.findNode(label, "name", "f").getId(), 0.195118);
+            expected.put(tx.findNode(label, "name", "g").getId(), 0.15);
+            expected.put(tx.findNode(label, "name", "h").getId(), 0.15);
+            expected.put(tx.findNode(label, "name", "i").getId(), 0.15);
+            expected.put(tx.findNode(label, "name", "j").getId(), 0.15);
+            tx.commit();
         }
 
         final Graph graph;
         if (graphImpl.isAssignableFrom(HeavyCypherGraphFactory.class)) {
-            graph = new GraphLoader(db)
+            graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                     .withLabel("MATCH (n:Label1) RETURN id(n) as id")
                     .withRelationshipType("MATCH (n:Label1)-[:TYPE1]->(m:Label1) RETURN id(n) as source,id(m) as target")
-                    .load(graphImpl);
+                    .load(graphImpl));
 
         } else {
-            graph = new GraphLoader(db)
+            graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                     .withLabel(label)
                     .withRelationshipType("TYPE1")
                     .withDirection(Direction.OUTGOING)
-                    .load(graphImpl);
+                    .load(graphImpl));
         }
 
         final CentralityResult rankResult = PageRankAlgorithm

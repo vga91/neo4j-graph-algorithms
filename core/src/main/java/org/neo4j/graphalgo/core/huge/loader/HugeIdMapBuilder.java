@@ -23,21 +23,32 @@ import org.neo4j.graphalgo.core.utils.paged.HugeLongArray;
 import org.neo4j.graphalgo.core.utils.paged.HugeLongArrayBuilder;
 import org.neo4j.graphalgo.core.utils.paged.SparseLongArray;
 
+import java.util.Arrays;
+
 final class HugeIdMapBuilder {
 
     static HugeIdMap build(
             HugeLongArrayBuilder idMapBuilder,
             long highestNodeId,
             AllocationTracker tracker) {
+        System.out.println("idMapBuilder = " + idMapBuilder + ", highestNodeId = " + highestNodeId + ", tracker = " + tracker);
         HugeLongArray graphIds = idMapBuilder.build();
+        System.out.println("graphIds = " + graphIds);
         SparseLongArray nodeToGraphIds = SparseLongArray.newArray(highestNodeId, tracker);
+//        SparseLongArray nodeToGraphIds = SparseLongArray.newArray(highestNodeId + 10, tracker);
+        System.out.println("nodeToGraphIds.toString() = " + nodeToGraphIds.toString());
 
         try (HugeLongArray.Cursor cursor = graphIds.cursor(graphIds.newCursor())) {
             while (cursor.next()) {
+                // todo -??? HERE!!!!!!!
                 long[] array = cursor.array;
+                System.out.println("array = " + Arrays.toString(array));
                 int offset = cursor.offset;
+                System.out.println("offset = " + offset);
                 int limit = cursor.limit;
+                System.out.println("limit = " + limit);
                 long internalId = cursor.base + offset;
+                System.out.println("internalId = " + internalId);
                 for (int i = offset; i < limit; ++i, ++internalId) {
                     nodeToGraphIds.set(array[i], internalId);
                 }

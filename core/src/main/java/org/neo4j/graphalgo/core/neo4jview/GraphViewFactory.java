@@ -25,14 +25,16 @@ import org.neo4j.graphalgo.core.GraphDimensions;
 import org.neo4j.graphalgo.core.IdMap;
 import org.neo4j.graphalgo.core.NodeImporter;
 import org.neo4j.graphalgo.core.utils.ImportProgress;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 public final class GraphViewFactory extends GraphFactory {
 
     public GraphViewFactory(
             final GraphDatabaseAPI api,
-            final GraphSetup setup) {
-        super(api, setup);
+            final GraphSetup setup,
+            KernelTransaction ktx) {
+        super(api, setup, ktx);
     }
 
     @Override

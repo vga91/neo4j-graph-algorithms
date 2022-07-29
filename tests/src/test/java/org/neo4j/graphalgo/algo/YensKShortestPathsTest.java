@@ -22,18 +22,17 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.KShortestPathsProc;
-import org.neo4j.graphalgo.LouvainProc;
-import org.neo4j.graphalgo.impl.yens.YensKShortestPaths;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * Graph:
@@ -49,7 +48,7 @@ import static org.junit.Assert.assertEquals;
 public class YensKShortestPathsTest {
 
     @ClassRule
-    public static ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
@@ -74,8 +73,8 @@ public class YensKShortestPathsTest {
                         " (d)-[:TYPE {cost:1.0}]->(f),\n" +
                         " (e)-[:TYPE {cost:4.0}]->(f)";
 
-        DB.execute(cypher);
-        DB.resolveDependency(Procedures.class).registerProcedure(KShortestPathsProc.class);
+        DB.executeTransactionally(cypher);
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(KShortestPathsProc.class);
     }
 
     @Test
@@ -86,7 +85,7 @@ public class YensKShortestPathsTest {
                         "YIELD resultCount RETURN resultCount";
 
         // 9 possible paths without loop
-        DB.execute(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             assertEquals(9, row.getNumber("resultCount").intValue());
             return true;
         });
@@ -95,8 +94,8 @@ public class YensKShortestPathsTest {
          * 10 rels from source graph already in DB + 29 rels from 9 paths
          */
         try (Transaction transaction = DB.beginTx()) {
-            assertEquals(39, DB.getAllRelationships().stream().count());
-            transaction.success();
+            assertEquals(39, transaction.getAllRelationships().stream().count());
+            transaction.commit();
         }
 
         Map<String, Double> combinations = new HashMap<>();
@@ -115,7 +114,7 @@ public class YensKShortestPathsTest {
                     "UNWIND relationships(p) AS pair\n" +
                     "return sum(pair.weight) AS distance", relationshipType);
 
-            DB.execute(shortestPathsQuery, MapUtil.map("one", "a", "two", "f")).accept(row -> {
+            executeAndAccept(DB, shortestPathsQuery, Map.of("one", "a", "two", "f"), row -> {
                 assertEquals(combinations.get(relationshipType), row.getNumber("distance").doubleValue(), 0.01);
                 return true;
             });

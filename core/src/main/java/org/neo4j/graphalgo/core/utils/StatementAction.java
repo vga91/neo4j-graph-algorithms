@@ -18,7 +18,7 @@
  */
 package org.neo4j.graphalgo.core.utils;
 
-import org.neo4j.helpers.Exceptions;
+import org.neo4j.graphalgo.core.utils.ExceptionUtil;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 public abstract class StatementAction extends StatementApi implements RenamesCurrentThread, Runnable, StatementApi.TxConsumer {
@@ -31,8 +31,10 @@ public abstract class StatementAction extends StatementApi implements RenamesCur
     public void run() {
         try (Revert ignored = RenamesCurrentThread.renameThread(threadName())) {
             acceptInTransaction(this);
-        } catch (Exception e) {
-            Exceptions.throwIfUnchecked(e);
+        // todo - in 3.5 Exception.throwIfUnchecked block comment says "Do note that if the segment common code is missing, it's preferable to use this instead: catch (RuntimeException | Error e) {...}"
+        } catch (RuntimeException | Error e) {
+            throw e;
+        } catch (Throwable e) {
             throw new RuntimeException(e);
         }
     }

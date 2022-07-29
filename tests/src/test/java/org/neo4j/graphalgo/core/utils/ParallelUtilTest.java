@@ -21,11 +21,11 @@ package org.neo4j.graphalgo.core.utils;
 import com.carrotsearch.randomizedtesting.RandomizedTest;
 import com.carrotsearch.randomizedtesting.annotations.ThreadLeakScope;
 import org.junit.Test;
-import org.neo4j.collection.primitive.PrimitiveIntIterable;
-import org.neo4j.collection.primitive.PrimitiveIntStack;
+import org.neo4j.graphalgo.api.PrimitiveIntIterable;
+import org.neo4j.graphalgo.api.PrimitiveIntStack;
 import org.neo4j.function.ThrowingConsumer;
 import org.neo4j.graphalgo.api.BatchNodeIterable;
-import org.neo4j.helpers.Exceptions;
+import org.neo4j.graphalgo.core.utils.ExceptionUtil;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -287,7 +287,7 @@ public final class ParallelUtilTest extends RandomizedTest {
         try {
             block.accept(pool);
         } catch (Throwable throwable) {
-            throw Exceptions.launderedException(throwable);
+            throw ExceptionUtil.launderedException(throwable);
         } finally {
             List<Runnable> unscheduled = pool.shutdownNow();
             pool.shutdown();
@@ -301,6 +301,7 @@ public final class ParallelUtilTest extends RandomizedTest {
         }
     }
 
+    // todo - something else???
     private PrimitiveIntIterable ints(int from, int size) {
         final PrimitiveIntStack stack = new PrimitiveIntStack(size);
         for (int i = 0; i < size; i++) {

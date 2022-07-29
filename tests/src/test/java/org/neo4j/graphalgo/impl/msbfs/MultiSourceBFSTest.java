@@ -24,13 +24,15 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.RelationshipIterator;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.neo4jview.DirectIdMapping;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.helpers.collection.Pair;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.internal.helpers.collection.Pair;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,6 +48,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withEmptyTx;
 import static org.neo4j.graphdb.Direction.OUTGOING;
 
 public final class MultiSourceBFSTest {
@@ -72,7 +75,7 @@ public final class MultiSourceBFSTest {
             "  (f)-[:BAR]->(d)\n";
 
     @Rule
-    public ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public DatabaseRule db = new ImpermanentDatabaseRule();
 
     @Test
     public void testPaperExample() {
@@ -279,20 +282,20 @@ public final class MultiSourceBFSTest {
     private void withGraph(
             String cypher,
             Consumer<? super Graph> block) {
-        db.execute(cypher).close();
-        block.accept(new GraphLoader(db).load(HeavyGraphFactory.class));
+        db.executeTransactionally(cypher);
+        block.accept(new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx).load(HeavyGraphFactory.class)));
     }
 
     private void withGrid(
             Consumer<? super GraphBuilder<?>> build,
             Consumer<? super Graph> block) {
-        db.executeAndCommit((dba) -> {
+        withEmptyTx(db, tx -> {
             DefaultBuilder graphBuilder = GraphBuilder.create(db)
                     .setLabel("Foo")
                     .setRelationship("BAR");
             build.accept(graphBuilder);
         });
-        Graph graph = new GraphLoader(db).load(HeavyGraphFactory.class);
+        Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx).load(HeavyGraphFactory.class));
         block.accept(graph);
     }
 

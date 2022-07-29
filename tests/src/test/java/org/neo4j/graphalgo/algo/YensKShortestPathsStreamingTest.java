@@ -22,23 +22,23 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.KShortestPathsProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * Graph:
@@ -54,7 +54,7 @@ import static org.junit.Assert.assertFalse;
 public class YensKShortestPathsStreamingTest {
 
     @ClassRule
-    public static ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
@@ -73,9 +73,9 @@ public class YensKShortestPathsStreamingTest {
                         "CREATE (f)-[:TYPE {cost:4.0}]->(d)\n" +
                         "CREATE (b)-[:TYPE {cost:2.0}]->(d)\n";
 
-        DB.execute(cypher);
-        DB.execute("MATCH (c:Node {name: 'c'}) DELETE c");
-        DB.resolveDependency(Procedures.class).registerProcedure(KShortestPathsProc.class);
+        DB.executeTransactionally(cypher);
+        DB.executeTransactionally("MATCH (c:Node {name: 'c'}) DELETE c");
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(KShortestPathsProc.class);
     }
 
     @Test
@@ -97,7 +97,7 @@ public class YensKShortestPathsStreamingTest {
         expectedCosts.put(2L, Arrays.asList(7.0d, 3.0, 4.0));
 
         // 9 possible paths without loop
-        DB.execute(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             long rowIndex = row.getNumber("index").longValue();
             assertEquals(expectedNodes.get(rowIndex), row.get("nodeIds"));
             assertEquals(expectedCosts.get(rowIndex), row.get("costs"));
@@ -124,7 +124,7 @@ public class YensKShortestPathsStreamingTest {
         expectedCosts.put(1L, Arrays.asList(5.0d));
         expectedCosts.put(2L, Arrays.asList(7.0d, 3.0, 4.0));
 
-        DB.execute(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             Path path = (Path) row.get("path");
 
             List<Node> actualNodes = StreamSupport.stream(path.nodes().spliterator(), false).collect(toList());
@@ -157,7 +157,7 @@ public class YensKShortestPathsStreamingTest {
         expectedCosts.put(1L, Arrays.asList(5.0d));
         expectedCosts.put(2L, Arrays.asList(7.0d, 3.0, 4.0));
 
-        DB.execute(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             Path path = (Path) row.get("path");
 
             List<Node> actualNodes = StreamSupport.stream(path.nodes().spliterator(), false).collect(toList());
@@ -175,7 +175,7 @@ public class YensKShortestPathsStreamingTest {
         List<Long> nodeIds;
         try (Transaction tx = DB.beginTx()) {
             nodeIds = Arrays.stream(nodes)
-                    .map(name -> DB.findNode(Label.label("Node"), "name", name).getId())
+                    .map(name -> tx.findNode(Label.label("Node"), "name", name).getId())
                     .collect(toList());
         }
         return nodeIds;
@@ -184,7 +184,7 @@ public class YensKShortestPathsStreamingTest {
         List<Node> nodeIds;
         try (Transaction tx = DB.beginTx()) {
             nodeIds = Arrays.stream(nodes)
-                    .map(name -> DB.findNode(Label.label("Node"), "name", name))
+                    .map(name -> tx.findNode(Label.label("Node"), "name", name))
                     .collect(toList());
         }
         return nodeIds;

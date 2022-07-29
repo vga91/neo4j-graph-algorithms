@@ -24,19 +24,22 @@ import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.MemoryUsage;
 import org.neo4j.graphalgo.core.utils.paged.PageUtil;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.internal.kernel.api.TokenWrite;
 import org.neo4j.internal.kernel.api.Write;
 import org.neo4j.kernel.api.KernelTransaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.values.storable.Values;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.getKernelTx;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withEmptyTx;
 
 public final class HugeGraphWeightTest {
 
@@ -45,14 +48,16 @@ public final class HugeGraphWeightTest {
     private static final int BATCH_SIZE = 100;
 
     @Rule
-    public ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public DatabaseRule db = new ImpermanentDatabaseRule();
 
     @Test
     public void shouldLoadCorrectWeights() throws Exception {
+//        mkDb(30, 2);
         mkDb(WEIGHT_BATCH_SIZE << 1, 2);
         HugeGraph graph = loadGraph(db);
 
         graph.forEachNode((long node) -> {
+            System.out.println("node = " + node);
             graph.forEachOutgoing(node, (src, tgt) -> {
                 long weight = (long) graph.weightOf(src, tgt);
                 int fakeId = ((int) src << 16) | (int) tgt & 0xFFFF;
@@ -72,8 +77,9 @@ public final class HugeGraphWeightTest {
     }
 
     private void mkDb(final int nodes, final int relsPerNode) {
-        db.executeAndCommit((GraphDatabaseService __) -> {
-            try (KernelTransaction st = db.transaction()) {
+        withEmptyTx(db, tx -> {
+            try {
+                KernelTransaction st = getKernelTx(tx);
                 TokenWrite token = st.tokenWrite();
                 int type = token.relationshipTypeGetOrCreateForName("TYPE");
                 int key = token.propertyKeyGetOrCreateForName("weight");
@@ -100,19 +106,19 @@ public final class HugeGraphWeightTest {
                         }
                     }
                 }
-            } catch (KernelException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
     private HugeGraph loadGraph(final GraphDatabaseAPI db) {
-        return (HugeGraph) new GraphLoader(db)
+        return (HugeGraph) new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withRelationshipWeightsFromProperty("weight", 0)
                 .withDirection(Direction.OUTGOING)
                 .withExecutorService(Pools.DEFAULT)
                 .withBatchSize(BATCH_SIZE)
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
     }
 
     private interface NewRel {

@@ -21,26 +21,31 @@ package org.neo4j.graphalgo.algo;
 import com.carrotsearch.hppc.LongScatterSet;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.StronglyConnectedComponentsProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * @author mknblch
  */
 public class ForwardBackwardSccProcTest {
 
-    private static GraphDatabaseAPI api;
+    @ClassRule
+    public static DatabaseRule api = new ImpermanentDatabaseRule();
 
     private static Graph graph;
 
@@ -72,34 +77,30 @@ public class ForwardBackwardSccProcTest {
                         " (h)-[:TYPE {cost:3}]->(i),\n" +
                         " (i)-[:TYPE {cost:3}]->(g)";
 
-        api = TestDatabaseCreator.createTestDatabase();
-        try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
-            tx.success();
-        }
+        api.executeTransactionally(cypher);
 
 
         api.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(StronglyConnectedComponentsProc.class);
 
-        graph = new GraphLoader(api)
+        graph = new TransactionWrapper(api).apply(ktx -> new GraphLoader(api, ktx)
                 .withLabel("Node")
                 .withRelationshipType("TYPE")
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
     }
 
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        api.shutdown();
-    }
+//    @AfterClass
+//    public static void shutdownGraph() throws Exception {
+//        api.shutdown();
+//    }
 
     private long getNodeId(String name) {
 
         try (Transaction tx = api.beginTx()) {
-            final long id = api.findNode(Label.label("Node"), "name", name).getId();
-            tx.success();
+            final long id = tx.findNode(Label.label("Node"), "name", name).getId();
+            tx.commit();
             return id;
         }
     }
@@ -122,7 +123,7 @@ public class ForwardBackwardSccProcTest {
     public LongScatterSet call(long nodeId) throws Exception {
         String cypher = String.format("CALL algo.scc.forwardBackward.stream(%d, 'Node', 'TYPE', {concurrency:4}) YIELD nodeId RETURN nodeId", nodeId);
         final LongScatterSet set = new LongScatterSet();
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             set.add(row.getNumber("nodeId").longValue());
             return true;
         });

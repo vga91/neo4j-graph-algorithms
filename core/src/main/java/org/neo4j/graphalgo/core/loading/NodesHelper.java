@@ -20,8 +20,9 @@ package org.neo4j.graphalgo.core.loading;
 
 import org.neo4j.internal.kernel.api.CursorFactory;
 import org.neo4j.internal.kernel.api.NodeCursor;
-import org.neo4j.internal.kernel.api.RelationshipGroupCursor;
 import org.neo4j.internal.kernel.api.RelationshipTraversalCursor;
+import org.neo4j.io.pagecache.context.CursorContext;
+import org.neo4j.storageengine.api.RelationshipSelection;
 
 /**
  * Helper methods for reading degrees of nodes.
@@ -38,8 +39,6 @@ import org.neo4j.internal.kernel.api.RelationshipTraversalCursor;
  * and for those we need the upper bound during import buffering.
  * <p>
  * The existing methods
- * {@link org.neo4j.internal.kernel.api.helpers.Nodes#countAll(NodeCursor, CursorFactory)} and
- * {@link org.neo4j.internal.kernel.api.helpers.Nodes#countAll(NodeCursor, CursorFactory, int)}
  * return a degree count that, while being technically correct, does not cover the full buffer-size that we require.
  */
 public final class NodesHelper {
@@ -47,27 +46,28 @@ public final class NodesHelper {
     /**
      * Counts all the relationships from node where the cursor is positioned.
      * <p>
-     * NOTE: Is different from {@link org.neo4j.internal.kernel.api.helpers.Nodes#countAll(NodeCursor, CursorFactory)}]
      * in that it counts loops twice. See the class-level docs for the reasoning.
      *
      * @param nodeCursor a cursor positioned at the node whose relationships we're counting
      * @param cursors    a factory for cursors
+     * @param cursorContext
      * @return the number of relationships from the node
      */
-    public static int countUndirected(NodeCursor nodeCursor, CursorFactory cursors) {
-        if (nodeCursor.isDense()) {
-            try (RelationshipGroupCursor group = cursors.allocateRelationshipGroupCursor()) {
-                nodeCursor.relationships(group);
+    public static int countUndirected(NodeCursor nodeCursor, CursorFactory cursors, CursorContext cursorContext) {
+        // TODO - nodeCursor.isDense() should not be needed
+//        if (nodeCursor.isDense()) {
+//            try (RelationshipGroupCursor group = cursors.allocateRelationshipGroupCursor()) {
+//                nodeCursor.relationships(group);
+//                int count = 0;
+//                while (group.next()) {
+//                    count += group.outgoingCount() + group.incomingCount() + (group.loopCount() << 1);
+//                }
+//                return count;
+//            }
+//        } else {
+            try (RelationshipTraversalCursor traversal = cursors.allocateRelationshipTraversalCursor(cursorContext)) {
                 int count = 0;
-                while (group.next()) {
-                    count += group.outgoingCount() + group.incomingCount() + (group.loopCount() << 1);
-                }
-                return count;
-            }
-        } else {
-            try (RelationshipTraversalCursor traversal = cursors.allocateRelationshipTraversalCursor()) {
-                int count = 0;
-                nodeCursor.allRelationships(traversal);
+                nodeCursor.relationships(traversal, RelationshipSelection.ALL_RELATIONSHIPS);
                 long nodeId = nodeCursor.nodeReference();
                 while (traversal.next()) {
                     ++count;
@@ -78,13 +78,13 @@ public final class NodesHelper {
                 }
                 return count;
             }
-        }
+//        }
     }
 
     /**
      * Counts all the relationships of the given type from node where the cursor is positioned.
-     * <p>
-     * NOTE: Is different from {@link org.neo4j.internal.kernel.api.helpers.Nodes#countAll(NodeCursor, CursorFactory, int)}
+     * <p> TODO - MAYBE WE CAN GET RID OF THIS.... TRY
+     * NOTE: Is different from {@link org.neo4j.internal.kernel.api.helpers.Nodes#countAll(NodeCursor)}
      * in that it counts loops twice. See the class-level docs for the reasoning.
      *
      * @param nodeCursor a cursor positioned at the node whose relationships we're counting
@@ -92,22 +92,23 @@ public final class NodesHelper {
      * @param type       the type of the relationship we're counting
      * @return the number relationships from the node with the given type
      */
-    public static int countUndirected(NodeCursor nodeCursor, CursorFactory cursors, int type) {
-        if (nodeCursor.isDense()) {
-            try (RelationshipGroupCursor group = cursors.allocateRelationshipGroupCursor()) {
-                nodeCursor.relationships(group);
+    public static int countUndirected(NodeCursor nodeCursor, CursorFactory cursors, int type, CursorContext cursorContext) {
+        // TODO - nodeCursor.isDense() should not be needed
+//        if (nodeCursor.isDense()) {
+//            try (RelationshipGroupCursor group = cursors.allocateRelationshipGroupCursor()) {
+//                nodeCursor.relationships(group);
+//                int count = 0;
+//                while (group.next()) {
+//                    if (group.type() == type) {
+//                        return group.outgoingCount() + group.incomingCount() + (group.loopCount() << 1);
+//                    }
+//                }
+//                return count;
+//            }
+//        } else {
+            try (RelationshipTraversalCursor traversal = cursors.allocateRelationshipTraversalCursor(cursorContext)) {
                 int count = 0;
-                while (group.next()) {
-                    if (group.type() == type) {
-                        return group.outgoingCount() + group.incomingCount() + (group.loopCount() << 1);
-                    }
-                }
-                return count;
-            }
-        } else {
-            try (RelationshipTraversalCursor traversal = cursors.allocateRelationshipTraversalCursor()) {
-                int count = 0;
-                nodeCursor.allRelationships(traversal);
+                nodeCursor.relationships(traversal, RelationshipSelection.ALL_RELATIONSHIPS);
                 long nodeId = nodeCursor.nodeReference();
                 while (traversal.next()) {
                     if (traversal.type() == type) {
@@ -120,7 +121,7 @@ public final class NodesHelper {
                 }
                 return count;
             }
-        }
+//        }
     }
 
     private NodesHelper() {

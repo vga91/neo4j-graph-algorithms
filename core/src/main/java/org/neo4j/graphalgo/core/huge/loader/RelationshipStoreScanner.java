@@ -18,7 +18,8 @@
  */
 package org.neo4j.graphalgo.core.huge.loader;
 
-import org.neo4j.io.layout.DatabaseFile;
+import org.neo4j.io.layout.recordstorage.RecordDatabaseFile;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.impl.store.NeoStores;
 import org.neo4j.kernel.impl.store.RecordStore;
 import org.neo4j.kernel.impl.store.RelationshipStore;
@@ -42,27 +43,28 @@ public final class RelationshipStoreScanner extends AbstractStorePageCacheScanne
 
         @Override
         public String storeFileName() {
-            return DatabaseFile.RELATIONSHIP_STORE.getName();
+            return RecordDatabaseFile.RELATIONSHIP_STORE.getName();
         }
 
         @Override
         public AbstractStorePageCacheScanner<RelationshipRecord> newScanner(
                 final GraphDatabaseAPI api,
-                final int prefetchSize) {
-            return new RelationshipStoreScanner(prefetchSize, api);
+                final int prefetchSize,
+                final KernelTransaction ktx) {
+            return new RelationshipStoreScanner(prefetchSize, api, ktx);
         }
     };
 
-    public static RelationshipStoreScanner of(GraphDatabaseAPI api) {
-        return of(api, AbstractStorePageCacheScanner.DEFAULT_PREFETCH_SIZE);
+    public static RelationshipStoreScanner of(GraphDatabaseAPI api, KernelTransaction ktx) {
+        return of(api, AbstractStorePageCacheScanner.DEFAULT_PREFETCH_SIZE, ktx);
     }
 
-    public static RelationshipStoreScanner of(GraphDatabaseAPI api, int prefetchSize) {
-        return new RelationshipStoreScanner(prefetchSize, api);
+    public static RelationshipStoreScanner of(GraphDatabaseAPI api, int prefetchSize, KernelTransaction ktx) {
+        return new RelationshipStoreScanner(prefetchSize, api, ktx);
     }
 
-    private RelationshipStoreScanner(final int prefetchSize, final GraphDatabaseAPI api) {
-        super(prefetchSize, api, RELATIONSHIP_ACCESS);
+    private RelationshipStoreScanner(final int prefetchSize, final GraphDatabaseAPI api, KernelTransaction ktx) {
+        super(prefetchSize, api, RELATIONSHIP_ACCESS, ktx);
     }
 
     @Override

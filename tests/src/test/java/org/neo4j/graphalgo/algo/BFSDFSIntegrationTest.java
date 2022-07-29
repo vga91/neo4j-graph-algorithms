@@ -20,17 +20,20 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.*;
 import org.junit.rules.ExpectedException;
+import org.neo4j.configuration.GraphDatabaseInternalSettings;
 import org.neo4j.graphalgo.TraverseProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Node;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * Graph:
@@ -44,10 +47,10 @@ import static org.junit.Assert.*;
  * @author mknblch
  */
 public class BFSDFSIntegrationTest {
-
-
+    
     @ClassRule
-    public static ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public static DatabaseRule db = new ImpermanentDatabaseRule()
+            .setConfig(GraphDatabaseInternalSettings.track_cursor_close, false);
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
@@ -71,8 +74,8 @@ public class BFSDFSIntegrationTest {
                         " (e)-[:TYPE {cost:2.0}]->(g),\n" +
                         " (f)-[:TYPE {cost:1.0}]->(g)";
 
-        db.resolveDependency(Procedures.class).registerProcedure(TraverseProc.class);
-        db.execute(cypher);
+        db.resolveDependency(GlobalProcedures.class).registerProcedure(TraverseProc.class);
+        db.executeTransactionally(cypher);
     }
 
     @Rule
@@ -80,7 +83,7 @@ public class BFSDFSIntegrationTest {
 
     private static long id(String name) {
         final Node[] node = new Node[1];
-        db.execute("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
+        executeAndAccept(db, "MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n", row -> {
             node[0] = row.getNode("n");
             return false;
         });
@@ -89,7 +92,7 @@ public class BFSDFSIntegrationTest {
 
     private static String name(long id) {
         final String[] node = new String[1];
-        db.execute("MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name").accept(row -> {
+        executeAndAccept(db, "MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name", row -> {
             node[0] = row.getString("name");
             return false;
         });
@@ -113,7 +116,7 @@ public class BFSDFSIntegrationTest {
     @Test
     public void testFindAnyOf() {
         final String cypher = "MATCH (n:Node {name:'a'}) WITH id(n) as s CALL algo.dfs.stream('Node', 'Type', '>', s, {targetNodes:[4,5]}) YIELD nodeIds RETURN nodeIds";
-        db.execute(cypher).accept(row -> {
+        executeAndAccept(db, cypher, row -> {
             List<Long> nodeIds = (List<Long>) row.get("nodeIds");
             assertEquals(4, nodeIds.size());
             return true;
@@ -123,7 +126,7 @@ public class BFSDFSIntegrationTest {
     @Test
     public void testMaxDepthOut() {
         final String cypher = "MATCH (n:Node {name:'a'}) WITH id(n) as s CALL algo.dfs.stream('Node', 'Type', '>', s, {maxDepth:2}) YIELD nodeIds RETURN nodeIds";
-        db.execute(cypher).accept(row -> {
+        executeAndAccept(db, cypher, row -> {
             List<Long> nodeIds = (List<Long>) row.get("nodeIds");
             assertContains(new String[]{"a", "b", "c", "d"}, nodeIds);
             return true;
@@ -133,7 +136,7 @@ public class BFSDFSIntegrationTest {
     @Test
     public void testMaxDepthIn() {
         final String cypher = "MATCH (n:Node {name:'g'}) WITH id(n) as s CALL algo.dfs.stream('Node', 'Type', '<', s, {maxDepth:2}) YIELD nodeIds RETURN nodeIds";
-        db.execute(cypher).accept(row -> {
+        executeAndAccept(db, cypher, row -> {
             List<Long> nodeIds = (List<Long>) row.get("nodeIds");
             assertContains(new String[]{"g", "e", "f", "d"}, nodeIds);
             return true;

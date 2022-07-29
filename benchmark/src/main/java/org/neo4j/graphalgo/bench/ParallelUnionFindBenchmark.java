@@ -111,7 +111,7 @@ public class ParallelUnionFindBenchmark {
             createTestGraph(numSets, 100_000);
         }
 
-        db.execute("MATCH (n) RETURN n");
+        db.executeTransactionally("MATCH (n) RETURN n");
 
         graph = new GraphLoader(db)
                 .withExecutorService(Pools.DEFAULT)
@@ -141,7 +141,7 @@ public class ParallelUnionFindBenchmark {
             rIdx = stm
                     .tokenWrite()
                     .relationshipTypeGetOrCreateForName(RELATIONSHIP_TYPE.name());
-            tx.success();
+            tx.commit();
         }
 
         final ArrayList<Runnable> runnables = new ArrayList<>();
@@ -166,7 +166,7 @@ public class ParallelUnionFindBenchmark {
                     }
                     node = temp;
                 }
-                tx.success();
+                tx.commit();
             } catch (InvalidTransactionTypeKernelException | TransactionFailureException e) {
                 throw new RuntimeException(e);
             }

@@ -28,6 +28,7 @@ import org.neo4j.graphalgo.core.utils.ImportProgress;
 import org.neo4j.graphalgo.core.utils.ProgressLogger;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.api.StatementConstants;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
@@ -51,10 +52,12 @@ public abstract class GraphFactory {
     protected final ImportProgress progress;
     protected final Log log;
     protected final ProgressLogger progressLogger;
+    protected final KernelTransaction ktx;
 
-    public GraphFactory(GraphDatabaseAPI api, GraphSetup setup) {
+    public GraphFactory(GraphDatabaseAPI api, GraphSetup setup, KernelTransaction ktx) {
         this.threadPool = setup.executor;
         this.api = api;
+        this.ktx = ktx;
         this.setup = setup;
         this.log = setup.log;
         this.progressLogger = progressLogger(log, setup.logMillis);

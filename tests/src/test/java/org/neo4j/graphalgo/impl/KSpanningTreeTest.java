@@ -27,12 +27,14 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.spanningTrees.KSpanningTree;
 import org.neo4j.graphalgo.impl.spanningTrees.SpanningTree;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -66,7 +68,7 @@ public class KSpanningTreeTest {
                     " (d)-[:TYPE {w:3.0}]->(c)";
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() {
@@ -83,7 +85,7 @@ public class KSpanningTreeTest {
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
-        DB.execute(cypher);
+        DB.executeTransactionally(cypher);
     }
 
     private Graph graph;
@@ -91,20 +93,20 @@ public class KSpanningTreeTest {
     public KSpanningTreeTest(
             Class<? extends GraphFactory> graphImpl,
             String nameIgnoredOnlyForTestName) {
-        graph = new GraphLoader(DB)
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withRelationshipWeightsFromProperty("w", 1.0)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .asUndirected(true)
-                .load(graphImpl);
+                .load(graphImpl));
 
         try (Transaction tx = DB.beginTx()) {
-            a = graph.toMappedNodeId(DB.findNode(Label.label("Node"), "name", "a").getId());
-            b = graph.toMappedNodeId(DB.findNode(Label.label("Node"), "name", "b").getId());
-            c = graph.toMappedNodeId(DB.findNode(Label.label("Node"), "name", "c").getId());
-            d = graph.toMappedNodeId(DB.findNode(Label.label("Node"), "name", "d").getId());
-            x = graph.toMappedNodeId(DB.findNode(Label.label("Node"), "name", "x").getId());
-            tx.success();
+            a = graph.toMappedNodeId(tx.findNode(Label.label("Node"), "name", "a").getId());
+            b = graph.toMappedNodeId(tx.findNode(Label.label("Node"), "name", "b").getId());
+            c = graph.toMappedNodeId(tx.findNode(Label.label("Node"), "name", "c").getId());
+            d = graph.toMappedNodeId(tx.findNode(Label.label("Node"), "name", "d").getId());
+            x = graph.toMappedNodeId(tx.findNode(Label.label("Node"), "name", "x").getId());
+            tx.commit();
         };
     }
 

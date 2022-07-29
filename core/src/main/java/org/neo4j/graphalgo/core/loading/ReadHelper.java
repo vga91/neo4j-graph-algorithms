@@ -23,6 +23,10 @@ import org.neo4j.internal.kernel.api.NodeCursor;
 import org.neo4j.internal.kernel.api.NodeLabelIndexCursor;
 import org.neo4j.internal.kernel.api.PropertyCursor;
 import org.neo4j.internal.kernel.api.Read;
+import org.neo4j.internal.kernel.api.Scan;
+import org.neo4j.internal.kernel.api.TokenRead;
+import org.neo4j.internal.kernel.api.security.AccessMode;
+import org.neo4j.io.pagecache.context.CursorContext;
 import org.neo4j.values.storable.FloatingPointValue;
 import org.neo4j.values.storable.IntegralValue;
 import org.neo4j.values.storable.Value;
@@ -45,19 +49,26 @@ public final class ReadHelper {
         return defaultValue;
     }
 
-    public static void readNodes(CursorFactory cursors, Read dataRead, int labelId, LongConsumer action) {
-        if (labelId == Read.ANY_LABEL) {
-            try (NodeCursor nodeCursor = cursors.allocateNodeCursor()) {
+    public static void readNodes(CursorFactory cursors, Read dataRead, int labelId, CursorContext cursorContext, LongConsumer action) {
+        if (labelId == TokenRead.ANY_LABEL) {
+            try (NodeCursor nodeCursor = cursors.allocateNodeCursor(cursorContext)) {
                 dataRead.allNodesScan(nodeCursor);
                 while (nodeCursor.next()) {
                     action.accept(nodeCursor.nodeReference());
                 }
             }
         } else {
-            try (NodeLabelIndexCursor nodeCursor = cursors.allocateNodeLabelIndexCursor()) {
-                dataRead.nodeLabelScan(labelId, nodeCursor);
-                while (nodeCursor.next()) {
-                    action.accept(nodeCursor.nodeReference());
+            // todo - investigate, weird dataRead.nodeLabelScan(labelId)...
+            final Scan<NodeLabelIndexCursor> nodeLabelIndexCursorScan = dataRead.nodeLabelScan(labelId);
+            try (NodeLabelIndexCursor nodeCursor = cursors.allocateNodeLabelIndexCursor(cursorContext)) {
+//                dataRead.nodeLabelScan(labelId);
+//                dataRead.nodeLabelScan(labelId, nodeCursor);
+                // todo - 100 sizeHint.. dunno
+                while (nodeLabelIndexCursorScan.reserveBatch(nodeCursor, 100, cursorContext, AccessMode.Static.READ)) {
+//                while (nodeCursor.next()) {
+                    while (nodeCursor.next()) {
+                        action.accept(nodeCursor.nodeReference());
+                    }
                 }
             }
         }

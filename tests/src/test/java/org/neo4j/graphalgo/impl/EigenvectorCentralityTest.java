@@ -20,10 +20,10 @@ package org.neo4j.graphalgo.impl;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
@@ -31,8 +31,11 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyCypherGraphFactory;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.pagerank.PageRankAlgorithm;
 import org.neo4j.graphalgo.impl.results.CentralityResult;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
@@ -41,6 +44,7 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
@@ -54,7 +58,7 @@ public final class EigenvectorCentralityTest {
 
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() {
-        return Arrays.asList(
+        return List.of(
                 new Object[]{HeavyGraphFactory.class, "HeavyGraphFactory"},
                 new Object[]{HeavyCypherGraphFactory.class, "HeavyCypherGraphFactory"},
                 new Object[]{HugeGraphFactory.class, "HugeGraphFactory"},
@@ -108,22 +112,13 @@ public final class EigenvectorCentralityTest {
             "  (j)-[:TYPE2]->(e),\n" +
             "  (k)-[:TYPE2]->(e)\n";
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() {
-        db = TestDatabaseCreator.createTestDatabase();
-        try (Transaction tx = db.beginTx()) {
-            db.execute(DB_CYPHER).close();
-            tx.success();
-        }
+        db.executeTransactionally(DB_CYPHER);
     }
-
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        if (db!=null) db.shutdown();
-    }
-
     public EigenvectorCentralityTest(
             Class<? extends GraphFactory> graphImpl,
             String nameIgnoredOnlyForTestName) {
@@ -136,31 +131,33 @@ public final class EigenvectorCentralityTest {
         final Map<Long, Double> expected = new HashMap<>();
 
         try (Transaction tx = db.beginTx()) {
-            expected.put(db.findNode(label, "name", "a").getId(), 1.762540000000000);
-            expected.put(db.findNode(label, "name", "b").getId(), 31.156790000000008);
-            expected.put(db.findNode(label, "name", "c").getId(), 28.694439999999993);
-            expected.put(db.findNode(label, "name", "d").getId(), 1.7625400000000004);
-            expected.put(db.findNode(label, "name", "e").getId(), 1.7625400000000004);
-            expected.put(db.findNode(label, "name", "f").getId(), 1.7625400000000004);
-            expected.put(db.findNode(label, "name", "g").getId(), 0.1);
-            expected.put(db.findNode(label, "name", "h").getId(), 0.1);
-            expected.put(db.findNode(label, "name", "i").getId(), 0.1);
-            expected.put(db.findNode(label, "name", "j").getId(), 0.1);
+            expected.put(tx.findNode(label, "name", "a").getId(), 1.762540000000000);
+            expected.put(tx.findNode(label, "name", "b").getId(), 31.156790000000008);
+            expected.put(tx.findNode(label, "name", "c").getId(), 28.694439999999993);
+            expected.put(tx.findNode(label, "name", "d").getId(), 1.7625400000000004);
+            expected.put(tx.findNode(label, "name", "e").getId(), 1.7625400000000004);
+            expected.put(tx.findNode(label, "name", "f").getId(), 1.7625400000000004);
+            expected.put(tx.findNode(label, "name", "g").getId(), 0.1);
+            expected.put(tx.findNode(label, "name", "h").getId(), 0.1);
+            expected.put(tx.findNode(label, "name", "i").getId(), 0.1);
+            expected.put(tx.findNode(label, "name", "j").getId(), 0.1);
+            tx.commit();
         }
 
         final Graph graph;
         if (graphImpl.isAssignableFrom(HeavyCypherGraphFactory.class)) {
-            graph = new GraphLoader(db)
+            graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                     .withLabel("MATCH (n:Label1) RETURN id(n) as id")
                     .withRelationshipType("MATCH (n:Label1)-[:TYPE1]->(m:Label1) RETURN id(n) as source,id(m) as target")
-                    .load(graphImpl);
+                    .load(graphImpl));
 
         } else {
-            graph = new GraphLoader(db)
+            // todo - check that
+            graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                     .withLabel(label)
                     .withRelationshipType("TYPE1")
                     .withDirection(Direction.OUTGOING)
-                    .load(graphImpl);
+                    .load(graphImpl));
         }
 
         final CentralityResult rankResult = PageRankAlgorithm

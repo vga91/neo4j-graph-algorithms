@@ -38,8 +38,9 @@ package org.neo4j.graphalgo.core.utils.traverse;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.neo4j.collection.primitive.PrimitiveIntIterable;
-import org.neo4j.collection.primitive.PrimitiveIntIterator;
+
+import org.neo4j.graphalgo.api.PrimitiveIntIterable;
+import org.neo4j.graphalgo.api.PrimitiveIntIterator;
 
 import java.util.Arrays;
 import java.util.concurrent.locks.StampedLock;

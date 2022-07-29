@@ -28,6 +28,7 @@ import org.neo4j.graphalgo.core.write.Translators;
 import org.neo4j.graphalgo.impl.MSColoring;
 import org.neo4j.graphalgo.impl.UnionFindProcExec;
 import org.neo4j.graphdb.Direction;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
 import org.neo4j.procedure.*;
@@ -46,6 +47,9 @@ public class MSColoringProc {
 
     @Context
     public GraphDatabaseAPI api;
+    
+    @Context
+    public KernelTransaction kernelTx;
 
     @Context
     public Log log;
@@ -120,7 +124,7 @@ public class MSColoringProc {
     }
 
     private Graph load(ProcedureConfiguration config) {
-        return new GraphLoader(api, Pools.DEFAULT)
+        return new GraphLoader(api, Pools.DEFAULT, kernelTx)
                 .init(log, config.getNodeLabelOrQuery(),config.getRelationshipOrQuery(),config)
                 .withOptionalRelationshipWeightsFromProperty(
                         config.getWeightProperty(),

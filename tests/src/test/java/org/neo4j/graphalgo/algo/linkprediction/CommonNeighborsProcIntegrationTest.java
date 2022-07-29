@@ -18,21 +18,25 @@
  */
 package org.neo4j.graphalgo.algo.linkprediction;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.neo4j.configuration.GraphDatabaseSettings;
 import org.neo4j.graphalgo.linkprediction.LinkPrediction;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.factory.GraphDatabaseSettings;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.test.TestGraphDatabaseFactory;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.configuration.GraphDatabaseInternalSettings.track_cursor_close;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 public class CommonNeighborsProcIntegrationTest {
     private static final String SETUP =
@@ -56,25 +60,19 @@ public class CommonNeighborsProcIntegrationTest {
 
             "MERGE (praveena)-[:FRIENDS]-(michael)";
 
-    private static GraphDatabaseService db;
+    @ClassRule
+    public static final DatabaseRule db = new ImpermanentDatabaseRule()
+            .setConfig(track_cursor_close, false)
+            .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of("algo.*"));
 
     @BeforeClass
     public static void setUp() throws Exception {
-        db = new TestGraphDatabaseFactory()
-                .newImpermanentDatabaseBuilder()
-                .setConfig(GraphDatabaseSettings.procedure_unrestricted,"algo.*")
-                .newGraphDatabase();
 
         ((GraphDatabaseAPI) db).getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerFunction(LinkPrediction.class);
 
-        db.execute(SETUP).close();
-    }
-
-    @AfterClass
-    public static void tearDown() {
-        db.shutdown();
+        db.executeTransactionally(SETUP);
     }
 
     @Test
@@ -85,11 +83,10 @@ public class CommonNeighborsProcIntegrationTest {
                 "RETURN algo.linkprediction.commonNeighbors(p1, p2) AS score, " +
                 "       1.0 AS cypherScore";
 
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+        testResult(db, controlQuery, Map.of(), result -> {
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+        });
     }
 
     @Test
@@ -100,12 +97,11 @@ public class CommonNeighborsProcIntegrationTest {
                         "RETURN algo.linkprediction.commonNeighbors(p1, p2, " +
                         "{relationshipQuery: 'FRIENDS', direction: 'BOTH'}) AS score," +
                         "1.0 AS cypherScore";
-
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+        
+        testResult(db, controlQuery, Map.of(), result -> {
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+        });
     }
 
     @Test
@@ -116,11 +112,10 @@ public class CommonNeighborsProcIntegrationTest {
                         "RETURN algo.linkprediction.commonNeighbors(p1, p2) AS score, " +
                         "       2.0 AS cypherScore";
 
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+        testResult(db, controlQuery, Map.of(), result -> {
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+        });
     }
 
     @Test
@@ -131,11 +126,10 @@ public class CommonNeighborsProcIntegrationTest {
                         "RETURN algo.linkprediction.commonNeighbors(p1, p2) AS score, " +
                         "       0.0 AS cypherScore";
 
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+        testResult(db, controlQuery, Map.of(), result -> {
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+        });
     }
 
     @Test
@@ -145,12 +139,11 @@ public class CommonNeighborsProcIntegrationTest {
                         "MATCH (p2:Person {name: 'Michael'})\n" +
                         "RETURN algo.linkprediction.commonNeighbors(p1, p2) AS score, " +
                         "       0.0 AS cypherScore";
-
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+        
+        testResult(db, controlQuery, Map.of(), result -> {
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+        });
     }
 
     @Test
@@ -160,12 +153,11 @@ public class CommonNeighborsProcIntegrationTest {
                         "MATCH (p2:Person {name: 'Praveena'})\n" +
                         "RETURN algo.linkprediction.commonNeighbors(p1, p2) AS score, " +
                         "       0.0 AS cypherScore";
-
-        try (Transaction tx = db.beginTx()) {
-            Result result = db.execute(controlQuery);
+        
+        testResult(db, controlQuery, Map.of(), result -> {
             Map<String, Object> node = result.next();
             assertEquals((Double) node.get("cypherScore"), (double) node.get("score"), 0.01);
-        }
+        });
     }
 
 

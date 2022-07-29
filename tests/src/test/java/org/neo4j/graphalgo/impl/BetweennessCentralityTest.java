@@ -20,24 +20,28 @@ package org.neo4j.graphalgo.impl;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.BetweennessCentralityProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.AtomicDoubleArray;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.betweenness.*;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  *  (A)-->(B)-->(C)-->(D)-->(E)
@@ -47,7 +51,8 @@ import static org.mockito.Mockito.verify;
  */
 public class BetweennessCentralityTest {
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
     private static Graph graph;
 
     @BeforeClass
@@ -64,37 +69,34 @@ public class BetweennessCentralityTest {
                         " (b)-[:TYPE]->(c),\n" +
                         " (c)-[:TYPE]->(d),\n" +
                         " (d)-[:TYPE]->(e)";
-
-
-        db = TestDatabaseCreator.createTestDatabase();
+        
 
         try (Transaction tx = db.beginTx()) {
-            db.execute(cypher);
-            tx.success();
+            db.executeTransactionally(cypher);
+            tx.commit();
         }
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(BetweennessCentralityProc.class);
 
-        graph = new GraphLoader(db)
+        graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .withoutNodeProperties()
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
         graph = null;
     }
 
     private String name(long id) {
         String[] name = {""};
-        db.execute("MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name")
-                .accept(row -> {
+        executeAndAccept(db, "MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name",
+                row -> {
                     name[0] = row.getString("name");
                     return false;
                 });

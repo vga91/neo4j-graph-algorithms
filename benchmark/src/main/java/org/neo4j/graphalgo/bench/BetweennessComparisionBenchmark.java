@@ -24,8 +24,8 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.test.TestGraphDatabaseFactory;
 import org.openjdk.jmh.annotations.*;
@@ -57,8 +57,8 @@ public class BetweennessComparisionBenchmark {
                 new TestGraphDatabaseFactory()
                         .newImpermanentDatabaseBuilder()
                         .newGraphDatabase();
-        final Procedures procedures = db.getDependencyResolver()
-                .resolveDependency(Procedures.class);
+        final GlobalProcedures procedures = db.getDependencyResolver()
+                .resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(BetweennessCentralityProc.class);
 
         createNet(30);
@@ -87,7 +87,7 @@ public class BetweennessComparisionBenchmark {
                 }
                 temp = line;
             }
-            tx.success();
+            tx.commit();
         }
     }
 
@@ -111,21 +111,21 @@ public class BetweennessComparisionBenchmark {
 
     @Benchmark
     public Object _01_benchmark_sequential() {
-        return db.execute("CALL algo.betweenness('','', {write:false}) YIELD computeMillis")
+        return db.executeTransactionally("CALL algo.betweenness('','', {write:false}) YIELD computeMillis")
                 .stream()
                 .count();
     }
 
     @Benchmark
     public Object _04_benchmark_parallel8() {
-        return db.execute("CALL algo.betweenness('','', {write:false, concurrency:8}) YIELD computeMillis")
+        return db.executeTransactionally("CALL algo.betweenness('','', {write:false, concurrency:8}) YIELD computeMillis")
                 .stream()
                 .count();
     }
 
     @Benchmark
     public Object _05_benchmark_sucessorBrandes() {
-        return db.execute("CALL algo.betweenness.exp1('','', {write:false, concurrency:8}) YIELD computeMillis")
+        return db.executeTransactionally("CALL algo.betweenness.exp1('','', {write:false, concurrency:8}) YIELD computeMillis")
                 .stream()
                 .count();
     }

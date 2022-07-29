@@ -24,8 +24,11 @@ import org.neo4j.graphalgo.core.utils.StatementFunction;
 import org.neo4j.internal.kernel.api.Read;
 import org.neo4j.internal.kernel.api.TokenRead;
 import org.neo4j.kernel.api.KernelTransaction;
+//import org.neo4j.kernel.impl.newapi.InternalReadOps;
 import org.neo4j.kernel.impl.newapi.InternalReadOps;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
+
+import java.util.Arrays;
 
 public final class GraphDimensions extends StatementFunction<GraphDimensions> {
     private final GraphSetup setup;
@@ -78,7 +81,7 @@ public final class GraphDimensions extends StatementFunction<GraphDimensions> {
     }
 
     public int singleRelationshipTypeId() {
-        return relationId == null ? Read.ANY_RELATIONSHIP_TYPE : relationId[0];
+        return relationId == null ? TokenRead.ANY_RELATIONSHIP_TYPE : relationId[0];
     }
 
     public int relWeightId() {
@@ -127,7 +130,7 @@ public final class GraphDimensions extends StatementFunction<GraphDimensions> {
         TokenRead tokenRead = transaction.tokenRead();
         Read dataRead = transaction.dataRead();
         // TODO: if the label (and type and property) is not found, we default to all labels, which is probably not what we want
-        labelId = setup.loadAnyLabel() ? Read.ANY_LABEL : tokenRead.nodeLabel(setup.startLabel);
+        labelId = setup.loadAnyLabel() ? TokenRead.ANY_LABEL : tokenRead.nodeLabel(setup.startLabel);
         if (!setup.loadAnyRelationshipType()) {
             int relId = tokenRead.relationshipType(setup.relationshipType);
             if (relId != TokenRead.NO_TOKEN) {
@@ -150,20 +153,23 @@ public final class GraphDimensions extends StatementFunction<GraphDimensions> {
         nodePropId = propertyKey(tokenRead, setup.shouldLoadNodeProperty(), setup.nodePropertyName);
 
         nodeCount = dataRead.countsForNode(labelId);
+        // We need to allocate space for `highestNode + 1` since we
+        // need to be able to store a node with `id = highestNodeId`.
         allNodesCount = InternalReadOps.getHighestPossibleNodeCount(dataRead, api);
         maxRelCount = Math.max(
                 dataRead.countsForRelationshipWithoutTxState(
                         labelId,
                         singleRelationshipTypeId(),
-                        Read.ANY_LABEL
+                        TokenRead.ANY_LABEL
                 ),
                 dataRead.countsForRelationshipWithoutTxState(
-                        Read.ANY_LABEL,
+                        TokenRead.ANY_LABEL,
                         singleRelationshipTypeId(),
                         labelId
                 )
         );
-        allRelsCount = InternalReadOps.getHighestPossibleRelationshipCount(dataRead, api);
+        allRelsCount = InternalReadOps.getHighestPossibleRelationshipCount(dataRead, api) + 1;
+        System.out.println("this.toString() = " + this.toString());
         return this;
     }
 
@@ -171,4 +177,20 @@ public final class GraphDimensions extends StatementFunction<GraphDimensions> {
         return load ? tokenRead.propertyKey(propertyName) : TokenRead.NO_TOKEN;
     }
 
+    @Override
+    public String toString() {
+        return "GraphDimensions{" +
+                "setup=" + setup +
+                ", nodeCount=" + nodeCount +
+                ", allNodesCount=" + allNodesCount +
+                ", maxRelCount=" + maxRelCount +
+                ", allRelsCount=" + allRelsCount +
+                ", labelId=" + labelId +
+                ", relationId=" + Arrays.toString(relationId) +
+                ", relWeightId=" + relWeightId +
+                ", nodeWeightId=" + nodeWeightId +
+                ", nodePropId=" + nodePropId +
+                ", nodePropIds=" + Arrays.toString(nodePropIds) +
+                '}';
+    }
 }

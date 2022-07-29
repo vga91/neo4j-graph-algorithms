@@ -18,7 +18,7 @@
  */
 package org.neo4j.graphalgo.impl.msbfs;
 
-import org.neo4j.collection.primitive.PrimitiveIntIterator;
+import org.neo4j.graphalgo.api.PrimitiveIntIterator;
 
 public interface BfsSources extends PrimitiveIntIterator {
 

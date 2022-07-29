@@ -22,21 +22,14 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.AdditionalMatchers;
-import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.neo4j.graphalgo.HarmonicCentralityProc;
-import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
-import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.Result;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.assertNotEquals;
-import static org.mockito.Mockito.*;
 
 
 /**
@@ -48,12 +41,12 @@ public class HarmonicCentralityIntegrationTest_477 {
     public static final String TYPE = "TYPE";
 
     @ClassRule
-    public static final ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public static final DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
 
-        db.execute(
+        db.executeTransactionally(
                 "CREATE (alice:Person{id:\"Alice\"}),\n" +
                         "       (michael:Person{id:\"Michael\"}),\n" +
                         "       (karin:Person{id:\"Karin\"}),\n" +
@@ -71,7 +64,7 @@ public class HarmonicCentralityIntegrationTest_477 {
         );
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(HarmonicCentralityProc.class);
     }
 
@@ -86,6 +79,6 @@ public class HarmonicCentralityIntegrationTest_477 {
                 "',{graph:'cypher'}) YIELD nodeId,centrality";
 
 
-        db.execute(cypher);
+        db.executeTransactionally(cypher);
     }
 }

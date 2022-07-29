@@ -22,18 +22,21 @@ import com.carrotsearch.hppc.IntIntScatterMap;
 import com.carrotsearch.hppc.cursors.IntIntCursor;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.StronglyConnectedComponentsProc;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.scc.SCCTunedTarjan;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import java.util.Arrays;
 import java.util.List;
@@ -41,6 +44,8 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
+import static org.neo4j.configuration.GraphDatabaseInternalSettings.track_cursor_close;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**        _______
  *        /       \
@@ -53,9 +58,10 @@ import static org.junit.Assert.assertNull;
  * @author mknblch
  */
 public class SCCTunedTarjanTest {
-
-
-    private static GraphDatabaseAPI api;
+    
+    @ClassRule
+    public static DatabaseRule api = new ImpermanentDatabaseRule()
+            .setConfig(track_cursor_close, false);
 
     private static Graph graph;
 
@@ -86,32 +92,27 @@ public class SCCTunedTarjanTest {
                         " (h)-[:TYPE {cost:3}]->(i),\n" +
                         " (i)-[:TYPE {cost:3}]->(g)";
 
-        api = TestDatabaseCreator.createTestDatabase();
-
         api.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(StronglyConnectedComponentsProc.class);
 
-        try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
-            tx.success();
-        }
+        api.executeTransactionally(cypher);
 
-        graph = new GraphLoader(api)
+        graph = new TransactionWrapper(api).apply(ktx -> new GraphLoader(api, ktx)
                 .withLabel("Node")
                 .withRelationshipType("TYPE")
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
     }
 
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        if (api != null) api.shutdown();
-    }
+//    @AfterClass
+//    public static void shutdownGraph() throws Exception {
+//        if (api != null) api.shutdown();
+//    }
 
     public static int getMappedNodeId(String name) {
         final Node[] node = new Node[1];
-        api.execute("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
+        executeAndAccept(api, "MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n", row -> {
             node[0] = row.getNode("n");
             return false;
         });
@@ -137,7 +138,7 @@ public class SCCTunedTarjanTest {
 
         String cypher = "CALL algo.scc.recursive.tunedTarjan('', '', {write:true}) YIELD loadMillis, computeMillis, writeMillis";
 
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             final long loadMillis = row.getNumber("loadMillis").longValue();
             final long computeMillis = row.getNumber("computeMillis").longValue();
             final long writeMillis = row.getNumber("writeMillis").longValue();
@@ -149,7 +150,7 @@ public class SCCTunedTarjanTest {
 
         String cypher2 = "MATCH (n) RETURN n.partition as c";
         final IntIntScatterMap testMap = new IntIntScatterMap();
-        api.execute(cypher2).accept(row -> {
+        executeAndAccept(api, cypher2, row -> {
             testMap.addTo(row.getNumber("c").intValue(), 1);
             return true;
         });
@@ -169,7 +170,7 @@ public class SCCTunedTarjanTest {
 
         String cypher = "CALL algo.scc.recursive.tunedTarjan.stream() YIELD nodeId, partition";
 
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             testMap.addTo(row.getNumber("partition").intValue(), 1);
             return true;
         });

@@ -18,10 +18,71 @@
  */
 package org.neo4j.graphalgo.core.utils;
 
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.api.exceptions.Status;
 
+import java.lang.reflect.InvocationTargetException;
+
 public final class ExceptionUtil {
+    
+    
+    
+    
+    private static final String UNEXPECTED_MESSAGE = "Unexpected Exception";
+    
+    // from org.neo4j.helpers.ExceptionUtil.chain() 3.5
+    
+    // todo - try this:
+//    use throw e or throw new RuntimeException(e) directly. 
+//    Prefer multi-caches if applicable. For more elaborate scenarios, have a look at throwIfUnchecked(Throwable) and throwIfInstanceOf(Throwable, Class)
+//    For a more furrow explanation take a look at the very similar case: Why we deprecated Throwables.propagate        
+    
+    public static RuntimeException launderedException(Class<RuntimeException> type, String messageForUnexpected, Throwable exception )
+    {
+        if ( type.isInstance( exception ) )
+        {
+            return type.cast( exception );
+        }
+        else if ( exception instanceof Error )
+        {
+            throw (Error) exception;
+        }
+        else if ( exception instanceof InvocationTargetException)
+        {
+            return launderedException( type, messageForUnexpected,
+                    ( (InvocationTargetException) exception ).getTargetException() );
+        }
+        else if ( exception instanceof RuntimeException )
+        {
+            throw (RuntimeException) exception;
+        }
+        else
+        {
+            throw new RuntimeException( messageForUnexpected, exception );
+        }
+    }
+
+    public static RuntimeException launderedException(String message, Throwable exception) {
+        return launderedException(RuntimeException.class, message, exception);
+    }
+    
+    public static RuntimeException launderedException(Throwable exception ) {
+        return launderedException(RuntimeException.class, UNEXPECTED_MESSAGE, exception);
+    }
+        
+    
+    
+    // from org.neo4j.helpers.ExceptionUtil.chain() 3.5
+    // todo - try doing Optional.ofNullable
+    public static <T extends Throwable> T chain(T initial, T current) {
+        if ( initial == null ) {
+            return current;
+        }
+        if (current != null) {
+            initial.addSuppressed( current );
+        }
+        return initial;
+    }
 
     public static RuntimeException asUnchecked(final Throwable exception) {
         if (exception instanceof RuntimeException) {

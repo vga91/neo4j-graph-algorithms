@@ -20,14 +20,16 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.ShortestPathDeltaSteppingProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.Arrays;
@@ -38,6 +40,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.mockito.AdditionalMatchers.eq;
 import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Mockito.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
 /**         5     5      5
@@ -52,7 +55,8 @@ import static org.mockito.Mockito.*;
 @RunWith(Parameterized.class)
 public final class ShortestPathDeltaSteppingProcUndirectedTest {
 
-    private static GraphDatabaseAPI api;
+    @ClassRule
+    public static DatabaseRule api = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setup() throws KernelException {
@@ -85,22 +89,20 @@ public final class ShortestPathDeltaSteppingProcUndirectedTest {
                         " (h)-[:TYPE {cost:2}]->(i),\n" +
                         " (i)-[:TYPE {cost:2}]->(x)";
 
-        api = TestDatabaseCreator.createTestDatabase();
-
         api.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(ShortestPathDeltaSteppingProc.class);
 
         try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
-            tx.success();
+            tx.execute(cypher);
+            tx.commit();
         }
     }
 
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-       if (api != null) api.shutdown();
-    }
+//    @AfterClass
+//    public static void shutdownGraph() throws Exception {
+//       if (api != null) api.shutdown();
+//    }
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() {
@@ -122,7 +124,7 @@ public final class ShortestPathDeltaSteppingProcUndirectedTest {
         final String cypher = "MATCH(n:Node {name:'x'}) WITH n CALL algo.shortestPath.deltaStepping.stream(n, 'cost', 3.0,{graph:'"+graphImpl+"', direction: 'OUTGOING'}) " +
                 "YIELD nodeId, distance RETURN nodeId, distance";
 
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             long nodeId = row.getNumber("nodeId").longValue();
             double distance = row.getNumber("distance").doubleValue();
 
@@ -145,7 +147,7 @@ public final class ShortestPathDeltaSteppingProcUndirectedTest {
         final String cypher = "MATCH(n:Node {name:'x'}) WITH n CALL algo.shortestPath.deltaStepping.stream(n, 'cost', 3.0,{graph:'"+graphImpl+"'}) " +
                 "YIELD nodeId, distance RETURN nodeId, distance";
 
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             long nodeId = row.getNumber("nodeId").longValue();
             double distance = row.getNumber("distance").doubleValue();
 

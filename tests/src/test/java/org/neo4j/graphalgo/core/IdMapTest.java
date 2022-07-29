@@ -22,8 +22,8 @@ import com.carrotsearch.hppc.LongHashSet;
 import com.carrotsearch.randomizedtesting.RandomizedTest;
 import com.carrotsearch.randomizedtesting.annotations.ThreadLeakScope;
 import org.junit.Test;
-import org.neo4j.collection.primitive.PrimitiveIntIterable;
-import org.neo4j.collection.primitive.PrimitiveIntIterator;
+import org.neo4j.graphalgo.api.PrimitiveIntIterable;
+import org.neo4j.graphalgo.api.PrimitiveIntIterator;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 
 import java.util.Collection;

@@ -70,7 +70,7 @@ public class AllShortestPathsProc {
         Direction direction = configuration.getDirection(Direction.BOTH);
 
         AllocationTracker tracker = AllocationTracker.create();
-        GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT)
+        GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .withOptionalLabel(configuration.getNodeLabelOrQuery())
                 .withOptionalRelationshipType(configuration.getRelationshipOrQuery())
                 .withOptionalRelationshipWeightsFromProperty(

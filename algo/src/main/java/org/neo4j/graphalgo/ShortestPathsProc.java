@@ -69,7 +69,7 @@ public class ShortestPathsProc {
 
         ProcedureConfiguration configuration = ProcedureConfiguration.create(config);
 
-        final Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        final Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, configuration.getNodeLabelOrQuery(),configuration.getRelationshipOrQuery(),configuration)
                 .withOptionalRelationshipWeightsFromProperty(
                         propertyName,
@@ -105,7 +105,7 @@ public class ShortestPathsProc {
         ShortestPathResult.Builder builder = ShortestPathResult.builder();
 
         ProgressTimer load = builder.timeLoad();
-        final Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        final Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, configuration.getNodeLabelOrQuery(), configuration.getRelationshipOrQuery(), configuration)
                 .withOptionalRelationshipWeightsFromProperty(
                         propertyName,

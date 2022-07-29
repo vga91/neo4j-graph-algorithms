@@ -18,8 +18,6 @@
  */
 package org.neo4j.graphalgo.core.utils;
 
-import org.neo4j.helpers.NamedThreadFactory;
-
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -53,6 +51,15 @@ public final class Pools {
         throw new UnsupportedOperationException();
     }
 
+    //                 // todo - creare classe a parte?
+    //                new ThreadFactory() {
+    //                    @Override
+    //                    public Thread newThread(Runnable r) {
+    //                        return null;
+    //                    }
+    //                }
+    
+    
     public static ExecutorService createDefaultPool() {
         return new ThreadPoolExecutor(
                 DEFAULT_CONCURRENCY,

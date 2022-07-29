@@ -20,27 +20,32 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.DegreeCentralityProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.*;
 import java.util.function.Consumer;
 
 import static org.junit.Assert.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 @RunWith(Parameterized.class)
 public class DegreeProcIntegrationTest {
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
+    
     private static Map<Long, Double> incomingExpected = new HashMap<>();
     private static Map<Long, Double> bothExpected = new HashMap<>();
     private static Map<Long, Double> outgoingExpected = new HashMap<>();
@@ -58,51 +63,50 @@ public class DegreeProcIntegrationTest {
             "  (a)-[:TYPE1{foo:2.1}]->(c),\n" +
             "  (a)-[:TYPE2{foo:7.1}]->(c)\n";
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
+//    @AfterClass
+//    public static void tearDown() throws Exception {
+//        if (db != null) db.shutdown();
+//    }
 
     @BeforeClass
     public static void setup() throws KernelException {
-        db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            db.execute(DB_CYPHER).close();
-            tx.success();
+            db.executeTransactionally(DB_CYPHER);
+            tx.commit();
         }
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(DegreeCentralityProc.class);
 
 
         try (Transaction tx = db.beginTx()) {
             final Label label = Label.label("Label1");
-            incomingExpected.put(db.findNode(label, "name", "a").getId(), 0.0);
-            incomingExpected.put(db.findNode(label, "name", "b").getId(), 1.0);
-            incomingExpected.put(db.findNode(label, "name", "c").getId(), 2.0);
+            incomingExpected.put(tx.findNode(label, "name", "a").getId(), 0.0);
+            incomingExpected.put(tx.findNode(label, "name", "b").getId(), 1.0);
+            incomingExpected.put(tx.findNode(label, "name", "c").getId(), 2.0);
 
-            incomingWeightedExpected.put(db.findNode(label, "name", "a").getId(), 0.0);
-            incomingWeightedExpected.put(db.findNode(label, "name", "b").getId(), 3.0);
-            incomingWeightedExpected.put(db.findNode(label, "name", "c").getId(), 7.1);
+            incomingWeightedExpected.put(tx.findNode(label, "name", "a").getId(), 0.0);
+            incomingWeightedExpected.put(tx.findNode(label, "name", "b").getId(), 3.0);
+            incomingWeightedExpected.put(tx.findNode(label, "name", "c").getId(), 7.1);
 
-            bothExpected.put(db.findNode(label, "name", "a").getId(), 2.0);
-            bothExpected.put(db.findNode(label, "name", "b").getId(), 2.0);
-            bothExpected.put(db.findNode(label, "name", "c").getId(), 2.0);
+            bothExpected.put(tx.findNode(label, "name", "a").getId(), 2.0);
+            bothExpected.put(tx.findNode(label, "name", "b").getId(), 2.0);
+            bothExpected.put(tx.findNode(label, "name", "c").getId(), 2.0);
 
-            bothWeightedExpected.put(db.findNode(label, "name", "a").getId(), 5.1);
-            bothWeightedExpected.put(db.findNode(label, "name", "b").getId(), 8.0);
-            bothWeightedExpected.put(db.findNode(label, "name", "c").getId(), 7.1);
+            bothWeightedExpected.put(tx.findNode(label, "name", "a").getId(), 5.1);
+            bothWeightedExpected.put(tx.findNode(label, "name", "b").getId(), 8.0);
+            bothWeightedExpected.put(tx.findNode(label, "name", "c").getId(), 7.1);
 
-            outgoingExpected.put(db.findNode(label, "name", "a").getId(), 2.0);
-            outgoingExpected.put(db.findNode(label, "name", "b").getId(), 1.0);
-            outgoingExpected.put(db.findNode(label, "name", "c").getId(), 0.0);
+            outgoingExpected.put(tx.findNode(label, "name", "a").getId(), 2.0);
+            outgoingExpected.put(tx.findNode(label, "name", "b").getId(), 1.0);
+            outgoingExpected.put(tx.findNode(label, "name", "c").getId(), 0.0);
 
-            outgoingWeightedExpected.put(db.findNode(label, "name", "a").getId(), 5.1);
-            outgoingWeightedExpected.put(db.findNode(label, "name", "b").getId(), 5.0);
-            outgoingWeightedExpected.put(db.findNode(label, "name", "c").getId(), 0.0);
+            outgoingWeightedExpected.put(tx.findNode(label, "name", "a").getId(), 5.1);
+            outgoingWeightedExpected.put(tx.findNode(label, "name", "b").getId(), 5.0);
+            outgoingWeightedExpected.put(tx.findNode(label, "name", "c").getId(), 0.0);
 
-            tx.success();
+            tx.commit();
         }
     }
 
@@ -293,18 +297,16 @@ public class DegreeProcIntegrationTest {
             String query,
             Map<String, Object> params,
             Consumer<Result.ResultRow> check) {
-        try (Result result = db.execute(query, params)) {
-            result.accept(row -> {
-                check.accept(row);
-                return true;
-            });
-        }
+        executeAndAccept(db, query, params, row -> {
+            check.accept(row);
+            return true;
+        });
     }
 
     private void assertResult(final String scoreProperty, Map<Long, Double> expected) {
         try (Transaction tx = db.beginTx()) {
             for (Map.Entry<Long, Double> entry : expected.entrySet()) {
-                double score = ((Number) db
+                double score = ((Number) tx
                         .getNodeById(entry.getKey())
                         .getProperty(scoreProperty)).doubleValue();
                 assertEquals(
@@ -313,7 +315,7 @@ public class DegreeProcIntegrationTest {
                         score,
                         0.1);
             }
-            tx.success();
+            tx.commit();
         }
     }
 

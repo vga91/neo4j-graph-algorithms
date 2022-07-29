@@ -19,6 +19,8 @@
 package org.neo4j.graphalgo.algo;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withTx;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,18 +28,21 @@ import java.util.List;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.ShortestPathProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 public class ShortestPathAStarTest {
-	
-	private static GraphDatabaseAPI db;
+
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 	
 	@BeforeClass
     public static void setup() throws KernelException {
@@ -83,21 +88,15 @@ public class ShortestPathAStarTest {
                         "  (nO)-[:TYPE {cost:603.0}]->(nP),\n" +
                         "  (nP)-[:TYPE {cost:847.0}]->(nX)";
 
-        db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            db.execute(createGraph).close();
-            tx.success();
+            db.executeTransactionally(createGraph);
+            tx.commit();
         }
         
         db.getDependencyResolver()
-        .resolveDependency(Procedures.class)
+        .resolveDependency(GlobalProcedures.class)
         .registerProcedure(ShortestPathProc.class);
 	}
-	
-	@AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
 	
 	@Test
     public void testAStarResult() throws Exception {
@@ -107,13 +106,11 @@ public class ShortestPathAStarTest {
 				1652.0, 2392.0, 2979.0);
 		final List<String> actualNode = new ArrayList<String>();
 		final List<Double> actualDistance = new ArrayList<Double>(); 
-        db.execute(
-                "MATCH (start:Node{name:'SINGAPORE'}), (end:Node{name:'CHIBA'}) " +
-                        "CALL algo.shortestPath.astar.stream(start, end, 'cost') " +
-                        "YIELD nodeId, cost RETURN nodeId, cost ")
-                .accept(row -> {
+		executeAndAccept(db, "MATCH (start:Node{name:'SINGAPORE'}), (end:Node{name:'CHIBA'}) " +
+                "CALL algo.shortestPath.astar.stream(start, end, 'cost') " +
+                "YIELD nodeId, cost RETURN nodeId, cost ", row -> {
                     long nodeId = row.getNumber("nodeId").longValue();
-                    Node node = db.getNodeById(nodeId);
+                    Node node = withTx(db, tx -> tx.getNodeById(nodeId));
                     String nodeName = (String) node.getProperty("name");
                     double distance = row.getNumber("cost").doubleValue();
                     actualNode.add(nodeName);

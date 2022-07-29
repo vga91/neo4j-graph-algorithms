@@ -25,11 +25,11 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.LabelPropagationProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Result;
-import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,6 +40,7 @@ import java.util.function.Consumer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 @RunWith(Parameterized.class)
 public class LabelPropagationProcIntegrationTest {
@@ -71,7 +72,7 @@ public class LabelPropagationProcIntegrationTest {
     }
 
     @Rule
-    public ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public DatabaseRule db = new ImpermanentDatabaseRule();
 
     @Rule
     public ExpectedException exceptions = ExpectedException.none();
@@ -86,8 +87,8 @@ public class LabelPropagationProcIntegrationTest {
 
     @Before
     public void setup() throws KernelException {
-        db.resolveDependency(Procedures.class).registerProcedure(LabelPropagationProc.class);
-        db.execute(DB_CYPHER);
+        db.resolveDependency(GlobalProcedures.class).registerProcedure(LabelPropagationProc.class);
+        db.executeTransactionally(DB_CYPHER);
     }
 
     @Test
@@ -226,15 +227,13 @@ public class LabelPropagationProcIntegrationTest {
             String query,
             Map<String, Object> params,
             Consumer<Result.ResultRow> check) {
-        try (Result result = db.execute(query, params)) {
-            result.accept(row -> {
-                check.accept(row);
-                return true;
-            });
-        }
+        executeAndAccept(db, query, params, row -> {
+            check.accept(row);
+            return true;
+        });
     }
 
     private Map<String, Object> parParams() {
-        return MapUtil.map("batchSize", parallel ? 1 : 100, "concurrency", parallel ? 8: 1, "graph", graphImpl);
+        return Map.of("batchSize", parallel ? 1 : 100, "concurrency", parallel ? 8: 1, "graph", graphImpl);
     }
 }

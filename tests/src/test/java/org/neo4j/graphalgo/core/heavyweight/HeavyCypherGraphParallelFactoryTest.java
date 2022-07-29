@@ -21,18 +21,22 @@ package org.neo4j.graphalgo.core.heavyweight;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.DuplicateRelationshipsStrategy;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.helpers.collection.Iterators;
+import org.neo4j.graphdb.Result;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
-import org.neo4j.test.TestGraphDatabaseFactory;
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
@@ -40,19 +44,13 @@ import static org.junit.Assert.assertEquals;
 public class HeavyCypherGraphParallelFactoryTest {
 
     private static final int COUNT = 10000;
-    private static GraphDatabaseService db;
+    
+    @ClassRule
+    public static DatabaseRule db  = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setUp() {
-
-        db = new TestGraphDatabaseFactory().newImpermanentDatabase();
-
-        Iterators.count(db.execute("UNWIND range(1," + COUNT + ") AS id CREATE (n {id:id})-[:REL {prop:id%10}]->(n)"));
-    }
-
-    @AfterClass
-    public static void tearDown() {
-        db.shutdown();
+        db.executeTransactionally("UNWIND range(1," + COUNT + ") AS id CREATE (n {id:id})-[:REL {prop:id%10}]->(n)", Map.of(), Result::resultAsString);
     }
 
 
@@ -66,7 +64,7 @@ public class HeavyCypherGraphParallelFactoryTest {
 
     @Test
     public void testLoadNodesParallelCypher() throws Exception {
-        String nodeStatement = "MATCH (n) WITH n SKIP {skip} LIMIT {limit} RETURN id(n) as id";
+        String nodeStatement = "MATCH (n) WITH n SKIP $skip LIMIT $limit RETURN id(n) as id";
         String relStatement = "MATCH (n)-[r:REL]->(m) RETURN id(n) as source, id(m) as target, r.prop as weight";
 
         loadAndTestGraph(nodeStatement, relStatement, false);
@@ -75,7 +73,7 @@ public class HeavyCypherGraphParallelFactoryTest {
     @Test
     public void testLoadRelationshipsParallelCypher() throws Exception {
         String nodeStatement = "MATCH (n) RETURN id(n) as id";
-        String relStatement = "MATCH (n)-[r:REL]->(m)  WITH * SKIP {skip} LIMIT {limit} RETURN id(n) as source, id(m) as target, r.prop as weight";
+        String relStatement = "MATCH (n)-[r:REL]->(m)  WITH * SKIP $skip LIMIT $limit RETURN id(n) as source, id(m) as target, r.prop as weight";
 
         loadAndTestGraph(nodeStatement, relStatement, false);
     }
@@ -84,30 +82,30 @@ public class HeavyCypherGraphParallelFactoryTest {
     public void testLoadRelationshipsParallelAccumulateWeightCypher() throws Exception {
         String nodeStatement = "MATCH (n) RETURN id(n) as id";
         String relStatement =
-                "MATCH (n)-[r:REL]->(m) WITH * SKIP {skip} LIMIT {limit} RETURN id(n) as source, id(m) as target, r.prop/2.0 as weight " +
+                "MATCH (n)-[r:REL]->(m) WITH * SKIP $skip LIMIT $limit RETURN id(n) as source, id(m) as target, r.prop/2.0 as weight " +
                 "UNION ALL "+
-                "MATCH (n)-[r:REL]->(m) WITH * SKIP {skip} LIMIT {limit} RETURN id(n) as source, id(m) as target, r.prop/2.0 as weight ";
+                "MATCH (n)-[r:REL]->(m) WITH * SKIP $skip LIMIT $limit RETURN id(n) as source, id(m) as target, r.prop/2.0 as weight ";
 
         loadAndTestGraph(nodeStatement, relStatement, true);
     }
 
     @Test
     public void testLoadCypherBothParallel() throws Exception {
-        String nodeStatement = "MATCH (n) WITH n SKIP {skip} LIMIT {limit} RETURN id(n) as id";
-        String relStatement = "MATCH (n)-[r:REL]->(m) WITH * SKIP {skip} LIMIT {limit} RETURN id(n) as source, id(m) as target, r.prop as weight";
+        String nodeStatement = "MATCH (n) WITH n SKIP $skip LIMIT $limit RETURN id(n) as id";
+        String relStatement = "MATCH (n)-[r:REL]->(m) WITH * SKIP $skip LIMIT $limit RETURN id(n) as source, id(m) as target, r.prop as weight";
 
         loadAndTestGraph(nodeStatement, relStatement, false);
     }
 
     private void loadAndTestGraph(String nodeStatement, String relStatement, boolean accumulateWeights) {
-        final Graph graph = new GraphLoader((GraphDatabaseAPI) db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader((GraphDatabaseAPI) db, ktx)
                 .withExecutorService(Pools.DEFAULT)
                 .withBatchSize(1000)
                 .withDuplicateRelationshipsStrategy(accumulateWeights ? DuplicateRelationshipsStrategy.SUM : DuplicateRelationshipsStrategy.NONE)
                 .withRelationshipWeightsFromProperty("prop",0d)
                 .withLabel(nodeStatement)
                 .withRelationshipType(relStatement)
-                .load(HeavyCypherGraphFactory.class);
+                .load(HeavyCypherGraphFactory.class));
 
         Assert.assertEquals(COUNT, graph.nodeCount());
         AtomicInteger relCount = new AtomicInteger();

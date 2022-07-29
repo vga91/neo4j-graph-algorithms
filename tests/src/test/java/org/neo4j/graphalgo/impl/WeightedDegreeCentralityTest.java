@@ -20,10 +20,10 @@ package org.neo4j.graphalgo.impl;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
@@ -31,7 +31,10 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyCypherGraphFactory;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.degree.WeightedDegreeCentrality;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
@@ -125,20 +128,12 @@ public final class WeightedDegreeCentralityTest {
             "  (j)-[:TYPE2]->(e),\n" +
             "  (k)-[:TYPE2]->(e)\n";
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() {
-        db = TestDatabaseCreator.createTestDatabase();
-        try (Transaction tx = db.beginTx()) {
-            db.execute(DB_CYPHER).close();
-            tx.success();
-        }
-    }
-
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        if (db!=null) db.shutdown();
+        db.executeTransactionally(DB_CYPHER);
     }
 
     public WeightedDegreeCentralityTest(
@@ -153,35 +148,35 @@ public final class WeightedDegreeCentralityTest {
         final Map<Long, double[]> expected = new HashMap<>();
 
         try (Transaction tx = db.beginTx()) {
-            expected.put(db.findNode(label, "name", "a").getId(), new double[] {});
-            expected.put(db.findNode(label, "name", "b").getId(), new double[] {2.0});
-            expected.put(db.findNode(label, "name", "c").getId(), new double[] {2.0});
-            expected.put(db.findNode(label, "name", "d").getId(), new double[] {5.0,2.0});
-            expected.put(db.findNode(label, "name", "e").getId(), new double[] {2.0,7.0,1.0});
-            expected.put(db.findNode(label, "name", "f").getId(), new double[] {2.0,2.0});
-            expected.put(db.findNode(label, "name", "g").getId(), new double[] {});
-            expected.put(db.findNode(label, "name", "h").getId(), new double[] {});
-            expected.put(db.findNode(label, "name", "i").getId(), new double[] {});
-            expected.put(db.findNode(label, "name", "j").getId(), new double[] {});
-            tx.close();
+            expected.put(tx.findNode(label, "name", "a").getId(), new double[] {});
+            expected.put(tx.findNode(label, "name", "b").getId(), new double[] {2.0});
+            expected.put(tx.findNode(label, "name", "c").getId(), new double[] {2.0});
+            expected.put(tx.findNode(label, "name", "d").getId(), new double[] {5.0,2.0});
+            expected.put(tx.findNode(label, "name", "e").getId(), new double[] {2.0,7.0,1.0});
+            expected.put(tx.findNode(label, "name", "f").getId(), new double[] {2.0,2.0});
+            expected.put(tx.findNode(label, "name", "g").getId(), new double[] {});
+            expected.put(tx.findNode(label, "name", "h").getId(), new double[] {});
+            expected.put(tx.findNode(label, "name", "i").getId(), new double[] {});
+            expected.put(tx.findNode(label, "name", "j").getId(), new double[] {});
+            tx.commit();
         }
 
         final Graph graph;
         if (graphImpl.isAssignableFrom(HeavyCypherGraphFactory.class)) {
-            graph = new GraphLoader(db)
+            graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                     .withLabel("MATCH (n:Label1) RETURN id(n) as id")
                     .withRelationshipType("MATCH (n:Label1)-[type:TYPE1]->(m:Label1) RETURN id(n) as source,id(m) as target, type.weight AS weight")
                     .withOptionalRelationshipWeightsFromProperty("weight", 1.0)
-                    .load(graphImpl);
+                    .load(graphImpl));
 
         } else {
-            graph = new GraphLoader(db)
+            graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                     .withLabel(label)
                     .withRelationshipType("TYPE1")
                     .withDirection(Direction.OUTGOING)
                     .withOptionalRelationshipWeightsFromProperty("weight", 1.0)
                     .withSort(true)
-                    .load(graphImpl);
+                    .load(graphImpl));
         }
 
         WeightedDegreeCentrality degreeCentrality = new WeightedDegreeCentrality(graph, Pools.DEFAULT, 1, Direction.OUTGOING);

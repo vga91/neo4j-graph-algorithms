@@ -18,14 +18,18 @@
  */
 package org.neo4j.graphalgo.impl;
 
+import org.eclipse.jetty.util.log.Slf4jLog;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.neo4j.configuration.BufferingLog;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.write.Exporter;
 import org.neo4j.graphalgo.core.write.Translators;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
@@ -34,11 +38,14 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.logging.FormattedLog;
 import org.neo4j.logging.Level;
 import org.neo4j.logging.Log;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.logging.NullLog;
+import org.neo4j.logging.log4j.Log4jLog;
+import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -57,7 +64,8 @@ public class ProgressLoggingTest {
     private static final String LABEL = "Node";
     private static final String RELATIONSHIP = "REL";
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() {
@@ -75,33 +83,26 @@ public class ProgressLoggingTest {
     @BeforeClass
     public static void setup() throws Exception {
 
-        db = TestDatabaseCreator.createTestDatabase();
-
         try (ProgressTimer timer = ProgressTimer.start(t -> System.out.println("setup took " + t + "ms"))) {
             final GridBuilder gridBuilder = GraphBuilder.create(db)
                     .setLabel(LABEL)
                     .setRelationship(RELATIONSHIP)
                     .newGridBuilder()
                     .createGrid(100, 10)
-                    .forEachRelInTx(rel -> {
+                    .forEachRelInTx((rel, tx) -> {
                         rel.setProperty(PROPERTY, Math.random() * 5); // (0-5)
                     });
         }
     }
 
-    @AfterClass
-    public static void tearDown() {
-        db.shutdown();
-    }
-
     public ProgressLoggingTest(Class<? extends GraphFactory> graphImpl, String nameIgnored) {
         this.graphImpl = graphImpl;
-        graph = new GraphLoader(db)
+        graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withExecutorService(Pools.DEFAULT)
                 .withLabel(LABEL)
                 .withRelationshipType(RELATIONSHIP)
                 .withRelationshipWeightsFromProperty(PROPERTY, 1.0)
-                .load(graphImpl);
+                .load(graphImpl));
     }
 
     @Test
@@ -110,13 +111,13 @@ public class ProgressLoggingTest {
         final StringWriter buffer = new StringWriter();
 
         try (ProgressTimer timer = ProgressTimer.start(t -> System.out.println("load took " + t + "ms"))) {
-            graph = new GraphLoader(db)
+            graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                     .withLog(testLogger(buffer))
                     .withExecutorService(Pools.DEFAULT)
                     .withLabel(LABEL)
                     .withRelationshipType(RELATIONSHIP)
                     .withRelationshipWeightsFromProperty(PROPERTY, 1.0)
-                    .load(graphImpl);
+                    .load(graphImpl));
         }
 
         System.out.println(buffer);
@@ -153,9 +154,13 @@ public class ProgressLoggingTest {
     }
 
     public static Log testLogger(StringWriter writer) {
-        return FormattedLog
-                .withLogLevel(Level.DEBUG)
-                .withCategory("Test")
-                .toPrintWriter(new PrintWriter(writer));
+        // todo - figure out...
+        final BufferingLog bufferingLog = new BufferingLog();
+        bufferingLog.debug(writer.toString());
+        return bufferingLog;
+//        return new BufferingLog().debugLogger().
+//                .withLogLevel(Level.DEBUG)
+//                .withCategory("Test")
+//                .toPrintWriter(new PrintWriter(writer));
     }
 }

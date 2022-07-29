@@ -20,24 +20,28 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.neo4j.graphalgo.DangalchevCentralityProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.helper.graphbuilder.DefaultBuilder;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Result;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.rebind;
 
 
 /**
@@ -48,7 +52,8 @@ public class DangalchevCentralityIntegrationTest {
 
     public static final String TYPE = "TYPE";
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
     private static DefaultBuilder builder;
     private static long centerNodeId;
 
@@ -62,8 +67,6 @@ public class DangalchevCentralityIntegrationTest {
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
-
-        db = TestDatabaseCreator.createTestDatabase();
 
         builder = GraphBuilder.create(db)
                 .setLabel("Node")
@@ -84,30 +87,29 @@ public class DangalchevCentralityIntegrationTest {
 
         builder.newRingBuilder()
                 .createRing(5)
-                .forEachNodeInTx(node -> {
-                    node.createRelationshipTo(center, type);
+                .forEachNodeInTx((node, tx) -> {
+                    Node nodeBound = rebind(tx, node);
+                    Node centerBound = rebind(tx, center);
+                    nodeBound.createRelationshipTo(centerBound, type);
                 })
                 .newRingBuilder()
                 .createRing(5)
-                .forEachNodeInTx(node -> {
-                    center.createRelationshipTo(node, type);
+                .forEachNodeInTx((node, tx) -> {
+                    Node nodeBound = rebind(tx, node);
+                    Node centerBound = rebind(tx, center);
+                    centerBound.createRelationshipTo(nodeBound, type);
                 });
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(DangalchevCentralityProc.class);
-    }
-
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
     }
 
     @Test
     public void testClosenessStream() throws Exception {
 
-        db.execute("CALL algo.closeness.dangalchev.stream('Node', 'TYPE') YIELD nodeId, centrality")
-                .accept((Result.ResultVisitor<Exception>) row -> {
+        executeAndAccept(db, "CALL algo.closeness.dangalchev.stream('Node', 'TYPE') YIELD nodeId, centrality",
+                row -> {
                     consumer.accept(
                             row.getNumber("nodeId").longValue(),
                             row.getNumber("centrality").doubleValue());
@@ -120,17 +122,16 @@ public class DangalchevCentralityIntegrationTest {
     @Test
     public void testClosenessWrite() throws Exception {
 
-        db.execute("CALL algo.closeness.dangalchev('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
-                "nodes, loadMillis, computeMillis, writeMillis")
-                .accept((Result.ResultVisitor<Exception>) row -> {
+        executeAndAccept(db, "CALL algo.closeness.dangalchev('','', {write:true, stats:true, writeProperty:'centrality'}) YIELD " +
+                "nodes, loadMillis, computeMillis, writeMillis", row -> {
                     assertNotEquals(-1L, row.getNumber("writeMillis"));
                     assertNotEquals(-1L, row.getNumber("computeMillis"));
                     assertNotEquals(-1L, row.getNumber("nodes"));
                     return true;
                 });
 
-        db.execute("MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality")
-                .accept(row -> {
+        executeAndAccept(db, "MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as centrality",
+                row -> {
                     consumer.accept(
                             row.getNumber("id").longValue(),
                             row.getNumber("centrality").doubleValue());

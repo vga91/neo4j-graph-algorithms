@@ -24,7 +24,7 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.internal.kernel.api.TokenWrite;
 import org.neo4j.internal.kernel.api.Write;
 import org.neo4j.kernel.api.KernelTransaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.test.TestGraphDatabaseFactory;
@@ -125,7 +125,7 @@ public class HeroGraph {
                 write.relationshipCreate(heroId, appearedIn, comicId);
                 ++rels;
             }
-            tx.success();
+            tx.commit();
         }
 
         long took = System.nanoTime() - startTime;

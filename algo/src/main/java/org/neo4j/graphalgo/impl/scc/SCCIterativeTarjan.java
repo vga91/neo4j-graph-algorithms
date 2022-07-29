@@ -20,10 +20,10 @@ package org.neo4j.graphalgo.impl.scc;
 
 import com.carrotsearch.hppc.IntStack;
 import org.neo4j.graphalgo.api.Graph;
+import org.neo4j.graphalgo.core.utils.traverse.SimpleBitSet;
 import org.neo4j.graphalgo.impl.Algorithm;
 import org.neo4j.graphalgo.results.SCCStreamResult;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.kernel.impl.util.collection.SimpleBitSet;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;

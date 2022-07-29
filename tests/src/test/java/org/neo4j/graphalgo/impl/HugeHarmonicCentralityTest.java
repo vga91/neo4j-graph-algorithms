@@ -26,10 +26,12 @@ import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.graphalgo.impl.closeness.HugeHarmonicCentrality;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.*;
@@ -63,11 +65,11 @@ import static org.mockito.Mockito.*;
 public class HugeHarmonicCentralityTest {
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
-        DB.execute("CREATE (a:Node {name:'a'})\n" +
+        DB.executeTransactionally("CREATE (a:Node {name:'a'})\n" +
                 "CREATE (b:Node {name:'b'})\n" +
                 "CREATE (c:Node {name:'c'})\n" +
                 "CREATE (d:Node {name:'d'})\n" +
@@ -81,11 +83,11 @@ public class HugeHarmonicCentralityTest {
     private HugeGraph graph;
 
     public HugeHarmonicCentralityTest() {
-        graph = (HugeGraph) new GraphLoader(DB)
+        graph = (HugeGraph) new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .withoutNodeProperties()
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
     }
 
     @Test

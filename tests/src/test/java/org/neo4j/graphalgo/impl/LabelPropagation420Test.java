@@ -40,10 +40,12 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyCypherGraphFactory;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.impl.LabelPropagationAlgorithm.Labels;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -126,11 +128,11 @@ public final class LabelPropagation420Test {
     }
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() {
-        DB.execute(GRAPH).close();
+        DB.executeTransactionally(GRAPH);
     }
 
     @Rule
@@ -145,14 +147,14 @@ public final class LabelPropagation420Test {
 
     @Before
     public void setup() {
-        GraphLoader graphLoader = new GraphLoader(DB, Pools.DEFAULT)
+        GraphLoader graphLoader = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, Pools.DEFAULT, ktx)
                 .withRelationshipWeightsFromProperty("weight", 1.0)
                 .withOptionalNodeProperties(
                         PropertyMapping.of(WEIGHT_TYPE, WEIGHT_TYPE, 1.0),
                         PropertyMapping.of(PARTITION_TYPE, PARTITION_TYPE, 0.0)
                 )
                 .withDirection(Direction.BOTH)
-                .withConcurrency(Pools.DEFAULT_CONCURRENCY);
+                .withConcurrency(Pools.DEFAULT_CONCURRENCY));
 
         if (graphImpl == HeavyCypherGraphFactory.class) {
             graphLoader

@@ -29,12 +29,14 @@ import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -42,6 +44,7 @@ import java.util.stream.Stream;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withTx;
 
 @RunWith(Parameterized.class)
 public final class ShortestPathDijkstraTest {
@@ -117,13 +120,13 @@ public final class ShortestPathDijkstraTest {
     }
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() {
-        DB.execute(DB_CYPHER).close();
-        DB.execute(DB_CYPHER2).close();
-        DB.execute(DB_CYPHER_599).close();
+        DB.executeTransactionally(DB_CYPHER);
+        DB.executeTransactionally(DB_CYPHER2);
+        DB.executeTransactionally(DB_CYPHER_599);
     }
 
     private Class<? extends GraphFactory> graphImpl;
@@ -149,12 +152,12 @@ public final class ShortestPathDijkstraTest {
                 "name", "f");
         long[] nodeIds = expected.nodeIds;
 
-        final Graph graph = new GraphLoader(DB)
+        final Graph graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withLabel(label)
                 .withRelationshipType(type)
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
                 .withDirection(Direction.OUTGOING)
-                .load(graphImpl);
+                .load(graphImpl));
 
         final ShortestPathDijkstra shortestPathDijkstra = new ShortestPathDijkstra(graph);
         shortestPathDijkstra.compute(nodeIds[0], nodeIds[nodeIds.length - 1], Direction.OUTGOING);
@@ -175,12 +178,12 @@ public final class ShortestPathDijkstraTest {
                 "name", "7");
         long[] nodeIds = expected.nodeIds;
 
-        final Graph graph = new GraphLoader(DB)
+        final Graph graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withLabel(label)
                 .withRelationshipType(type)
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
                 .withDirection(Direction.OUTGOING)
-                .load(graphImpl);
+                .load(graphImpl));
 
         final ShortestPathDijkstra shortestPathDijkstra = new ShortestPathDijkstra(graph);
         shortestPathDijkstra.compute(nodeIds[0], nodeIds[nodeIds.length - 1], Direction.OUTGOING);
@@ -200,12 +203,12 @@ public final class ShortestPathDijkstraTest {
                 "id", "1", "id", "2", "id", "5",
                 "id", "6", "id", "3", "id", "4");
 
-        Graph graph = new GraphLoader(DB)
+        Graph graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withLabel(label)
                 .withRelationshipType(type)
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
                 .withDirection(Direction.OUTGOING)
-                .load(graphImpl);
+                .load(graphImpl));
 
         ShortestPathDijkstra shortestPathDijkstra = new ShortestPathDijkstra(graph);
         shortestPathDijkstra.compute(
@@ -234,12 +237,12 @@ public final class ShortestPathDijkstraTest {
                 "name", "f");
         final long head = expected.nodeIds[0], tail = expected.nodeIds[expected.nodeIds.length - 1];
 
-        final Graph graph = new GraphLoader(DB)
+        final Graph graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withLabel(label)
                 .withRelationshipType("TYPE1")
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
                 .withDirection(Direction.OUTGOING)
-                .load(graphImpl);
+                .load(graphImpl));
 
         final ShortestPathDijkstra shortestPathDijkstra = new ShortestPathDijkstra(graph);
         Stream<ShortestPathDijkstra.Result> resultStream = shortestPathDijkstra
@@ -254,16 +257,16 @@ public final class ShortestPathDijkstraTest {
             Label label,
             RelationshipType type,
             String... kvPairs) {
-        return DB.executeAndCommit(db -> {
+        return withTx(DB, tx -> {
             double weight = 0.0;
             Node prev = null;
             long[] nodeIds = new long[kvPairs.length / 2];
             for (int i = 0; i < nodeIds.length; i++) {
-                Node current = db.findNode(label, kvPairs[2*i], kvPairs[2*i + 1]);
+                Node current = tx.findNode(label, kvPairs[2*i], kvPairs[2*i + 1]);
                 long id = current.getId();
                 nodeIds[i] = id;
                 if (prev != null) {
-                    for (Relationship rel : prev.getRelationships(type, Direction.OUTGOING)) {
+                    for (Relationship rel : prev.getRelationships(Direction.OUTGOING, type)) {
                         if (rel.getEndNodeId() == id) {
                             double cost = ((Number) rel.getProperty("cost")).doubleValue();
                             weight += cost;

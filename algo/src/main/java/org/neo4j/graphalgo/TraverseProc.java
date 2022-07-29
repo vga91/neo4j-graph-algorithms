@@ -27,6 +27,7 @@ import org.neo4j.graphalgo.impl.Traverse;
 import org.neo4j.graphalgo.impl.walking.WalkPath;
 import org.neo4j.graphalgo.impl.walking.WalkResult;
 import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
@@ -50,7 +51,10 @@ public class TraverseProc {
     public Log log;
 
     @Context
-    public KernelTransaction transaction;
+    public KernelTransaction kernelTransaction;
+
+    @Context
+    public Transaction transaction;
 
     @Procedure(value = "algo.bfs.stream")
     @Description("CALL algo.bfs.stream(label:String, relationshipType:String, startNodeId:long, direction:Direction, " +
@@ -67,7 +71,7 @@ public class TraverseProc {
                 .overrideNodeLabelOrQuery(label)
                 .overrideRelationshipTypeOrQuery(relationship);
 
-        final Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        final Graph graph = new GraphLoader(api, Pools.DEFAULT, kernelTransaction)
                 .withOptionalLabel(label)
                 .withOptionalRelationshipType(relationship)
                 .withoutNodeWeights()
@@ -77,7 +81,7 @@ public class TraverseProc {
                 .load(configuration.getGraphImpl(HeavyGraph.TYPE));
         final Traverse traverse = new Traverse(graph)
                 .withProgressLogger(ProgressLogger.wrap(log, "BFS"))
-                .withTerminationFlag(TerminationFlag.wrap(transaction));
+                .withTerminationFlag(TerminationFlag.wrap(kernelTransaction));
 
         final List<Long> targetNodes = configuration.get("targetNodes", Collections.emptyList());
         final long maxDepth = configuration.getNumber("maxDepth", -1L).longValue();
@@ -114,7 +118,7 @@ public class TraverseProc {
                 exitFunction,
                 aggregatorFunction);
 
-        return Stream.of(new WalkResult(nodes, WalkPath.toPath(api, nodes)));
+        return Stream.of(new WalkResult(nodes, WalkPath.toPath(transaction, nodes)));
     }
 
     @Procedure(value = "algo.dfs.stream")
@@ -131,7 +135,7 @@ public class TraverseProc {
                 .overrideDirection(direction)
                 .overrideNodeLabelOrQuery(label)
                 .overrideRelationshipTypeOrQuery(relationship);
-        final Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        final Graph graph = new GraphLoader(api, Pools.DEFAULT, kernelTransaction)
                 .withOptionalLabel(label)
                 .withOptionalRelationshipType(relationship)
                 .withoutNodeWeights()
@@ -141,7 +145,7 @@ public class TraverseProc {
                 .load(configuration.getGraphImpl(HeavyGraph.TYPE));
         final Traverse traverse = new Traverse(graph)
                 .withProgressLogger(ProgressLogger.wrap(log, "DFS"))
-                .withTerminationFlag(TerminationFlag.wrap(transaction));
+                .withTerminationFlag(TerminationFlag.wrap(kernelTransaction));
 
         final List<Long> targetNodes = configuration.get("targetNodes", Collections.emptyList());
         final long maxDepth = configuration.getNumber("maxDepth", -1L).longValue();
@@ -179,7 +183,7 @@ public class TraverseProc {
                 exitFunction,
                 aggregatorFunction);
 
-        return Stream.of(new WalkResult(nodes, WalkPath.toPath(api, nodes)));
+        return Stream.of(new WalkResult(nodes, WalkPath.toPath(transaction, nodes)));
     }
 
 }

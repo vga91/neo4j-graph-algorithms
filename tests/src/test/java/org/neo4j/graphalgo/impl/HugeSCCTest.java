@@ -20,14 +20,17 @@ package org.neo4j.graphalgo.impl;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.core.utils.paged.HugeLongArray;
 import org.neo4j.graphalgo.impl.scc.HugeSCCIterativeTarjan;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
@@ -37,6 +40,8 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.neo4j.configuration.GraphDatabaseInternalSettings.track_cursor_close;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**        _______
  *        /       \
@@ -50,8 +55,9 @@ import static org.junit.Assert.assertNotEquals;
  */
 public class HugeSCCTest {
 
-
-    private static GraphDatabaseAPI api;
+    @ClassRule
+    public static DatabaseRule api = new ImpermanentDatabaseRule()
+            .setConfig(track_cursor_close, false);
 
     private static HugeGraph graph;
 
@@ -83,28 +89,23 @@ public class HugeSCCTest {
                         " (h)-[:TYPE {cost:3}]->(i),\n" +
                         " (i)-[:TYPE {cost:3}]->(g)";
 
-        api = TestDatabaseCreator.createTestDatabase();
-        try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
-            tx.success();
-        }
+        api.executeTransactionally(cypher);
 
-        graph = (HugeGraph) new GraphLoader(api)
+        graph = (HugeGraph) new TransactionWrapper(api).apply(ktx -> new GraphLoader(api, ktx)
                 .withLabel("Node")
                 .withRelationshipType("TYPE")
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
-                .load(HugeGraphFactory.class);
+                .load(HugeGraphFactory.class));
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if (api != null) api.shutdown();
         graph = null;
     }
 
     public static int getMappedNodeId(String name) {
         final Node[] node = new Node[1];
-        api.execute("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
+        executeAndAccept(api, "MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n", row -> {
             node[0] = row.getNode("n");
             return false;
         });

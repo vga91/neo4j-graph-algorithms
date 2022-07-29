@@ -25,7 +25,6 @@ import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.neo4j.graphalgo.LouvainProc;
 import org.neo4j.graphalgo.TestProgressLogger;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
@@ -34,12 +33,14 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.TerminationFlag;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.core.utils.paged.HugeLongArray;
 import org.neo4j.graphalgo.impl.louvain.Louvain;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -74,7 +75,7 @@ public class LouvainTest1 {
     public static final String ABCD = "abcd";
 
     @Rule
-    public ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @Rule
     public ErrorCollector collector = new ErrorCollector();
@@ -99,23 +100,23 @@ public class LouvainTest1 {
     }
 
     private void setup(String cypher) {
-        DB.execute(cypher);
-        graph = new GraphLoader(DB)
+        DB.executeTransactionally(cypher);
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .withoutNodeProperties()
                 .withOptionalRelationshipWeightsFromProperty("w", 1.0)
                 //.withDirection(Direction.BOTH)
                 .asUndirected(true)
-                .load(graphImpl);
+                .load(graphImpl));
 
         try (Transaction transaction = DB.beginTx()) {
             for (int i = 0; i < ABCD.length(); i++) {
                 final String value = String.valueOf(ABCD.charAt(i));
-                final int id = graph.toMappedNodeId(DB.findNode(LABEL, "name", value).getId());
+                final int id = graph.toMappedNodeId(transaction.findNode(LABEL, "name", value).getId());
                 nameMap.put(value, id);
             }
-            transaction.success();
+            transaction.commit();
         }
     }
 
@@ -123,9 +124,9 @@ public class LouvainTest1 {
         try (Transaction transaction = DB.beginTx()) {
             louvain.resultStream()
                     .forEach(r -> {
-                        System.out.println(DB.getNodeById(r.nodeId).getProperty("name") + ":" + r.community);
+                        System.out.println(transaction.getNodeById(r.nodeId).getProperty("name") + ":" + r.community);
                     });
-            transaction.success();
+            transaction.commit();
         }
     }
 

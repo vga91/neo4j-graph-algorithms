@@ -24,6 +24,7 @@ import org.neo4j.graphalgo.core.GraphDimensions;
 import org.neo4j.graphalgo.core.utils.ImportProgress;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.core.utils.paged.HugeLongArrayBuilder;
+import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.api.StatementConstants;
 import org.neo4j.kernel.impl.store.record.NodeRecord;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
@@ -42,6 +43,7 @@ final class ScanningNodesImporter extends ScanningRecordsImporter<NodeRecord, Id
 
     private Map<String, HugeNodePropertiesBuilder> builders;
     private HugeLongArrayBuilder idMapBuilder;
+//    private final KernelTransaction tx;
 
     ScanningNodesImporter(
             GraphDatabaseAPI api,
@@ -50,10 +52,12 @@ final class ScanningNodesImporter extends ScanningRecordsImporter<NodeRecord, Id
             AllocationTracker tracker,
             ExecutorService threadPool,
             int concurrency,
-            PropertyMapping[] propertyMappings) {
-        super(NodeStoreScanner.NODE_ACCESS, "Node", api, dimensions, threadPool, concurrency);
+            PropertyMapping[] propertyMappings,
+            KernelTransaction tx) {
+        super(NodeStoreScanner.NODE_ACCESS, "Node", api, dimensions, threadPool, concurrency, tx);
         this.progress = progress;
         this.tracker = tracker;
+//        this.tx = tx;
         this.propertyMappings = propertyMappings;
     }
 

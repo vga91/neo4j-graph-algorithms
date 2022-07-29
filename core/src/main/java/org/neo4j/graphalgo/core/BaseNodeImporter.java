@@ -40,7 +40,8 @@ public abstract class BaseNodeImporter<T> extends StatementFunction<T> {
     @Override
     public final T apply(final KernelTransaction transaction) {
         final T mapping = newNodeMap(nodeCount);
-        ReadHelper.readNodes(transaction.cursors(), transaction.dataRead(), labelId, (nodeId) -> {
+        
+        ReadHelper.readNodes(transaction.cursors(), transaction.dataRead(), labelId, transaction.cursorContext(), (nodeId) -> {
             addNodeId(mapping, nodeId);
             progress.nodeImported();
         });

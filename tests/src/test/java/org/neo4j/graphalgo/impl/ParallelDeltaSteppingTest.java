@@ -21,18 +21,23 @@ package org.neo4j.graphalgo.impl;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphalgo.helper.graphbuilder.GridBuilder;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import java.util.concurrent.Executors;
+
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.rebind;
 
 /**
  * The test creates a grid of nodes and computes a reference array
@@ -43,12 +48,13 @@ import java.util.concurrent.Executors;
  * @author mknblch
  */
 public class ParallelDeltaSteppingTest {
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     private static final String PROPERTY = "property";
     private static final String LABEL = "Node";
     private static final String RELATIONSHIP = "REL";
 
-    private static GraphDatabaseAPI db;
     private static GridBuilder gridBuilder;
     private static Graph graph;
     private static double[] reference;
@@ -56,17 +62,15 @@ public class ParallelDeltaSteppingTest {
 
     @BeforeClass
     public static void setup() throws Exception {
-
-        db = TestDatabaseCreator.createTestDatabase();
-
+        
         try (ProgressTimer timer = ProgressTimer.start(t -> System.out.println("setup took " + t + "ms"))) {
             gridBuilder = GraphBuilder.create(db)
                     .setLabel(LABEL)
                     .setRelationship(RELATIONSHIP)
                     .newGridBuilder()
                     .createGrid(50, 50)
-                    .forEachRelInTx(rel -> {
-                        rel.setProperty(PROPERTY, Math.random() * 5); // (0-5)
+                    .forEachRelInTx((rel, tx) -> {
+                        rebind(tx, rel).setProperty(PROPERTY, Math.random() * 5); // (0-5)
                     });
 
             rootNodeId = gridBuilder.getLineNodes()
@@ -76,19 +80,14 @@ public class ParallelDeltaSteppingTest {
         }
 
         try (ProgressTimer timer = ProgressTimer.start(t -> System.out.println("load took " + t + "ms"))) {
-            graph = new GraphLoader(db)
+            graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                     .withLabel(LABEL)
                     .withRelationshipType(RELATIONSHIP)
                     .withRelationshipWeightsFromProperty(PROPERTY, 1.0)
-                    .load(HeavyGraphFactory.class);
+                    .load(HeavyGraphFactory.class));
         }
 
         reference = compute(1);
-    }
-
-    @AfterClass
-    public static void tearDown() {
-        db.shutdown();
     }
 
     @Test

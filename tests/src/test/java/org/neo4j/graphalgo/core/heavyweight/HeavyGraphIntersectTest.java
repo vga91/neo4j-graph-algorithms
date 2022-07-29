@@ -20,9 +20,14 @@ package org.neo4j.graphalgo.core.heavyweight;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.utils.Intersections;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Result;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
@@ -33,19 +38,16 @@ import java.util.Map;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 public class HeavyGraphIntersectTest {
-    private GraphDatabaseAPI gdb;
+    @Rule
+    public static DatabaseRule gdb = new ImpermanentDatabaseRule();
 
-    @Before
-    public void setUp() throws Exception {
-        gdb = org.neo4j.graphalgo.TestDatabaseCreator.createTestDatabase();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        gdb.shutdown();
-    }
+//    @After
+//    public void tearDown() throws Exception {
+//        gdb.shutdown();
+//    }
 
     @Test
     public void countTriangles() {
@@ -55,34 +57,35 @@ public class HeavyGraphIntersectTest {
                 "(c)-[:X]->(f) " +
                 "RETURN [id(a),id(b),id(c),id(d),id(e),id(f)] as ids";
         // triangles: a: 2, b: 4, c:4, d: 2, e: 0, f:0
-        List<Long> ids = gdb.execute(statement).<List<Long>>columnAs("ids").next();
+        List<Long> ids = gdb.executeTransactionally(statement, Map.of(), r -> r.<List<Long>>columnAs("ids").next());
         // System.out.println("ids = " + ids);
         assertEquals(ids.subList(0,4), assertTriangles());
     }
 
     private List<Long> assertTriangles() {
-        HeavyGraph graph = (HeavyGraph)new GraphLoader(gdb)
+        HeavyGraph graph = (HeavyGraph) new TransactionWrapper(gdb).apply(ktx -> new GraphLoader(gdb, ktx)
                 .asUndirected(true)
                 .withSort(true)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         String triangleQuery = "MATCH (a)--(b)--(c)--(a) where a <> b and b <> c and c <> a " +
                 " AND id(b) < id(c) " +
                 "WITH [id(a),id(b),id(c)] as ids order by ids[0],ids[1],ids[2]" +
                 "RETURN ids[0] as start, collect(ids) as ids order by start";
-        // System.out.println(gdb.execute(triangleQuery).resultAsString());
-        Result result = gdb.execute(triangleQuery);
-        List<Long> foundIds = new ArrayList<>();
-        while (result.hasNext()) {
-            Map<String, Object> row = result.next();
-            long start = (long)row.get("start");
-            List<List<Long>> triangles = (List<List<Long>>) row.get("ids");
-            List<List<Long>> found = new ArrayList<>(triangles.size());
-            graph.intersectAll((int)start, (nodeA, nodeB, nodeC) -> found.add(asList(nodeA,nodeB,nodeC)));
-            assertEquals(triangles,found);
-            foundIds.add(start);
-        }
-        return foundIds;
+        // System.out.println(gdb.executeTransactionally(triangleQuery).resultAsString());
+        return gdb.executeTransactionally(triangleQuery, Map.of(), result -> {
+            List<Long> foundIds = new ArrayList<>();
+            while (result.hasNext()) {
+                Map<String, Object> row = result.next();
+                long start = (long) row.get("start");
+                List<List<Long>> triangles = (List<List<Long>>) row.get("ids");
+                List<List<Long>> found = new ArrayList<>(triangles.size());
+                graph.intersectAll((int) start, (nodeA, nodeB, nodeC) -> found.add(asList(nodeA, nodeB, nodeC)));
+                assertEquals(triangles, found);
+                foundIds.add(start);
+            }
+            return foundIds;
+        });
     }
 
     private static final int[] ONE = {1};

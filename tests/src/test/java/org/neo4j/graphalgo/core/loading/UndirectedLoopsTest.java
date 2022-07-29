@@ -25,8 +25,10 @@ import org.junit.Test;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 
@@ -35,7 +37,7 @@ import static org.junit.Assert.assertArrayEquals;
 public final class UndirectedLoopsTest {
 
     @Rule
-    public ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public DatabaseRule DB = new ImpermanentDatabaseRule();
 
     private static final String DB_CYPHER = "" +
             "CREATE (a:Label1 {name:\"a\"})\n" +
@@ -56,18 +58,18 @@ public final class UndirectedLoopsTest {
 
     @Before
     public void setUp() {
-        DB.execute(DB_CYPHER).close();
+        DB.executeTransactionally(DB_CYPHER);
     }
 
     @Test
     public void undirectedWithMultipleLoopsShouldSucceed() {
-        Graph graph = new GraphLoader(DB)
+        Graph graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withLabel("Foo|Bar")
                 .withRelationshipType("Bar|Foo")
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
                 .withDirection(Direction.OUTGOING)
                 .asUndirected(true)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         LongArrayList nodes = new LongArrayList();
         graph.forEachNode(nodeId -> {

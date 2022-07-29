@@ -20,6 +20,7 @@ package org.neo4j.graphalgo.impl;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -29,13 +30,15 @@ import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.pagerank.PageRankAlgorithm;
 import org.neo4j.graphalgo.impl.pagerank.PageRankResult;
 import org.neo4j.graphalgo.impl.results.CentralityResult;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -102,21 +105,21 @@ public final class PageRankWikiTest {
             // k
             "  (k)-[:TYPE]->(e)\n";
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() {
-        db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            db.execute(DB_CYPHER).close();
-            tx.success();
+            db.executeTransactionally(DB_CYPHER);
+            tx.commit();
         }
     }
 
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        db.shutdown();
-    }
+//    @AfterClass
+//    public static void shutdownGraph() throws Exception {
+//        db.shutdown();
+//    }
 
     public PageRankWikiTest(
             Class<? extends GraphFactory> graphImpl,
@@ -130,24 +133,24 @@ public final class PageRankWikiTest {
         final Map<Long, Double> expected = new HashMap<>();
 
         try (Transaction tx = db.beginTx()) {
-            expected.put(db.findNode(label, "name", "a").getId(), 0.3040965);
-            expected.put(db.findNode(label, "name", "b").getId(), 3.5658695);
-            expected.put(db.findNode(label, "name", "c").getId(), 3.180981);
-            expected.put(db.findNode(label, "name", "d").getId(), 0.3625935);
-            expected.put(db.findNode(label, "name", "e").getId(), 0.7503465);
-            expected.put(db.findNode(label, "name", "f").getId(), 0.3625935);
-            expected.put(db.findNode(label, "name", "g").getId(), 0.15);
-            expected.put(db.findNode(label, "name", "h").getId(), 0.15);
-            expected.put(db.findNode(label, "name", "i").getId(), 0.15);
-            expected.put(db.findNode(label, "name", "j").getId(), 0.15);
-            expected.put(db.findNode(label, "name", "k").getId(), 0.15);
-            tx.close();
+            expected.put(tx.findNode(label, "name", "a").getId(), 0.3040965);
+            expected.put(tx.findNode(label, "name", "b").getId(), 3.5658695);
+            expected.put(tx.findNode(label, "name", "c").getId(), 3.180981);
+            expected.put(tx.findNode(label, "name", "d").getId(), 0.3625935);
+            expected.put(tx.findNode(label, "name", "e").getId(), 0.7503465);
+            expected.put(tx.findNode(label, "name", "f").getId(), 0.3625935);
+            expected.put(tx.findNode(label, "name", "g").getId(), 0.15);
+            expected.put(tx.findNode(label, "name", "h").getId(), 0.15);
+            expected.put(tx.findNode(label, "name", "i").getId(), 0.15);
+            expected.put(tx.findNode(label, "name", "j").getId(), 0.15);
+            expected.put(tx.findNode(label, "name", "k").getId(), 0.15);
+            tx.commit();
         }
 
-        final Graph graph = new GraphLoader(db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withLabel("Node")
                 .withRelationshipType("TYPE")
-                .load(graphImpl);
+                .load(graphImpl));
 
         final CentralityResult rankResult = PageRankAlgorithm
                 .of(graph, 0.85, LongStream.empty())

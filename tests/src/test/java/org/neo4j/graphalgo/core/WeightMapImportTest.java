@@ -30,8 +30,10 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.neo4jview.GraphView;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -57,7 +59,7 @@ public class WeightMapImportTest {
     }
 
     @Rule
-    public ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @Rule
     public ErrorCollector collector = new ErrorCollector();
@@ -145,14 +147,14 @@ public class WeightMapImportTest {
     }
 
     private void setup(String cypher, Direction direction) {
-        DB.execute(cypher);
-        graph = new GraphLoader(DB)
+        DB.executeTransactionally(cypher);
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .withoutNodeProperties()
                 .withDirection(direction)
                 .withRelationshipWeightsFromProperty("w", 0.0)
-                .load(graphImpl);
+                .load(graphImpl));
     }
 
     private void checkWeight(int nodeId, Direction direction, double... expecteds) {

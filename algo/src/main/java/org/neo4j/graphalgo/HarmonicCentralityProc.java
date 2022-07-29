@@ -68,7 +68,7 @@ public class HarmonicCentralityProc {
 
         final AllocationTracker tracker = AllocationTracker.create();
 
-        final Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        final Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, configuration.getNodeLabelOrQuery(), configuration.getRelationshipOrQuery(), configuration)
                 .withoutNodeProperties()
                 .withConcurrency(configuration.getConcurrency())
@@ -111,7 +111,7 @@ public class HarmonicCentralityProc {
 
         final Graph graph;
         try (ProgressTimer timer = builder.timeLoad()) {
-            graph = new GraphLoader(api, Pools.DEFAULT)
+            graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                     .init(log, configuration.getNodeLabelOrQuery(), configuration.getRelationshipOrQuery(), configuration)
                     .withoutNodeProperties()
                     .withConcurrency(concurrency)

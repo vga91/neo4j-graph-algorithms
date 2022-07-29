@@ -138,7 +138,7 @@ public final class PageRankProc {
             PageRankScore.Stats.Builder statsBuilder,
             ProcedureConfiguration configuration,
             String weightPropertyKey) {
-        GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT)
+        GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, label, relationship, configuration)
                 .withAllocationTracker(tracker)
                 .withOptionalRelationshipWeightsFromProperty(weightPropertyKey, configuration.getWeightPropertyDefaultValue(0.0));

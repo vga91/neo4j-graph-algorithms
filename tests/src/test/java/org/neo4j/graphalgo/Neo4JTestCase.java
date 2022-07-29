@@ -20,6 +20,9 @@ package org.neo4j.graphalgo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -36,39 +39,27 @@ public abstract class Neo4JTestCase {
     public static final String WEIGHT_PROPERTY = "weight";
     public static final String RELATION = "RELATION";
 
-    protected static GraphDatabaseService db;
-
-    @BeforeClass
-    public static void setup() {
-        db = TestDatabaseCreator.createTestDatabase();
-    }
-
-    @AfterClass
-    public static void teardown() {
-        if (db != null) {
-            db.shutdown();
-            db = null;
-        }
-    }
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     public static int newNode() {
         try (Transaction transaction = db.beginTx()) {
-            final Node node = db.createNode(Label.label(LABEL));
-            transaction.success();
+            final Node node = transaction.createNode(Label.label(LABEL));
+            transaction.commit();
             final int id = Math.toIntExact(node.getId());
-            transaction.success();
+            transaction.commit();
             return id;
         }
     }
 
     public static long newRelation(int sourceNodeId, int targetNodeId) {
         try (Transaction transaction = db.beginTx()) {
-            final Node source = db.getNodeById(sourceNodeId);
-            final Node target = db.getNodeById(targetNodeId);
+            final Node source = transaction.getNodeById(sourceNodeId);
+            final Node target = transaction.getNodeById(targetNodeId);
             final Relationship relation = source.createRelationshipTo(
                     target,
                     RelationshipType.withName(RELATION));
-            transaction.success();
+            transaction.commit();
             return relation.getId();
         }
     }
@@ -78,13 +69,13 @@ public abstract class Neo4JTestCase {
             long targetNodeId,
             double weight) {
         try (Transaction transaction = db.beginTx()) {
-            final Node source = db.getNodeById(sourceNodeId);
-            final Node target = db.getNodeById(targetNodeId);
+            final Node source = transaction.getNodeById(sourceNodeId);
+            final Node target = transaction.getNodeById(targetNodeId);
             final Relationship relation = source.createRelationshipTo(
                     target,
                     RelationshipType.withName(RELATION));
             relation.setProperty(WEIGHT_PROPERTY, weight);
-            transaction.success();
+            transaction.commit();
             return relation.getId();
         }
     }

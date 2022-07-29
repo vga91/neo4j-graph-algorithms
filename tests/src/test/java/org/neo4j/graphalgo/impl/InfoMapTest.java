@@ -29,9 +29,11 @@ import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.TerminationFlag;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.infomap.InfoMap;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -57,7 +59,7 @@ import static org.junit.Assert.assertEquals;
 public class InfoMapTest {
 
     @ClassRule
-    public static ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     private static Graph graph;
 
@@ -126,15 +128,15 @@ public class InfoMapTest {
     @Before
     public void setupGraph() throws KernelException {
 
-        db.execute("MATCH (n) detach delete n");
-        db.execute(cypher);
+        db.executeTransactionally("MATCH (n) detach delete n");
+        db.executeTransactionally(cypher);
 
-        graph = new GraphLoader(db)
+        graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .withoutNodeProperties()
                 .asUndirected(true)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
     }
 

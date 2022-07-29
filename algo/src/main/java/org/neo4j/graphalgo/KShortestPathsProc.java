@@ -29,6 +29,7 @@ import org.neo4j.graphalgo.results.AbstractResultBuilder;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
@@ -57,12 +58,15 @@ public class KShortestPathsProc {
 
     @Context
     public GraphDatabaseAPI api;
+    
+    @Context
+    public Transaction tx;
 
     @Context
     public Log log;
 
     @Context
-    public KernelTransaction transaction;
+    public KernelTransaction kernelTx;
 
     @Procedure(value = "algo.kShortestPaths", mode = Mode.WRITE)
     @Description("CALL algo.kShortestPaths(startNode:Node, endNode:Node, k:int, weightProperty:String" +
@@ -84,7 +88,7 @@ public class KShortestPathsProc {
         Direction direction = configuration.getDirection(Direction.BOTH);
         // load
         try (ProgressTimer timer = builder.timeLoad()) {
-            final GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT)
+            final GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT, kernelTx)
                     .init(log, configuration.getNodeLabelOrQuery(), configuration.getRelationshipOrQuery(), configuration)
                     .withOptionalRelationshipWeightsFromProperty(
                             propertyName,
@@ -108,7 +112,7 @@ public class KShortestPathsProc {
         try (ProgressTimer timer = builder.timeEval()) {
             algorithm = new YensKShortestPaths(graph)
                     .withProgressLogger(ProgressLogger.wrap(log, "KShortestPaths(Yen)"))
-                    .withTerminationFlag(TerminationFlag.wrap(transaction))
+                    .withTerminationFlag(TerminationFlag.wrap(kernelTx))
                     .compute(startNode.getId(),
                             endNode.getId(),
                             direction,
@@ -150,7 +154,7 @@ public class KShortestPathsProc {
         Direction direction = configuration.getDirection(Direction.BOTH);
         // load
         try (ProgressTimer timer = builder.timeLoad()) {
-            final GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT)
+            final GraphLoader graphLoader = new GraphLoader(api, Pools.DEFAULT, kernelTx)
                     .init(log, configuration.getNodeLabelOrQuery(), configuration.getRelationshipOrQuery(), configuration)
                     .withOptionalRelationshipWeightsFromProperty(
                             propertyName,
@@ -174,7 +178,7 @@ public class KShortestPathsProc {
         try (ProgressTimer timer = builder.timeEval()) {
             algorithm = new YensKShortestPaths(graph)
                     .withProgressLogger(ProgressLogger.wrap(log, "KShortestPaths(Yen)"))
-                    .withTerminationFlag(TerminationFlag.wrap(transaction))
+                    .withTerminationFlag(TerminationFlag.wrap(kernelTx))
                     .compute(startNode.getId(),
                             endNode.getId(),
                             direction,
@@ -206,9 +210,9 @@ public class KShortestPathsProc {
             Path path = null;
             if (returnPath) {
                 if (propertyName != null) {
-                    path = WalkPath.toPath(api, nodeIds, costs);
+                    path = WalkPath.toPath(tx, nodeIds, costs);
                 } else {
-                    path = WalkPath.toPath(api, nodeIds);
+                    path = WalkPath.toPath(tx, nodeIds);
                 }
             }
 

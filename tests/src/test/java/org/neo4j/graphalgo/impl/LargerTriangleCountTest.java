@@ -31,11 +31,13 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.ParallelUtil;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.helper.graphbuilder.GraphBuilder;
 import org.neo4j.graphalgo.impl.triangle.TriangleCountForkJoin;
 import org.neo4j.graphalgo.impl.triangle.TriangleCountQueue;
 import org.neo4j.graphalgo.impl.triangle.TriangleStream;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -52,7 +54,7 @@ public final class LargerTriangleCountTest {
     private static final String RELATIONSHIP = "REL";
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() {
@@ -84,7 +86,7 @@ public final class LargerTriangleCountTest {
 
     @Before
     public void setUp() {
-        graph = new GraphLoader(DB)
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withLabel(LABEL)
                 .withRelationshipType(RELATIONSHIP)
                 .withoutRelationshipWeights()
@@ -92,7 +94,7 @@ public final class LargerTriangleCountTest {
                 .withSort(true)
                 .asUndirected(true)
                 .withConcurrency(1)
-                .load(graphImpl);
+                .load(graphImpl));
     }
 
     @Test

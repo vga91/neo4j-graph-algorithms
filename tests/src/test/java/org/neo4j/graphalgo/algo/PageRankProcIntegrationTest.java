@@ -20,18 +20,20 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.PageRankProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,11 +45,13 @@ import java.util.function.Consumer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 @RunWith(Parameterized.class)
 public class PageRankProcIntegrationTest {
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
     private static Map<Long, Double> expected = new HashMap<>();
     private static Map<Long, Double> weightedExpected = new HashMap<>();
 
@@ -96,48 +100,43 @@ public class PageRankProcIntegrationTest {
             "  (j)-[:TYPE2{foo:9.5}]->(e),\n" +
             "  (k)-[:TYPE2{foo:4.2}]->(e)\n";
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
 
     @BeforeClass
     public static void setup() throws KernelException {
-        db = TestDatabaseCreator.createTestDatabase();
         try (Transaction tx = db.beginTx()) {
-            db.execute(DB_CYPHER).close();
-            tx.success();
+            db.executeTransactionally(DB_CYPHER);
+            tx.commit();
         }
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(PageRankProc.class);
 
 
         try (Transaction tx = db.beginTx()) {
             final Label label = Label.label("Label1");
-            expected.put(db.findNode(label, "name", "a").getId(), 0.243);
-            expected.put(db.findNode(label, "name", "b").getId(), 1.844);
-            expected.put(db.findNode(label, "name", "c").getId(), 1.777);
-            expected.put(db.findNode(label, "name", "d").getId(), 0.218);
-            expected.put(db.findNode(label, "name", "e").getId(), 0.243);
-            expected.put(db.findNode(label, "name", "f").getId(), 0.218);
-            expected.put(db.findNode(label, "name", "g").getId(), 0.150);
-            expected.put(db.findNode(label, "name", "h").getId(), 0.150);
-            expected.put(db.findNode(label, "name", "i").getId(), 0.150);
-            expected.put(db.findNode(label, "name", "j").getId(), 0.150);
+            expected.put(tx.findNode(label, "name", "a").getId(), 0.243);
+            expected.put(tx.findNode(label, "name", "b").getId(), 1.844);
+            expected.put(tx.findNode(label, "name", "c").getId(), 1.777);
+            expected.put(tx.findNode(label, "name", "d").getId(), 0.218);
+            expected.put(tx.findNode(label, "name", "e").getId(), 0.243);
+            expected.put(tx.findNode(label, "name", "f").getId(), 0.218);
+            expected.put(tx.findNode(label, "name", "g").getId(), 0.150);
+            expected.put(tx.findNode(label, "name", "h").getId(), 0.150);
+            expected.put(tx.findNode(label, "name", "i").getId(), 0.150);
+            expected.put(tx.findNode(label, "name", "j").getId(), 0.150);
 
-            weightedExpected.put(db.findNode(label, "name", "a").getId(), 0.218);
-            weightedExpected.put(db.findNode(label, "name", "b").getId(), 2.008);
-            weightedExpected.put(db.findNode(label, "name", "c").getId(), 1.850);
-            weightedExpected.put(db.findNode(label, "name", "d").getId(), 0.185);
-            weightedExpected.put(db.findNode(label, "name", "e").getId(), 0.182);
-            weightedExpected.put(db.findNode(label, "name", "f").getId(), 0.174);
-            weightedExpected.put(db.findNode(label, "name", "g").getId(), 0.150);
-            weightedExpected.put(db.findNode(label, "name", "h").getId(), 0.150);
-            weightedExpected.put(db.findNode(label, "name", "i").getId(), 0.150);
-            weightedExpected.put(db.findNode(label, "name", "j").getId(), 0.150);
-            tx.success();
+            weightedExpected.put(tx.findNode(label, "name", "a").getId(), 0.218);
+            weightedExpected.put(tx.findNode(label, "name", "b").getId(), 2.008);
+            weightedExpected.put(tx.findNode(label, "name", "c").getId(), 1.850);
+            weightedExpected.put(tx.findNode(label, "name", "d").getId(), 0.185);
+            weightedExpected.put(tx.findNode(label, "name", "e").getId(), 0.182);
+            weightedExpected.put(tx.findNode(label, "name", "f").getId(), 0.174);
+            weightedExpected.put(tx.findNode(label, "name", "g").getId(), 0.150);
+            weightedExpected.put(tx.findNode(label, "name", "h").getId(), 0.150);
+            weightedExpected.put(tx.findNode(label, "name", "i").getId(), 0.150);
+            weightedExpected.put(tx.findNode(label, "name", "j").getId(), 0.150);
+            tx.commit();
         }
     }
 
@@ -281,18 +280,16 @@ public class PageRankProcIntegrationTest {
             String query,
             Map<String, Object> params,
             Consumer<Result.ResultRow> check) {
-        try (Result result = db.execute(query, params)) {
-            result.accept(row -> {
-                check.accept(row);
-                return true;
-            });
-        }
+        executeAndAccept(db, query, params, row -> {
+            check.accept(row);
+            return true;
+        });
     }
 
     private void assertResult(final String scoreProperty, Map<Long, Double> expected) {
         try (Transaction tx = db.beginTx()) {
             for (Map.Entry<Long, Double> entry : expected.entrySet()) {
-                double score = ((Number) db
+                double score = ((Number) tx
                         .getNodeById(entry.getKey())
                         .getProperty(scoreProperty)).doubleValue();
                 assertEquals(
@@ -301,7 +298,7 @@ public class PageRankProcIntegrationTest {
                         score,
                         0.1);
             }
-            tx.success();
+            tx.commit();
         }
     }
 

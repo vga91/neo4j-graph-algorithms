@@ -20,24 +20,26 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.neo4j.graphalgo.BetweennessCentralityProc;
 import org.neo4j.graphalgo.ClosenessCentralityProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
 /**
@@ -65,15 +67,14 @@ public class BetweennessCentralityIntegrationTest_282 {
             0
     };
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
 
-        db = TestDatabaseCreator.createTestDatabase();
-
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(BetweennessCentralityProc.class);
 
         final String importQuery =
@@ -98,17 +99,17 @@ public class BetweennessCentralityIntegrationTest_282 {
 
         try (ProgressTimer timer = ProgressTimer.start(l -> System.out.printf("Setup took %d ms%n", l))) {
             try (Transaction tx = db.beginTx()) {
-                db.execute(importQuery);
-                tx.success();
+                db.executeTransactionally(importQuery);
+                tx.commit();
             }
         }
 
     }
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
+//    @AfterClass
+//    public static void tearDown() throws Exception {
+//        if (db != null) db.shutdown();
+//    }
 
     /**
      * test org.neo4j.graphalgo.impl.BetweennessCentrality
@@ -121,7 +122,7 @@ public class BetweennessCentralityIntegrationTest_282 {
         final String evalQuery = "CALL algo.betweenness('Node', 'EDGE', {write:true, stats:true, writeProperty:'centrality'})\n" +
                 "YIELD nodes, minCentrality, maxCentrality, sumCentrality";
 
-        db.execute(evalQuery).accept(row -> {
+        executeAndAccept(db, evalQuery, row -> {
             final long nodes = row.getNumber("nodes").longValue();
             final double minCentrality = row.getNumber("minCentrality").doubleValue();
             final double maxCentrality = row.getNumber("maxCentrality").doubleValue();
@@ -136,7 +137,7 @@ public class BetweennessCentralityIntegrationTest_282 {
 
         final String checkQuery = "MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as c";
         final double[] result = new double[EXPECTED.length];
-        db.execute(checkQuery).accept(row -> {
+        executeAndAccept(db, checkQuery, row -> {
             final int id = row.getNumber("id").intValue();
             final double c = row.getNumber("c").doubleValue();
             result[id] = c;
@@ -160,7 +161,7 @@ public class BetweennessCentralityIntegrationTest_282 {
         final String evalQuery = "CALL algo.betweenness('Node', 'EDGE', {write:true, stats:true, writeProperty:'centrality', concurrency:4})\n" +
                 "YIELD nodes, minCentrality, maxCentrality, sumCentrality";
 
-        db.execute(evalQuery).accept(row -> {
+        executeAndAccept(db, evalQuery, row -> {
             final long nodes = row.getNumber("nodes").longValue();
             final double minCentrality = row.getNumber("minCentrality").doubleValue();
             final double maxCentrality = row.getNumber("maxCentrality").doubleValue();
@@ -175,7 +176,7 @@ public class BetweennessCentralityIntegrationTest_282 {
 
         final String checkQuery = "MATCH (n) WHERE exists(n.centrality) RETURN id(n) as id, n.centrality as c";
         final double[] result = new double[EXPECTED.length];
-        db.execute(checkQuery).accept(row -> {
+        executeAndAccept(db, checkQuery, row -> {
             final int id = row.getNumber("id").intValue();
             final double c = row.getNumber("c").doubleValue();
             result[id] = c;

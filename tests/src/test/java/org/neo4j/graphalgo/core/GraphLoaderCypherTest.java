@@ -26,8 +26,10 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.heavyweight.HeavyCypherGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 
@@ -40,7 +42,7 @@ import static org.junit.Assert.assertEquals;
 public class GraphLoaderCypherTest {
 
     @Rule
-    public ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public DatabaseRule db = new ImpermanentDatabaseRule();
 
     private Class<? extends GraphFactory> graphImpl;
 
@@ -51,7 +53,7 @@ public class GraphLoaderCypherTest {
 
     @Test
     public void both() {
-        db.execute("" +
+        db.executeTransactionally("" +
                 "CREATE (a:Node),(b:Node),(c:Node),(d:Node) " +
                 "CREATE" +
                 " (a)-[:REL]->(a)," +
@@ -59,7 +61,7 @@ public class GraphLoaderCypherTest {
                 " (a)-[:REL]->(b)," +
                 " (b)-[:REL]->(c)," +
                 " (b)-[:REL]->(d)");
-        GraphLoader graphLoader = new GraphLoader(db, Pools.DEFAULT);
+        GraphLoader graphLoader = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, Pools.DEFAULT, ktx));
         Graph graph = graphLoader.withLabel("MATCH (n) RETURN id(n) AS id")
                 .withRelationshipType("MATCH (a)--(b) RETURN id(a) AS source, id(b) AS target")
                 .direction(Direction.BOTH)
@@ -74,7 +76,7 @@ public class GraphLoaderCypherTest {
 
     @Test
     public void outgoing() {
-        db.execute("" +
+        db.executeTransactionally("" +
                 "CREATE (a:Node),(b:Node),(c:Node),(d:Node) " +
                 "CREATE" +
                 " (a)-[:REL]->(a)," +
@@ -82,7 +84,7 @@ public class GraphLoaderCypherTest {
                 " (a)-[:REL]->(b)," +
                 " (b)-[:REL]->(c)," +
                 " (b)-[:REL]->(d)");
-        GraphLoader graphLoader = new GraphLoader(db, Pools.DEFAULT);
+        GraphLoader graphLoader = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, Pools.DEFAULT, ktx));
         Graph graph = graphLoader.withLabel("MATCH (n) RETURN id(n) AS id")
                 .withRelationshipType("MATCH (a)-->(b) RETURN id(a) AS source, id(b) AS target")
                 .direction(Direction.OUTGOING)
@@ -97,7 +99,7 @@ public class GraphLoaderCypherTest {
 
     @Test
     public void incoming() {
-        db.execute("" +
+        db.executeTransactionally("" +
                 "CREATE (a:Node),(b:Node),(c:Node),(d:Node) " +
                 "CREATE" +
                 " (a)-[:REL]->(a)," +
@@ -105,7 +107,7 @@ public class GraphLoaderCypherTest {
                 " (a)-[:REL]->(b)," +
                 " (b)-[:REL]->(c)," +
                 " (b)-[:REL]->(d)");
-        GraphLoader graphLoader = new GraphLoader(db, Pools.DEFAULT);
+        GraphLoader graphLoader = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, Pools.DEFAULT, ktx));
         Graph graph = graphLoader.withLabel("MATCH (n) RETURN id(n) AS id")
                 .withRelationshipType("MATCH (a)<--(b) RETURN id(a) AS source, id(b) AS target")
                 .direction(Direction.INCOMING)

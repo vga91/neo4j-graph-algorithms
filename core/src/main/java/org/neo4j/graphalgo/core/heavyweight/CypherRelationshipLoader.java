@@ -30,6 +30,7 @@ import java.util.concurrent.Future;
 
 import static org.neo4j.graphalgo.core.heavyweight.CypherLoadingUtils.newWeightMapping;
 import static org.neo4j.graphalgo.core.heavyweight.HeavyCypherGraphFactory.NO_BATCH;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 public class CypherRelationshipLoader {
     private final GraphDatabaseAPI api;
@@ -96,7 +97,7 @@ public class CypherRelationshipLoader {
         final WeightMap relWeights = newWeightMapping(hasRelationshipWeights, setup.relationDefaultWeight, capacity);
 
         RelationshipRowVisitor visitor = new RelationshipRowVisitor(idMap, hasRelationshipWeights, relWeights, matrix, setup.duplicateRelationshipsStrategy);
-        api.execute(setup.relationshipType, CypherLoadingUtils.params(setup.params, offset, batchSize)).accept(visitor);
+        executeAndAccept(api, setup.relationshipType, CypherLoadingUtils.params(setup.params, offset, batchSize), visitor);
         return new Relationships(offset, visitor.rows(), matrix, relWeights, setup.relationDefaultWeight);
     }
 

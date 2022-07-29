@@ -22,7 +22,6 @@ import org.junit.Test;
 import org.neo4j.graphalgo.similarity.Similarities;
 import org.neo4j.graphalgo.similarity.SimilarityVectorAggregator;
 import org.neo4j.graphdb.Node;
-import org.neo4j.helpers.collection.MapUtil;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -69,7 +68,7 @@ public class PearsonSimilarityTest {
 
         List<Map<String, Object>> vectorMap = aggregator.result();
 
-        double similarity = similarities.pearsonSimilarity(vectorMap, vectorMap, MapUtil.map("vectorType", "maps"));
+        double similarity = similarities.pearsonSimilarity(vectorMap, vectorMap, Map.of("vectorType", "maps"));
         assertEquals(1.0, similarity, 0.01);
     }
 
@@ -93,7 +92,7 @@ public class PearsonSimilarityTest {
         aggregator2.next(node2, 1.0);
         List<Map<String, Object>> v2Map = aggregator2.result();
 
-        double similarity = similarities.pearsonSimilarity(v1Map, v2Map, MapUtil.map("vectorType", "maps"));
+        double similarity = similarities.pearsonSimilarity(v1Map, v2Map, Map.of("vectorType", "maps"));
         assertEquals(-1.0, similarity, 0.01);
     }
 
@@ -120,7 +119,7 @@ public class PearsonSimilarityTest {
         List<Map<String, Object>> v2Map = aggregator2.result();
 
 
-        double similarity = similarities.pearsonSimilarity(v1Map, v2Map, MapUtil.map("vectorType", "maps"));
+        double similarity = similarities.pearsonSimilarity(v1Map, v2Map, Map.of("vectorType", "maps"));
         assertEquals(1.0, similarity, 0.01);
     }
 
@@ -146,7 +145,7 @@ public class PearsonSimilarityTest {
         aggregator2.next(node2, 4.0);
         List<Map<String, Object>> v2Map = aggregator2.result();
 
-        double similarity = similarities.pearsonSimilarity(v1Map, v2Map, MapUtil.map("vectorType", "maps"));
+        double similarity = similarities.pearsonSimilarity(v1Map, v2Map, Map.of("vectorType", "maps"));
         assertEquals(0.0, similarity, 0.01);
     }
 

@@ -25,10 +25,10 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.triangle.TriangleCountQueue;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -61,8 +61,6 @@ public class ClusteringCoefficientWikiTest {
     @BeforeClass
     public static void setup() throws Exception {
 
-        db = TestDatabaseCreator.createTestDatabase();
-
         final String cypher =
                 "CREATE (a:Node {name:'a'})\n" +
                         "CREATE (b:Node {name:'b'})\n" +
@@ -75,22 +73,21 @@ public class ClusteringCoefficientWikiTest {
                         " (b)-[:TYPE]->(d)";
 
         try (Transaction tx = db.beginTx()) {
-            db.execute(cypher);
-            tx.success();
+            db.executeTransactionally(cypher);
+            tx.commit();
         }
 
-        graph = new GraphLoader(db)
+        graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withAnyLabel()
                 .withAnyRelationshipType()
                 .withoutRelationshipWeights()
                 .withoutNodeWeights()
                 .asUndirected(true)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
         graph = null;
     }
 

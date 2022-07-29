@@ -20,19 +20,20 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.AdditionalMatchers;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.neo4j.graphalgo.BetweennessCentralityProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -41,6 +42,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
 /**
@@ -50,15 +52,14 @@ import static org.mockito.Mockito.verify;
 @RunWith(MockitoJUnitRunner.class)
 public class BetweennessCentralityIntegrationTest_148 {
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
 
-        db = TestDatabaseCreator.createTestDatabase();
-
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(BetweennessCentralityProc.class);
 
         final String importQuery =
@@ -74,26 +75,17 @@ public class BetweennessCentralityIntegrationTest_148 {
                         ",(nMark)-[:FRIEND]->(nDoug)\n";
 
         try (ProgressTimer timer = ProgressTimer.start(l -> System.out.printf("Setup took %d ms%n", l))) {
-            try (Transaction tx = db.beginTx()) {
-                db.execute(importQuery);
-                tx.success();
-            }
+            db.executeTransactionally(importQuery);
         }
 
     }
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
-
     private String name(long id) {
         String[] name = {""};
-        db.execute("MATCH (n) WHERE id(n) = " + id + " RETURN n.name as name")
-                .accept(row -> {
-                    name[0] = row.getString("name");
-                    return false;
-                });
+        executeAndAccept(db, "MATCH (n) WHERE id(n) = " + id + " RETURN n.name as name", row -> {
+            name[0] = row.getString("name");
+            return false;
+        });
         if (name[0].isEmpty()) {
             throw new IllegalArgumentException("unknown id " + id);
         }
@@ -105,7 +97,7 @@ public class BetweennessCentralityIntegrationTest_148 {
 
         final Consumer mock = mock(Consumer.class);
         final String evalQuery = "CALL algo.betweenness.stream('User', 'FRIEND', {direction:'B'}) YIELD nodeId, centrality";
-        db.execute(evalQuery).accept(row -> {
+        executeAndAccept(db, evalQuery, row -> {
             final long nodeId = row.getNumber("nodeId").longValue();
             final double centrality = row.getNumber("centrality").doubleValue();
             mock.consume(name(nodeId), centrality);

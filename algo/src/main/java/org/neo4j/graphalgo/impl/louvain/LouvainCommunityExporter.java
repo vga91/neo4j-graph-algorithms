@@ -18,9 +18,9 @@
  */
 package org.neo4j.graphalgo.impl.louvain;
 
-import org.neo4j.collection.primitive.PrimitiveIntIterable;
-import org.neo4j.collection.primitive.PrimitiveIntIterator;
 import org.neo4j.graphalgo.api.IdMapping;
+import org.neo4j.graphalgo.api.PrimitiveIntIterable;
+import org.neo4j.graphalgo.api.PrimitiveIntIterator;
 import org.neo4j.graphalgo.core.utils.ParallelUtil;
 import org.neo4j.graphalgo.core.utils.StatementApi;
 import org.neo4j.internal.kernel.api.Write;

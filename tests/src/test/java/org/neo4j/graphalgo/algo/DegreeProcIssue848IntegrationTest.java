@@ -20,47 +20,42 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.DegreeCentralityProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.*;
 import java.util.function.Consumer;
 
 import static org.junit.Assert.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 @RunWith(Parameterized.class)
 public class DegreeProcIssue848IntegrationTest {
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     private static final String DB_CYPHER = "" +
             "UNWIND range(1,10001) as s\n" +
             "CREATE (:Node{id:s});\n";
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
-
     @BeforeClass
     public static void setup() throws KernelException {
-        db = TestDatabaseCreator.createTestDatabase();
-        try (Transaction tx = db.beginTx()) {
-            db.execute(DB_CYPHER).close();
-            tx.success();
-        }
+        db.executeTransactionally(DB_CYPHER);
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(DegreeCentralityProc.class);
     }
 
@@ -125,12 +120,11 @@ public class DegreeProcIssue848IntegrationTest {
             String query,
             Map<String, Object> params,
             Consumer<Result.ResultRow> check) {
-        try (Result result = db.execute(query, params)) {
-            result.accept(row -> {
-                check.accept(row);
-                return true;
-            });
-        }
+        // todo - check if it's correct
+        executeAndAccept(db, query, params, row -> {
+            check.accept(row);
+            return true;
+        });
     }
 
 }

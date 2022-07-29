@@ -23,16 +23,18 @@ import com.carrotsearch.hppc.IntIntScatterMap;
 import com.carrotsearch.hppc.cursors.IntIntCursor;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.neo4j.graphalgo.UnionFindProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,6 +42,7 @@ import java.util.Collection;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * @author mknblch
@@ -47,7 +50,8 @@ import static org.junit.Assert.assertTrue;
 @RunWith(Parameterized.class)
 public class UnionFindProcIntegrationTest {
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setup() throws KernelException {
@@ -78,22 +82,20 @@ public class UnionFindProcIntegrationTest {
                 // {H, I}
                 "  (nH)-[:TYPE]->(nI)";
 
-        db = TestDatabaseCreator.createTestDatabase();
-
         try (Transaction tx = db.beginTx()) {
-            db.execute(createGraph).close();
-            tx.success();
+            db.executeTransactionally(createGraph);
+            tx.commit();
         }
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(UnionFindProc.class);
     }
-
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
+//
+//    @AfterClass
+//    public static void tearDown() throws Exception {
+//        if (db != null) db.shutdown();
+//    }
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() {
@@ -110,83 +112,76 @@ public class UnionFindProcIntegrationTest {
 
     @Test
     public void testUnionFind() throws Exception {
-        db.execute("CALL algo.unionFind('', '',{graph:'"+graphImpl+"'}) YIELD setCount, communityCount")
-                .accept((Result.ResultVisitor<Exception>) row -> {
-                    assertEquals(3L, row.getNumber("communityCount"));
-                    assertEquals(3L, row.getNumber("setCount"));
-                    return true;
-                });
+        executeAndAccept(db, "CALL algo.unionFind('', '',{graph:'"+graphImpl+"'}) YIELD setCount, communityCount", row -> {
+            assertEquals(3L, row.getNumber("communityCount"));
+            assertEquals(3L, row.getNumber("setCount"));
+            return true;
+        });
     }
 
     @Test
     public void testUnionFindWithLabel() throws Exception {
-        db.execute("CALL algo.unionFind('Label', '',{graph:'"+graphImpl+"'}) YIELD setCount, communityCount")
-                .accept((Result.ResultVisitor<Exception>) row -> {
-                    assertEquals(1L, row.getNumber("communityCount"));
-                    assertEquals(1L, row.getNumber("setCount"));
-                    return true;
-                });
+        executeAndAccept(db, "CALL algo.unionFind('Label', '',{graph:'"+graphImpl+"'}) YIELD setCount, communityCount", row -> {
+            assertEquals(1L, row.getNumber("communityCount"));
+            assertEquals(1L, row.getNumber("setCount"));
+            return true;
+        });
     }
 
     @Test
     public void testUnionFindWriteBack() throws Exception {
-        db.execute("CALL algo.unionFind('', 'TYPE', {write:true,graph:'"+graphImpl+"'}) YIELD setCount, communityCount, writeMillis, nodes, partitionProperty, writeProperty")
-                .accept((Result.ResultVisitor<Exception>) row -> {
-                    assertNotEquals(-1L, row.getNumber("writeMillis"));
-                    assertNotEquals(-1L, row.getNumber("nodes"));
-                    assertEquals(3L, row.getNumber("communityCount"));
-                    assertEquals(3L, row.getNumber("setCount"));
-                    assertEquals("partition", row.getString("partitionProperty"));
-                    assertEquals("partition", row.getString("writeProperty"));
-                    return false;
-                });
+        executeAndAccept(db, "CALL algo.unionFind('', 'TYPE', {write:true,graph:'"+graphImpl+"'}) YIELD setCount, communityCount, writeMillis, nodes, partitionProperty, writeProperty", row -> {
+            assertNotEquals(-1L, row.getNumber("writeMillis"));
+            assertNotEquals(-1L, row.getNumber("nodes"));
+            assertEquals(3L, row.getNumber("communityCount"));
+            assertEquals(3L, row.getNumber("setCount"));
+            assertEquals("partition", row.getString("partitionProperty"));
+            assertEquals("partition", row.getString("writeProperty"));
+            return false;
+        });
     }
 
     @Test
     public void testUnionFindWriteBackExplicitWriteProperty() throws Exception {
-        db.execute("CALL algo.unionFind('', 'TYPE', {write:true,graph:'"+graphImpl+"', writeProperty:'unionFind'}) YIELD setCount, communityCount, writeMillis, nodes, partitionProperty, writeProperty")
-                .accept((Result.ResultVisitor<Exception>) row -> {
-                    assertNotEquals(-1L, row.getNumber("writeMillis"));
-                    assertNotEquals(-1L, row.getNumber("nodes"));
-                    assertEquals(3L, row.getNumber("communityCount"));
-                    assertEquals(3L, row.getNumber("setCount"));
-                    assertEquals("unionFind", row.getString("partitionProperty"));
-                    assertEquals("unionFind", row.getString("writeProperty"));
-                    return false;
-                });
+        executeAndAccept(db, "CALL algo.unionFind('', 'TYPE', {write:true,graph:'"+graphImpl+"', writeProperty:'unionFind'}) YIELD setCount, communityCount, writeMillis, nodes, partitionProperty, writeProperty", row -> {
+            assertNotEquals(-1L, row.getNumber("writeMillis"));
+            assertNotEquals(-1L, row.getNumber("nodes"));
+            assertEquals(3L, row.getNumber("communityCount"));
+            assertEquals(3L, row.getNumber("setCount"));
+            assertEquals("unionFind", row.getString("partitionProperty"));
+            assertEquals("unionFind", row.getString("writeProperty"));
+            return false;
+        });
     }
 
 
     @Test
     public void testUnionFindStream() throws Exception {
         final IntIntScatterMap map = new IntIntScatterMap(11);
-        db.execute("CALL algo.unionFind.stream('', 'TYPE', {graph:'"+graphImpl+"'}) YIELD setId")
-                .accept((Result.ResultVisitor<Exception>) row -> {
-                    map.addTo(row.getNumber("setId").intValue(), 1);
-                    return true;
-                });
+        executeAndAccept(db, "CALL algo.unionFind.stream('', 'TYPE', {graph:'"+graphImpl+"'}) YIELD setId", row -> {
+            map.addTo(row.getNumber("setId").intValue(), 1);
+            return true;
+        });
         assertMapContains(map, 1, 2, 7);
     }
 
     @Test
     public void testThresholdUnionFindStream() throws Exception {
         final IntIntScatterMap map = new IntIntScatterMap(11);
-        db.execute("CALL algo.unionFind.stream('', 'TYPE', {weightProperty:'cost', defaultValue:10.0, threshold:5.0, concurrency:1, graph:'"+graphImpl+"'}) YIELD setId")
-                .accept((Result.ResultVisitor<Exception>) row -> {
-                    map.addTo(row.getNumber("setId").intValue(), 1);
-                    return true;
-                });
+        executeAndAccept(db, "CALL algo.unionFind.stream('', 'TYPE', {weightProperty:'cost', defaultValue:10.0, threshold:5.0, concurrency:1, graph:'"+graphImpl+"'}) YIELD setId", row -> {
+            map.addTo(row.getNumber("setId").intValue(), 1);
+            return true;
+        });
         assertMapContains(map, 4, 3, 2, 1);
     }
 
     @Test
     public void testThresholdUnionFindLowThreshold() throws Exception {
         final IntIntScatterMap map = new IntIntScatterMap(11);
-        db.execute("CALL algo.unionFind.stream('', 'TYPE', {weightProperty:'cost', defaultValue:10.0, concurrency:1, threshold:3.14, graph:'"+graphImpl+"'}) YIELD setId")
-                .accept((Result.ResultVisitor<Exception>) row -> {
-                    map.addTo(row.getNumber("setId").intValue(), 1);
-                    return true;
-                });
+        executeAndAccept(db, "CALL algo.unionFind.stream('', 'TYPE', {weightProperty:'cost', defaultValue:10.0, concurrency:1, threshold:3.14, graph:'"+graphImpl+"'}) YIELD setId", row -> {
+            map.addTo(row.getNumber("setId").intValue(), 1);
+            return true;
+        });
         assertMapContains(map, 1, 2, 7);
     }
 

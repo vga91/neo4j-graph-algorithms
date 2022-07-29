@@ -32,13 +32,15 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.TerminationFlag;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.core.utils.paged.HugeLongArray;
 import org.neo4j.graphalgo.impl.louvain.*;
 import org.neo4j.graphalgo.TestProgressLogger;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.*;
 
@@ -89,7 +91,7 @@ public class LouvainWeightedGraphTest {
     public static final String ABCDEFGHZ = "abcdefghz";
 
     @Rule
-    public ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @Rule
     public ErrorCollector collector = new ErrorCollector();
@@ -114,22 +116,22 @@ public class LouvainWeightedGraphTest {
     }
 
     private void setup(String cypher) {
-        DB.execute(cypher);
-        graph = new GraphLoader(DB)
+        DB.executeTransactionally(cypher);
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .withoutNodeProperties()
                 .withOptionalRelationshipWeightsFromProperty("w", 1.0)
                 .asUndirected(true)
-                .load(graphImpl);
+                .load(graphImpl));
 
         try (Transaction transaction = DB.beginTx()) {
             for (int i = 0; i < ABCDEFGHZ.length(); i++) {
                 final String value = String.valueOf(ABCDEFGHZ.charAt(i));
-                final int id = graph.toMappedNodeId(DB.findNode(LABEL, "name", value).getId());
+                final int id = graph.toMappedNodeId(transaction.findNode(LABEL, "name", value).getId());
                 nameMap.put(value, id);
             }
-            transaction.success();
+            transaction.commit();
         }
     }
 
@@ -137,9 +139,9 @@ public class LouvainWeightedGraphTest {
         try (Transaction transaction = DB.beginTx()) {
             louvain.resultStream()
                     .forEach(r -> {
-                        System.out.println(DB.getNodeById(r.nodeId).getProperty("name") + ":" + r.community);
+                        System.out.println(transaction.getNodeById(r.nodeId).getProperty("name") + ":" + r.community);
                     });
-            transaction.success();
+            transaction.commit();
         }
     }
 

@@ -18,12 +18,22 @@
  */
 package org.neo4j.graphalgo;
 
+import org.junit.ClassRule;
+import org.junit.rules.TemporaryFolder;
+import org.neo4j.configuration.GraphDatabaseSettings;
+import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.test.TestDatabaseManagementServiceBuilder;
+
+import java.io.File;
+import java.util.UUID;
 
 /**
  * Builds a simple test graph.
@@ -38,19 +48,24 @@ public class SimpleGraphSetup {
     public static final String RELATION = "RELATION";
     public static final String PROPERTY = "weight";
 
-    private final GraphDatabaseService db;
+//    @ClassRule
+//    public static TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    
+    public static GraphDatabaseAPI db;// = new ImpermanentDatabaseRule();
 
     private long n0, n1, n2;
     private long r0, r1, r2;
     private int v0, v1, v2;
-
-    public SimpleGraphSetup(GraphDatabaseService db) {
-        this.db = db;
-        setupGraph();
-    }
+    
+    private final File file = new File(UUID.randomUUID().toString());
 
     public SimpleGraphSetup() {
-        this.db = TestDatabaseCreator.createTestDatabase();
+        // todo - delete folder 
+        DatabaseManagementService databaseManagementService = new TestDatabaseManagementServiceBuilder(file.toPath())
+//                .setConfig(apoc_jobs_pool_num_threads, 10L)
+                .build();
+        db = (GraphDatabaseAPI) databaseManagementService.database(GraphDatabaseSettings.DEFAULT_DATABASE_NAME);
         setupGraph();
     }
 
@@ -58,9 +73,9 @@ public class SimpleGraphSetup {
 
         try (Transaction transaction = db.beginTx()) {
 
-            final Node node0 = db.createNode(Label.label(LABEL));
-            final Node node1 = db.createNode(Label.label(LABEL));
-            final Node node2 = db.createNode(Label.label(LABEL));
+            final Node node0 = transaction.createNode(Label.label(LABEL));
+            final Node node1 = transaction.createNode(Label.label(LABEL));
+            final Node node2 = transaction.createNode(Label.label(LABEL));
 
             n0 = node0.getId();
             n1 = node1.getId();
@@ -78,16 +93,16 @@ public class SimpleGraphSetup {
             r1 = rel1.getId();
             r2 = rel2.getId();
 
-            transaction.success();
+            transaction.commit();
         }
     }
 
     public Graph build(Class<? extends GraphFactory> factory) {
-        final Graph graph = new GraphLoader((GraphDatabaseAPI) db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withLabel(LABEL)
                 .withRelationshipType(RELATION)
                 .withRelationshipWeightsFromProperty(PROPERTY, 0.0)
-                .load(factory);
+                .load(factory));
         v0 = graph.toMappedNodeId(n0);
         v1 = graph.toMappedNodeId(n1);
         v2 = graph.toMappedNodeId(n2);
@@ -134,7 +149,7 @@ public class SimpleGraphSetup {
         return n2;
     }
 
-    public void shutdown() {
-        if (db != null) db.shutdown();
+    public void deleteFolder() {
+        file.delete();
     }
 }

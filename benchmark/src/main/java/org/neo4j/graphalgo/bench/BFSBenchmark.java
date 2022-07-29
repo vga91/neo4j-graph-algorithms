@@ -73,7 +73,7 @@ public class BFSBenchmark {
                 .newCompleteGraphBuilder()
                 .createCompleteGraph(TRIANGLE_COUNT, connectedness);
 
-        g = new GraphLoader(api)
+        g = new TransactionWrapper(api).apply(ktx -> new GraphLoader(api, Pools.DEFAULT, ktx)
                 .withLabel(LABEL)
                 .withRelationshipType(RELATIONSHIP)
                 .withoutRelationshipWeights()
@@ -86,7 +86,7 @@ public class BFSBenchmark {
 
     @TearDown
     public void tearDown() {
-        if (api != null) api.shutdown();
+//        if (api != null) api.shutdown();
         Pools.DEFAULT.shutdownNow();
     }
 

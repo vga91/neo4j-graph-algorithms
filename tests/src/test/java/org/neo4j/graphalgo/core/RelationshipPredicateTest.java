@@ -28,11 +28,13 @@ import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -54,7 +56,7 @@ public class RelationshipPredicateTest {
     public static final Label LABEL = Label.label("Node");
 
     @ClassRule
-    public static ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static DatabaseRule DB = new ImpermanentDatabaseRule();
 
     private static long nodeA;
     private static long nodeB;
@@ -79,7 +81,7 @@ public class RelationshipPredicateTest {
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
-        DB.execute("CREATE (a:Node {name:'a'})\n" +
+        DB.executeTransactionally("CREATE (a:Node {name:'a'})\n" +
                 "CREATE (b:Node {name:'b'})\n" +
                 "CREATE (c:Node {name:'c'})\n" +
                 "CREATE" +
@@ -88,10 +90,10 @@ public class RelationshipPredicateTest {
                 " (c)-[:TYPE]->(a)");
 
         try (Transaction transaction = DB.beginTx()) {
-            nodeA = DB.findNode(LABEL, "name", "a").getId();
-            nodeB = DB.findNode(LABEL, "name", "b").getId();
-            nodeC = DB.findNode(LABEL, "name", "c").getId();
-            transaction.success();
+            nodeA = transaction.findNode(LABEL, "name", "a").getId();
+            nodeB = transaction.findNode(LABEL, "name", "b").getId();
+            nodeC = transaction.findNode(LABEL, "name", "c").getId();
+            transaction.commit();
         };
     }
 
@@ -337,11 +339,11 @@ public class RelationshipPredicateTest {
     }
 
     private GraphLoader loader() {
-        return new GraphLoader(DB)
+        return new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withAnyLabel()
                 .withAnyRelationshipType()
                 .withoutRelationshipWeights()
                 .withoutNodeWeights()
-                .withoutNodeProperties();
+                .withoutNodeProperties());
     }
 }

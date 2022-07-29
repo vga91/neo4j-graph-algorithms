@@ -20,6 +20,7 @@ package org.neo4j.graphalgo.core.heavyweight;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -30,9 +31,11 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.RelationshipConsumer;
 import org.neo4j.graphalgo.api.WeightedRelationshipConsumer;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyInt;
@@ -48,7 +51,8 @@ import static org.mockito.Mockito.verify;
 @RunWith(MockitoJUnitRunner.class)
 public class HeavyGraphFactoryTest {
 
-    private static GraphDatabaseService db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     private static long id1;
     private static long id2;
@@ -63,16 +67,14 @@ public class HeavyGraphFactoryTest {
     @BeforeClass
     public static void setup() {
 
-        db = TestDatabaseCreator.createTestDatabase();
-
         try (final Transaction transaction = db.beginTx()) {
-            final Node node1 = db.createNode(Label.label("Node1"));
+            final Node node1 = transaction.createNode(Label.label("Node1"));
             node1.setProperty("prop1", 1);
 
-            final Node node2 = db.createNode(Label.label("Node2"));
+            final Node node2 = transaction.createNode(Label.label("Node2"));
             node2.setProperty("prop2", 2);
 
-            final Node node3 = db.createNode(Label.label("Node3"));
+            final Node node3 = transaction.createNode(Label.label("Node3"));
             node3.setProperty("prop3", 3);
 
             final Relationship rel1 = node1.createRelationshipTo(node2, RelationshipType.withName("REL1"));
@@ -81,7 +83,7 @@ public class HeavyGraphFactoryTest {
             rel1.setProperty("prop1", 1);
             rel2.setProperty("prop2", 2);
             rel3.setProperty("prop3", 3);
-            transaction.success();
+            transaction.commit();
 
             id1 = node1.getId();
             id2 = node2.getId();
@@ -90,18 +92,13 @@ public class HeavyGraphFactoryTest {
 
     }
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
-
     @Test
     public void testAnyLabel() throws Exception {
 
-        final Graph graph = new GraphLoader((GraphDatabaseAPI) db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withAnyLabel()
                 .withAnyRelationshipType()
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         assertEquals(3, graph.nodeCount());
     }
@@ -109,22 +106,22 @@ public class HeavyGraphFactoryTest {
     @Test
     public void testWithLabel() throws Exception {
 
-        final Graph graph = new GraphLoader((GraphDatabaseAPI) db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withLabel("Node1")
                 .withoutRelationshipWeights()
                 .withAnyRelationshipType()
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         assertEquals(1, graph.nodeCount());
     }
 
     @Test
     public void testAnyRelation() throws Exception {
-        final Graph graph = new GraphLoader((GraphDatabaseAPI) db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withAnyLabel()
                 .withoutRelationshipWeights()
                 .withAnyRelationshipType()
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         graph.forEachRelationship(graph.toMappedNodeId(id1), Direction.OUTGOING, relationConsumer);
         verify(relationConsumer, times(1)).accept(eq(graph.toMappedNodeId(id1)), eq(graph.toMappedNodeId(id3)), anyLong());
@@ -138,11 +135,11 @@ public class HeavyGraphFactoryTest {
 
     @Test
     public void testWithRelation() throws Exception {
-        final Graph graph = new GraphLoader((GraphDatabaseAPI) db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withAnyLabel()
                 .withoutRelationshipWeights()
                 .withRelationshipType("REL1")
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         graph.forEachRelationship(graph.toMappedNodeId(id1), Direction.OUTGOING, relationConsumer);
         verify(relationConsumer, times(1)).accept(eq(graph.toMappedNodeId(id1)), eq(graph.toMappedNodeId(id2)), anyLong());
@@ -157,11 +154,11 @@ public class HeavyGraphFactoryTest {
     @Test
     public void testWithProperty() throws Exception {
 
-        final Graph graph = new GraphLoader((GraphDatabaseAPI) db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withAnyLabel()
                 .withAnyRelationshipType()
                 .withRelationshipWeightsFromProperty("prop1", 0.0)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         graph.forEachRelationship(graph.toMappedNodeId(id1), Direction.OUTGOING, weightedRelationConsumer);
         verify(weightedRelationConsumer, times(1))
@@ -170,7 +167,7 @@ public class HeavyGraphFactoryTest {
 
     @Test
     public void testWithNodeProperties() throws Exception {
-        final HeavyGraph graph = (HeavyGraph) new GraphLoader((GraphDatabaseAPI) db)
+        final HeavyGraph graph = (HeavyGraph) new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withoutRelationshipWeights()
                 .withAnyRelationshipType()
                 .withOptionalNodeProperties(
@@ -178,7 +175,7 @@ public class HeavyGraphFactoryTest {
                         PropertyMapping.of("prop2", "prop2", 0D),
                         PropertyMapping.of("prop3", "prop3", 0D)
                 )
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
 
         assertEquals(1.0, graph.nodeProperties("prop1").get(graph.toMappedNodeId(0L)), 0.01);
         assertEquals(2.0, graph.nodeProperties("prop2").get(graph.toMappedNodeId(1L)), 0.01);

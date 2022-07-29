@@ -69,7 +69,7 @@ public class ClosenessCentralityProc {
         final ProcedureConfiguration configuration = ProcedureConfiguration.create(config);
         AllocationTracker tracker = AllocationTracker.create();
 
-        final Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        final Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .init(log, label, relationship, configuration)
                 .withoutNodeProperties()
                 .asUndirected(true)
@@ -134,7 +134,7 @@ public class ClosenessCentralityProc {
 
         Graph graph;
         try (ProgressTimer timer = builder.timeLoad()) {
-            graph = new GraphLoader(api, Pools.DEFAULT)
+            graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                     .init(log, label, relationship, configuration)
                     .withoutNodeProperties()
                     .withDirection(Direction.OUTGOING)

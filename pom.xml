@@ -28,9 +28,9 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <neo4j.version>3.5.3</neo4j.version>
+        <neo4j.version>4.4.8</neo4j.version>
         <jmh.version>1.21</jmh.version>
-        <javac.target>1.8</javac.target>
+        <javac.target>11</javac.target>
     </properties>
 
     <organization>
@@ -101,13 +101,13 @@
                 <type>test-jar</type>
                 <scope>test</scope>
             </dependency>
-            <dependency>
-                <groupId>net.biville.florent</groupId>
-                <artifactId>neo4j-sproc-compiler</artifactId>
-                <version>1.2.1</version>
-                <scope>provided</scope>
-                <optional>true</optional>
-            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>net.biville.florent</groupId>-->
+<!--                <artifactId>neo4j-sproc-compiler</artifactId>-->
+<!--                <version>1.2.1</version>-->
+<!--                <scope>provided</scope>-->
+<!--                <optional>true</optional>-->
+<!--            </dependency>-->
 
             <!-- Benchmark Dependencies -->
             <dependency>

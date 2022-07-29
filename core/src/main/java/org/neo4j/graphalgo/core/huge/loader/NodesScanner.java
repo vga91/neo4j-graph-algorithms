@@ -27,10 +27,13 @@ import org.neo4j.graphalgo.core.utils.paged.HugeLongArrayBuilder;
 import org.neo4j.internal.kernel.api.CursorFactory;
 import org.neo4j.internal.kernel.api.PropertyCursor;
 import org.neo4j.internal.kernel.api.Read;
+import org.neo4j.io.pagecache.context.CursorContext;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.impl.store.NodeStore;
 import org.neo4j.kernel.impl.store.record.NodeRecord;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
+import org.neo4j.storageengine.api.LongReference;
+import org.neo4j.storageengine.api.PropertySelection;
 import org.neo4j.values.storable.Value;
 
 import java.util.Collection;
@@ -128,18 +131,18 @@ final class NodesScanner extends StatementAction implements RecordScanner {
 
     @Override
     public void accept(final KernelTransaction transaction) {
-        Read read = transaction.dataRead();
-        CursorFactory cursors = transaction.cursors();
+
         try (AbstractStorePageCacheScanner<NodeRecord>.Cursor cursor = scanner.getCursor()) {
             NodesBatchBuffer batches = new NodesBatchBuffer(
                     nodeStore,
                     label,
                     cursor.bulkSize(),
-                    nodePropertyBuilders != null);
+                    nodePropertyBuilders != null,
+                    transaction.storeCursors());
             final ImportProgress progress = this.progress;
             long allImported = 0L;
             while (batches.scan(cursor)) {
-                int imported = importNodes(batches, read, cursors);
+                int imported = importNodes(batches, transaction);//read, cursors, transaction.cursorContext());
                 progress.relationshipsImported(imported);
                 allImported += imported;
             }
@@ -153,9 +156,12 @@ final class NodesScanner extends StatementAction implements RecordScanner {
     }
 
     private int importNodes(
-            NodesBatchBuffer buffer,
-            final Read read,
-            final CursorFactory cursors) {
+            NodesBatchBuffer buffer, 
+            KernelTransaction transaction
+//            final Read read,
+//            final CursorFactory cursors,
+//            CursorContext cursorContext
+    ) {
 
         int batchLength = buffer.length();
         if (batchLength == 0) {
@@ -184,8 +190,10 @@ final class NodesScanner extends StatementAction implements RecordScanner {
                             properties[batchIndex],
                             nodePropertyBuilders,
                             localIndex,
-                            cursors,
-                            read
+                            transaction
+//                            cursors,
+//                            read,
+//                            cursorContext
                     );
                 }
             }
@@ -201,10 +209,17 @@ final class NodesScanner extends StatementAction implements RecordScanner {
             long propertiesReference,
             IntObjectMap<HugeNodePropertiesBuilder> nodeProperties,
             long localIndex,
-            CursorFactory cursors,
-            Read read) {
-        try (PropertyCursor pc = cursors.allocatePropertyCursor()) {
-            read.nodeProperties(nodeReference, propertiesReference, pc);
+            KernelTransaction transaction
+//            CursorFactory cursors,
+//            Read read,
+//            CursorContext cursorContext
+    ) {
+        Read read = transaction.dataRead();
+        CursorFactory cursors = transaction.cursors();
+        
+        try (PropertyCursor pc = cursors.allocatePropertyCursor(transaction.cursorContext(), transaction.memoryTracker())) {
+            // todo - investigate, PropertySelection.ALL_PROPERTIES??? 
+            read.nodeProperties(nodeReference, new LongReference(propertiesReference), PropertySelection.ALL_PROPERTIES, pc);
             while (pc.next()) {
                 HugeNodePropertiesBuilder props = nodeProperties.get(pc.propertyKey());
                 if (props != null) {

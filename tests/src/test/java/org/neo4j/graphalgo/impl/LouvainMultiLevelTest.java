@@ -31,16 +31,15 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.TerminationFlag;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.impl.louvain.Louvain;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Label;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -92,7 +91,7 @@ public class LouvainMultiLevelTest {
     public static final Label LABEL = Label.label("Node");
 
     @Rule
-    public ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @Rule
     public ErrorCollector collector = new ErrorCollector();
@@ -115,14 +114,14 @@ public class LouvainMultiLevelTest {
     }
 
     private void setup(String cypher) {
-        DB.execute(cypher);
-        graph = new GraphLoader(DB)
+        DB.executeTransactionally(cypher);
+        graph = new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .withoutNodeProperties()
                 .withOptionalRelationshipWeightsFromProperty("w", 1.0)
                 .asUndirected(true)
-                .load(graphImpl);
+                .load(graphImpl));
     }
 
     @Test

@@ -20,23 +20,27 @@ package org.neo4j.graphalgo.core.heavyweight;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.PropertyMapping;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.*;
-import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
-import org.neo4j.test.TestGraphDatabaseFactory;
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 public class HeavyCypherGraphFactoryTest {
 
-    private static GraphDatabaseService db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     private static int id1;
     private static int id2;
@@ -45,23 +49,21 @@ public class HeavyCypherGraphFactoryTest {
     @BeforeClass
     public static void setUp() {
 
-        db = TestDatabaseCreator.createTestDatabase();
-
-        db.execute(
-                "CREATE (n1 {partition: 6})-[:REL  {prop:1}]->(n2 {foo: 4})-[:REL {prop:2}]->(n3) " +
-                   "CREATE (n1)-[:REL {prop:3}]->(n3) " +
-                   "RETURN id(n1) AS id1, id(n2) AS id2, id(n3) AS id3").accept(row -> {
+        
+        executeAndAccept(db, "CREATE (n1 {partition: 6})-[:REL  {prop:1}]->(n2 {foo: 4})-[:REL {prop:2}]->(n3) " +
+                "CREATE (n1)-[:REL {prop:3}]->(n3) " +
+                "RETURN id(n1) AS id1, id(n2) AS id2, id(n3) AS id3", row -> {
             id1 = row.getNumber("id1").intValue();
             id2 = row.getNumber("id2").intValue();
             id3 = row.getNumber("id3").intValue();
             return true;
         });
     }
-
-    @AfterClass
-    public static void tearDown() {
-        db.shutdown();
-    }
+//
+//    @AfterClass
+//    public static void tearDown() {
+//        db.shutdown();
+//    }
 
 
     @Test
@@ -69,8 +71,8 @@ public class HeavyCypherGraphFactoryTest {
         String nodes = "MATCH (n) RETURN id(n) as id, n.partition AS partition, n.foo AS foo";
         String rels = "MATCH (n)-[r]->(m) WHERE type(r) = {rel} RETURN id(n) as source, id(m) as target, r.prop as weight";
 
-        final HeavyGraph graph = (HeavyGraph) new GraphLoader((GraphDatabaseAPI) db)
-                .withParams(MapUtil.map("rel","REL"))
+        final HeavyGraph graph = (HeavyGraph) new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
+                .withParams(Map.of("rel","REL"))
                 .withRelationshipWeightsFromProperty("prop", 0)
                 .withLabel(nodes)
                 .withRelationshipType(rels)
@@ -78,7 +80,7 @@ public class HeavyCypherGraphFactoryTest {
                         PropertyMapping.of("partition", "partition", 0.0),
                         PropertyMapping.of("foo", "foo", 5.0)
                 )
-                .load(HeavyCypherGraphFactory.class);
+                .load(HeavyCypherGraphFactory.class));
 
         assertEquals(3, graph.nodeCount());
         assertEquals(2, graph.degree(graph.toMappedNodeId(id1), Direction.OUTGOING));

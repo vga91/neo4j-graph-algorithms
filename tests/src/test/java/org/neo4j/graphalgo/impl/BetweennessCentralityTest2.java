@@ -20,23 +20,26 @@ package org.neo4j.graphalgo.impl;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.neo4j.graphalgo.BetweennessCentralityProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.ParallelUtil;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.betweenness.BetweennessCentrality;
 import org.neo4j.graphalgo.impl.betweenness.BetweennessCentralitySuccessorBrandes;
 import org.neo4j.graphalgo.impl.betweenness.ParallelBetweennessCentrality;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.concurrent.atomic.AtomicIntegerArray;
@@ -44,6 +47,7 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  *   .0                 .0
@@ -60,7 +64,8 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class BetweennessCentralityTest2 {
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
     private static Graph graph;
 
     interface TestConsumer {
@@ -92,34 +97,28 @@ public class BetweennessCentralityTest2 {
                         " (e)-[:TYPE]->(g),\n" +
                         " (f)-[:TYPE]->(g)";
 
-        db = TestDatabaseCreator.createTestDatabase();
-
-        try (Transaction tx = db.beginTx()) {
-            db.execute(cypher);
-            tx.success();
-        }
+        db.executeTransactionally(cypher);
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(BetweennessCentralityProc.class);
 
-        graph = new GraphLoader(db)
+        graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .withoutNodeProperties()
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
         graph = null;
     }
 
     private String name(long id) {
         String[] name = {""};
-        db.execute("MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name")
-                .accept(row -> {
+        executeAndAccept(db, "MATCH (n:Node) WHERE id(n) = " + id + " RETURN n.name as name",
+                row -> {
                     name[0] = row.getString("name");
                     return false;
                 });

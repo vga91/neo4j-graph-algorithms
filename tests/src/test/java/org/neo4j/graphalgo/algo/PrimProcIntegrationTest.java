@@ -20,16 +20,21 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.PrimProc;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+
+import java.util.Map;
 
 import static org.junit.Assert.*;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  *
@@ -48,12 +53,13 @@ import static org.junit.Assert.*;
 public class PrimProcIntegrationTest {
 
     private static final RelationshipType type = RelationshipType.withName("TYPE");
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
+//    @AfterClass
+//    public static void tearDown() throws Exception {
+//        if (db != null) db.shutdown();
+//    }
 
     @BeforeClass
     public static void setup() throws KernelException {
@@ -71,24 +77,22 @@ public class PrimProcIntegrationTest {
                 "CREATE (c)-[:TYPE {cost:5.0}]->(e) " +
                 "CREATE (d)-[:TYPE {cost:6.0}]->(e)";
 
-        db = TestDatabaseCreator.createTestDatabase();
-
         try (Transaction tx = db.beginTx()) {
-            db.execute(cypher);
-            tx.success();
+            db.executeTransactionally(cypher);
+            tx.commit();
         }
 
         db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(PrimProc.class);
     }
 
     @Test
     public void testMinimum() throws Exception {
 
-        db.execute("MATCH(n:Node{start:true}) WITH n CALL algo.spanningTree('Node', 'TYPE', 'cost', id(n), {graph:'huge', write:true, stats:true}) " +
+        executeAndAccept(db, "MATCH(n:Node{start:true}) WITH n CALL algo.spanningTree('Node', 'TYPE', 'cost', id(n), {graph:'huge', write:true, stats:true}) " +
                 "YIELD loadMillis, computeMillis, writeMillis, effectiveNodeCount " +
-                "RETURN loadMillis, computeMillis, writeMillis, effectiveNodeCount").accept(res -> {
+                "RETURN loadMillis, computeMillis, writeMillis, effectiveNodeCount", res -> {
 
             System.out.println(res.get("loadMillis"));
             System.out.println(res.get("computeMillis"));
@@ -101,10 +105,9 @@ public class PrimProcIntegrationTest {
             return true;
         });
 
-        final long relCount = db.execute("MATCH (a)-[:MST]->(b) RETURN id(a) as a, id(b) as b")
-                .stream()
-                .peek(m -> System.out.println(m.get("a") + " -> " + m.get("b")))
-                .count();
+        final long relCount = db.executeTransactionally("MATCH (a)-[:MST]->(b) RETURN id(a) as a, id(b) as b", Map.of(), 
+                r -> r.stream().peek(m -> System.out.println(m.get("a") + " -> " + m.get("b")))
+                            .count());
 
         assertEquals(relCount, 4);
     }
@@ -112,9 +115,9 @@ public class PrimProcIntegrationTest {
     @Test
     public void testMaximum() throws Exception {
 
-        db.execute("MATCH(n:Node{start:true}) WITH n CALL algo.spanningTree.maximum('Node', 'TYPE', 'cost', id(n), {writeProperty:'MAX', graph:'huge', write:true, stats:true}) " +
+        executeAndAccept(db, "MATCH(n:Node{start:true}) WITH n CALL algo.spanningTree.maximum('Node', 'TYPE', 'cost', id(n), {writeProperty:'MAX', graph:'huge', write:true, stats:true}) " +
                 "YIELD loadMillis, computeMillis, writeMillis, effectiveNodeCount " +
-                "RETURN loadMillis, computeMillis, writeMillis, effectiveNodeCount").accept(res -> {
+                "RETURN loadMillis, computeMillis, writeMillis, effectiveNodeCount", res -> {
 
             System.out.println(res.get("loadMillis"));
             System.out.println(res.get("computeMillis"));
@@ -127,10 +130,10 @@ public class PrimProcIntegrationTest {
             return true;
         });
 
-        final long relCount = db.execute("MATCH (a)-[:MAX]->(b) RETURN id(a) as a, id(b) as b")
-                .stream()
+        final long relCount = db.executeTransactionally("MATCH (a)-[:MAX]->(b) RETURN id(a) as a, id(b) as b", Map.of(), r ->
+                r.stream()
                 .peek(m -> System.out.println(m.get("a") + " -> " + m.get("b")))
-                .count();
+                .count());
 
         assertEquals(relCount, 4);
     }

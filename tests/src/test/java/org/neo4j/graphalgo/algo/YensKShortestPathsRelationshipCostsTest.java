@@ -22,16 +22,15 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.KShortestPathsProc;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * Graph:
@@ -47,7 +46,7 @@ import static org.junit.Assert.assertEquals;
 public class YensKShortestPathsRelationshipCostsTest {
 
     @ClassRule
-    public static ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
@@ -60,8 +59,8 @@ public class YensKShortestPathsRelationshipCostsTest {
                         " (a)-[:TYPE {cost:3.0}]->(b),\n" +
                         " (b)-[:TYPE {cost:2.0}]->(c)";
 
-        DB.execute(cypher);
-        DB.resolveDependency(Procedures.class).registerProcedure(KShortestPathsProc.class);
+        DB.executeTransactionally(cypher);
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(KShortestPathsProc.class);
     }
 
     @Test
@@ -71,7 +70,7 @@ public class YensKShortestPathsRelationshipCostsTest {
                 "CALL algo.kShortestPaths(c, a, 1, 'cost') " +
                 "YIELD resultCount RETURN resultCount";
 
-        DB.execute(cypher).accept(row -> {
+        executeAndAccept(DB, cypher, row -> {
             assertEquals(1, row.getNumber("resultCount").intValue());
             return true;
         });
@@ -80,7 +79,7 @@ public class YensKShortestPathsRelationshipCostsTest {
                 "UNWIND relationships(p) AS pair\n" +
                 "return sum(pair.weight) AS distance";
 
-        DB.execute(shortestPathsQuery, MapUtil.map("one", "c", "two", "a")).accept(row -> {
+        executeAndAccept(DB, cypher, Map.of("one", "c", "two", "a"), row -> {
             assertEquals(5.0, row.getNumber("distance").doubleValue(), 0.01);
             return true;
         });

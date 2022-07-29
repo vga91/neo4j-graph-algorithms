@@ -29,8 +29,10 @@ import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -42,7 +44,7 @@ import static org.junit.Assert.assertEquals;
 public final class LoadingTest {
 
     @Rule
-    public ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public DatabaseRule db = new ImpermanentDatabaseRule();
 
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() {
@@ -63,7 +65,7 @@ public final class LoadingTest {
 
     @Test
     public void testBasicLoading() {
-        db.execute("CREATE (a:Node {name:'a'})\n" +
+        db.executeTransactionally("CREATE (a:Node {name:'a'})\n" +
                 "CREATE (b:Node {name:'b'})\n" +
                 "CREATE (c:Node {name:'c'})\n" +
                 "CREATE (d:Node2 {name:'d'})\n" +
@@ -79,12 +81,12 @@ public final class LoadingTest {
                 " (b)-[:TYPE2 {prop:7}]->(e),\n" +
                 " (a)-[:TYPE2 {prop:8}]->(e)");
 
-        final Graph graph = new GraphLoader(db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withDirection(Direction.OUTGOING)
                 .withExecutorService(Pools.DEFAULT)
                 .withLabel("Node")
                 .withRelationshipType("TYPE")
-                .load(graphImpl);
+                .load(graphImpl));
 
         assertEquals(3, graph.nodeCount());
 

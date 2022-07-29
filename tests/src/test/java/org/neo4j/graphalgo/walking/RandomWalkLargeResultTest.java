@@ -19,49 +19,36 @@
 package org.neo4j.graphalgo.walking;
 
 import org.junit.*;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.*;
-import org.neo4j.helpers.collection.Iterators;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.internal.helpers.collection.Iterators;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.count;
 
 public class RandomWalkLargeResultTest {
 
     private static final int NODE_COUNT = 20000;
 
-    private static GraphDatabaseAPI db;
-    private Transaction tx;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void beforeClass() throws KernelException {
-        db = TestDatabaseCreator.createTestDatabase();
-        db.getDependencyResolver().resolveDependency(Procedures.class).registerProcedure(NodeWalkerProc.class);
+        db.getDependencyResolver().resolveDependency(GlobalProcedures.class).registerProcedure(NodeWalkerProc.class);
 
-        db.execute(buildDatabaseQuery(), Collections.singletonMap("count",NODE_COUNT)).close();
-    }
-
-    @AfterClass
-    public static void AfterClass() {
-        db.shutdown();
-    }
-
-    @Before
-    public void setUp() throws Exception {
-        tx = db.beginTx();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        tx.close();
+        db.executeTransactionally(buildDatabaseQuery(), Collections.singletonMap("count",NODE_COUNT));
     }
 
     private static String buildDatabaseQuery() {
@@ -74,8 +61,8 @@ public class RandomWalkLargeResultTest {
 
     @Test
     public void shouldHandleLargeResults() {
-        Result results = db.execute("CALL algo.randomWalk.stream(null, 100, 100000)");
+        final long count = count(db, "CALL algo.randomWalk.stream(null, 100, 100000)");
 
-        assertEquals(100000,Iterators.count(results));
+        assertEquals(100000, count);
     }
 }

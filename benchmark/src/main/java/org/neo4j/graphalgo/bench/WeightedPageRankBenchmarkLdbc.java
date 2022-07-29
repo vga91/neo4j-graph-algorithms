@@ -28,7 +28,7 @@ import org.neo4j.graphalgo.impl.results.CentralityResult;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.openjdk.jmh.annotations.*;
 
@@ -80,12 +80,12 @@ public class WeightedPageRankBenchmarkLdbc {
             long endNodeId = relationship.getEndNodeId();
             relationship.setProperty("weight", startNodeId + endNodeId % 100);
             if(++ count % 100000 == 0) {
-                tx.success(); tx.close();
+                tx.commit(); tx.close();
                 tx = db.beginTx();
             }
         }
 
-        tx.success();
+        tx.commit();
         tx.close();
 
         grph = new GraphLoader(db, Pools.DEFAULT)

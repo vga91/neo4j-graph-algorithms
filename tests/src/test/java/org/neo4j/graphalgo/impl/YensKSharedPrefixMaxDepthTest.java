@@ -22,9 +22,10 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.graphalgo.KShortestPathsProc;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +46,7 @@ public class YensKSharedPrefixMaxDepthTest {
 
 
     @ClassRule
-    public static ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() throws KernelException {
@@ -65,8 +66,8 @@ public class YensKSharedPrefixMaxDepthTest {
                         " (e)-[:TYPE {cost:1.0}]->(f),\n" +
                         " (f)-[:TYPE {cost:1.0}]->(d)\n";
 
-        db.execute(cypher);
-        db.resolveDependency(Procedures.class).registerProcedure(KShortestPathsProc.class);
+        db.executeTransactionally(cypher);
+        db.resolveDependency(GlobalProcedures.class).registerProcedure(KShortestPathsProc.class);
     }
 
     @Test
@@ -80,8 +81,8 @@ public class YensKSharedPrefixMaxDepthTest {
         params.put("from", "d");
         params.put("to", "a");
         params.put("maxDepth", 5);
-        List<Object> paths = db.execute(cypher, params).stream().map(result -> result.get("path"))
-                .collect(Collectors.toList());
+        List<Object> paths = db.executeTransactionally(cypher, params, r -> r.stream().map(result -> result.get("path"))
+                .collect(Collectors.toList()));
 
         assertEquals("Number of paths to maxDepth=5 should be 1", 1, paths.size());
 
@@ -89,15 +90,15 @@ public class YensKSharedPrefixMaxDepthTest {
         params.put("from", "a");
         params.put("to", "d");
 
-        List<Object> pathsOtherDirection = db.execute(cypher, params).stream().map(result -> result.get("path"))
-                .collect(Collectors.toList());
+        List<Object> pathsOtherDirection = db.executeTransactionally(cypher, params, r -> r.stream().map(result -> result.get("path"))
+                .collect(Collectors.toList()));
 
         assertEquals("Number of paths to maxDepth=5 should be 1", 1, pathsOtherDirection.size());
 
         params.put("maxDepth", 6);
 
-        List<Object> pathsDepth6 = db.execute(cypher, params).stream().map(result -> result.get("path"))
-                .collect(Collectors.toList());
+        List<Object> pathsDepth6 = db.executeTransactionally(cypher, params, r -> r.stream().map(result -> result.get("path"))
+                .collect(Collectors.toList()));
 
         assertEquals("Number of paths to maxDepth=6 should be 2", 2, pathsDepth6.size());
     }

@@ -25,6 +25,9 @@ import org.neo4j.graphalgo.core.utils.paged.BitUtil;
 import org.neo4j.internal.kernel.api.CursorFactory;
 import org.neo4j.internal.kernel.api.PropertyCursor;
 import org.neo4j.internal.kernel.api.Read;
+import org.neo4j.kernel.api.KernelTransaction;
+import org.neo4j.storageengine.api.LongReference;
+import org.neo4j.storageengine.api.PropertySelection;
 
 import java.util.Arrays;
 
@@ -87,10 +90,12 @@ class HugeWeightMapBuilder {
             long propertiesReference,
             long target,
             int localSource,
-            CursorFactory cursors,
-            Read read) {
-        try (PropertyCursor pc = cursors.allocatePropertyCursor()) {
-            read.relationshipProperties(relationshipReference, propertiesReference, pc);
+            KernelTransaction transaction) {
+        final CursorFactory cursors = transaction.cursors();
+        final Read read = transaction.dataRead();
+        try (PropertyCursor pc = cursors.allocatePropertyCursor(transaction.cursorContext(), transaction.memoryTracker())) {
+            // todo - check PropertySelection.ALL_PROPERTIES..
+            read.relationshipProperties(relationshipReference, new LongReference(propertiesReference), PropertySelection.ALL_PROPERTIES, pc);
             double weight = ReadHelper.readProperty(pc, weightProperty, defaultWeight);
             if (weight != defaultWeight) {
                 addWeight(localSource, target, weight);
@@ -140,8 +145,7 @@ class HugeWeightMapBuilder {
                 long propertiesReference,
                 long target,
                 int localSource,
-                CursorFactory cursors,
-                Read read) {
+                KernelTransaction transaction) {
         }
     }
 }

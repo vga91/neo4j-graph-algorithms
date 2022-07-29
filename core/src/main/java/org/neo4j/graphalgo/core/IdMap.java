@@ -21,11 +21,11 @@ package org.neo4j.graphalgo.core;
 import com.carrotsearch.hppc.LongIntHashMap;
 import com.carrotsearch.hppc.LongIntMap;
 import com.carrotsearch.hppc.cursors.LongIntCursor;
-import org.neo4j.collection.primitive.PrimitiveIntIterable;
-import org.neo4j.collection.primitive.PrimitiveIntIterator;
 import org.neo4j.graphalgo.api.BatchNodeIterable;
 import org.neo4j.graphalgo.api.IdMapping;
 import org.neo4j.graphalgo.api.NodeIterator;
+import org.neo4j.graphalgo.api.PrimitiveIntIterable;
+import org.neo4j.graphalgo.api.PrimitiveIntIterator;
 import org.neo4j.graphalgo.core.utils.ParallelUtil;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.core.utils.paged.MemoryUsage;
@@ -94,6 +94,11 @@ public final class IdMap implements IdMapping, NodeIterator, BatchNodeIterable {
         tracker.add(MemoryUsage.sizeOfIntArray(nodeToGraphIds.values.length));
         tracker.add(MemoryUsage.sizeOfLongArray(size()));
         graphIds = new long[size()];
+        
+//        nodeToGraphIds.forEach(item -> {
+//            System.out.println("item = " + item);
+//        });
+        
         for (final LongIntCursor cursor : nodeToGraphIds) {
             graphIds[cursor.value] = cursor.key;
         }

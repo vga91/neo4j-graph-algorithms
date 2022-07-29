@@ -22,22 +22,26 @@ import com.carrotsearch.hppc.LongLongScatterMap;
 import com.carrotsearch.hppc.cursors.LongLongCursor;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphalgo.StronglyConnectedComponentsProc;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 
 import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * @author mknblch
@@ -45,7 +49,8 @@ import static org.junit.Assert.assertTrue;
 @Ignore
 public class MultistepSCCProcTest {
 
-    private static GraphDatabaseAPI api;
+    @ClassRule
+    public static DatabaseRule api = new ImpermanentDatabaseRule();
 
     private static Graph graph;
 
@@ -77,28 +82,24 @@ public class MultistepSCCProcTest {
                         " (h)-[:TYPE {cost:3}]->(i),\n" +
                         " (i)-[:TYPE {cost:3}]->(g)";
 
-        api = TestDatabaseCreator.createTestDatabase();
-        try (Transaction tx = api.beginTx()) {
-            api.execute(cypher);
-            tx.success();
-        }
+        api.executeTransactionally(cypher);
 
 
         api.getDependencyResolver()
-                .resolveDependency(Procedures.class)
+                .resolveDependency(GlobalProcedures.class)
                 .registerProcedure(StronglyConnectedComponentsProc.class);
 
-        graph = new GraphLoader(api)
+        graph = new TransactionWrapper(api).apply(ktx -> new GraphLoader(api, ktx)
                 .withLabel("Node")
                 .withRelationshipType("TYPE")
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
     }
 
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        api.shutdown();
-    }
+//    @AfterClass
+//    public static void shutdownGraph() throws Exception {
+//        api.shutdown();
+//    }
 
     @Test
     public void testWrite() throws Exception {
@@ -106,7 +107,7 @@ public class MultistepSCCProcTest {
                 "YIELD loadMillis, computeMillis, writeMillis, setCount, maxSetSize, minSetSize " +
                 "RETURN loadMillis, computeMillis, writeMillis, setCount, maxSetSize, minSetSize";
 
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
 
             assertTrue(row.getNumber("loadMillis").longValue() > 0L);
             assertTrue(row.getNumber("computeMillis").longValue() > 0L);
@@ -124,7 +125,7 @@ public class MultistepSCCProcTest {
     public void testStream() throws Exception {
         String cypher = "CALL algo.scc.multistep.stream('Node', 'TYPE', {write:true, concurrency:4, cutoff:0}) YIELD nodeId, cluster RETURN nodeId, cluster";
         final LongLongScatterMap testMap = new LongLongScatterMap();
-        api.execute(cypher).accept(row -> {
+        executeAndAccept(api, cypher, row -> {
             testMap.addTo(row.getNumber("cluster").longValue(), 1);
             return true;
         });

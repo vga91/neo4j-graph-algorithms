@@ -26,6 +26,7 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphdb.Direction;
 
 import java.util.Arrays;
@@ -76,9 +77,9 @@ public final class DirectionFilteringTest extends RandomGraphTestCase {
         failing.addAll(Arrays.asList(expectedToFail));
         EnumSet<Direction> succeeding = EnumSet.complementOf(failing);
 
-        final Graph graph = new GraphLoader(RandomGraphTestCase.db)
+        final Graph graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(RandomGraphTestCase.db, ktx)
                 .withDirection(filter)
-                .load(graphImpl);
+                .load(graphImpl));
         graph.forEachNode(node -> {
             for (Direction direction : succeeding) {
                 graph.degree(node, direction);

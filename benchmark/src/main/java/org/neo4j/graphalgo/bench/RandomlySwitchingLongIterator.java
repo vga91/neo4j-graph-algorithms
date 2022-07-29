@@ -18,7 +18,6 @@
  */
 package org.neo4j.graphalgo.bench;
 
-import org.neo4j.collection.primitive.PrimitiveLongIterator;
 
 import java.util.Random;
 

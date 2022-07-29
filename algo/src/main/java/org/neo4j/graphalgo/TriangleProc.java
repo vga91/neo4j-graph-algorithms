@@ -73,7 +73,7 @@ public class TriangleProc {
                 .overrideNodeLabelOrQuery(label)
                 .overrideRelationshipTypeOrQuery(relationship);
 
-        final Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        final Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .withOptionalLabel(configuration.getNodeLabelOrQuery())
                 .withOptionalRelationshipType(configuration.getRelationshipOrQuery())
                 .withoutRelationshipWeights()
@@ -111,7 +111,7 @@ public class TriangleProc {
                 .overrideNodeLabelOrQuery(label)
                 .overrideRelationshipTypeOrQuery(relationship);
 
-        final Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        final Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .withOptionalLabel(configuration.getNodeLabelOrQuery())
                 .withOptionalRelationshipType(configuration.getRelationshipOrQuery())
                 .withoutRelationshipWeights()
@@ -150,7 +150,7 @@ public class TriangleProc {
                 .overrideNodeLabelOrQuery(label)
                 .overrideRelationshipTypeOrQuery(relationship);
 
-        final Graph graph = new GraphLoader(api, Pools.DEFAULT)
+        final Graph graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                 .withOptionalLabel(configuration.getNodeLabelOrQuery())
                 .withOptionalRelationshipType(configuration.getRelationshipOrQuery())
                 .withoutRelationshipWeights()
@@ -193,7 +193,7 @@ public class TriangleProc {
         final TriangleCountResultBuilder builder = new TriangleCountResultBuilder();
 
         try (ProgressTimer timer = builder.timeLoad()) {
-            graph = new GraphLoader(api, Pools.DEFAULT)
+            graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                     .withOptionalLabel(configuration.getNodeLabelOrQuery())
                     .withOptionalRelationshipType(configuration.getRelationshipOrQuery())
                     .withoutRelationshipWeights()
@@ -332,7 +332,7 @@ public class TriangleProc {
         final TriangleCountResultBuilder builder = new TriangleCountResultBuilder();
 
         try (ProgressTimer timer = builder.timeLoad()) {
-            graph = new GraphLoader(api, Pools.DEFAULT)
+            graph = new GraphLoader(api, Pools.DEFAULT, transaction)
                     .withOptionalLabel(configuration.getNodeLabelOrQuery())
                     .withOptionalRelationshipType(configuration.getRelationshipOrQuery())
                     .withoutRelationshipWeights()

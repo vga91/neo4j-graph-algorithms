@@ -20,88 +20,113 @@ package org.neo4j.graphalgo.algo;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.neo4j.configuration.GraphDatabaseSettings;
+import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphalgo.EigenvectorCentralityProc;
 import org.neo4j.graphalgo.PageRankProc;
-import org.neo4j.graphalgo.TestDatabaseCreator;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Label;
-import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.factory.GraphDatabaseSettings;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.io.fs.FileUtils;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.test.TestGraphDatabaseFactory;
+import org.neo4j.test.TestDatabaseManagementServiceBuilder;
 
 import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Consumer;
 
 import static org.junit.Assert.*;
+import static org.neo4j.configuration.GraphDatabaseSettings.DEFAULT_DATABASE_NAME;
+import static org.neo4j.configuration.GraphDatabaseSettings.load_csv_file_url_root;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.testResult;
 
 @RunWith(Parameterized.class)
 public class EigenvectorCentralityProcIntegrationTest {
+    public static final URL RESOURCE = Thread.currentThread().getContextClassLoader().getResource("got/got-s1-nodes.csv");
+    
+    @ClassRule
+    public static DatabaseRule db;
 
-    private static GraphDatabaseAPI db;
+    static {
+        try {
+            db = new ImpermanentDatabaseRule()
+                        .setConfig(load_csv_file_url_root, Path.of(RESOURCE.toURI()).getParent());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+//    private static final URL loadTest = Thread.currentThread().getContextClassLoader().getResource("got/got-s1-nodes.csv");//.getPath();
+
+    
     private static Map<Long, Double> expected = new HashMap<>();
     private static Map<Long, Double> weightedExpected = new HashMap<>();
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        if (db != null) db.shutdown();
-    }
+//    @AfterClass
+//    public static void tearDown() throws Exception {
+//        if (db != null) db.shutdown();
+//    }
 
     @BeforeClass
-    public static void setup() throws KernelException {
+    public static void setup() throws Exception {
         ClassLoader classLoader = EigenvectorCentralityProcIntegrationTest.class.getClassLoader();
-        File file = new File(classLoader.getResource("got/got-s1-nodes.csv").getFile());
+//        File file = new File(classLoader.getResource("got/got-s1-nodes.csv").getFile());
 
-        db = (GraphDatabaseAPI)new TestGraphDatabaseFactory()
-                .newImpermanentDatabaseBuilder(new File(UUID.randomUUID().toString()))
-                .setConfig(GraphDatabaseSettings.load_csv_file_url_root,file.getParent())
-                .newGraphDatabase();
+//        final DatabaseManagementService databaseManagementService = new TestDatabaseManagementServiceBuilder(file.getParentFile().toPath())
+//                .setConfig(GraphDatabaseSettings.load_csv_file_url_root, file.getParentFile().toPath())
+//                .build();
+//        db = (GraphDatabaseAPI) databaseManagementService.database(DEFAULT_DATABASE_NAME);
+        
 
         try (Transaction tx = db.beginTx()) {
-            db.execute("CREATE CONSTRAINT ON (c:Character)\n" +
-                    "ASSERT c.id IS UNIQUE;").close();
+            db.executeTransactionally("CREATE CONSTRAINT ON (c:Character)\n" +
+                    "ASSERT c.id IS UNIQUE;");
         }
 
         try (Transaction tx = db.beginTx()) {
-            db.execute("LOAD CSV WITH HEADERS FROM 'file:///got-s1-nodes.csv' AS row\n" +
+            db.executeTransactionally("LOAD CSV WITH HEADERS FROM 'file:///got-s1-nodes.csv' AS row\n" +
                     "MERGE (c:Character {id: row.Id})\n" +
-                    "SET c.name = row.Label;").close();
+                    "SET c.name = row.Label;");
 
-            db.execute("LOAD CSV WITH HEADERS FROM 'file:///got-s1-edges.csv' AS row\n" +
+            db.executeTransactionally("LOAD CSV WITH HEADERS FROM 'file:///got-s1-edges.csv' AS row\n" +
                     "MATCH (source:Character {id: row.Source})\n" +
                     "MATCH (target:Character {id: row.Target})\n" +
                     "MERGE (source)-[rel:INTERACTS_SEASON1]->(target)\n" +
-                    "SET rel.weight = toInteger(row.Weight);").close();
+                    "SET rel.weight = toInteger(row.Weight);");
 
-            tx.success();
+            tx.commit();
         }
 
-        Procedures procedures = db.getDependencyResolver().resolveDependency(Procedures.class);
+        GlobalProcedures procedures = db.getDependencyResolver().resolveDependency(GlobalProcedures.class);
         procedures.registerProcedure(EigenvectorCentralityProc.class);
         procedures.registerProcedure(PageRankProc.class);
 
 
         try (Transaction tx = db.beginTx()) {
             final Label label = Label.label("Character");
-            expected.put(db.findNode(label, "name", "Ned").getId(), 111.68570401574802);
-            expected.put(db.findNode(label, "name", "Robert").getId(), 88.09448401574804);
-            expected.put(db.findNode(label, "name", "Cersei").getId(), 		84.59226401574804);
-            expected.put(db.findNode(label, "name", "Catelyn").getId(), 	84.51566401574803);
-            expected.put(db.findNode(label, "name", "Tyrion").getId(), 82.00291401574802);
-            expected.put(db.findNode(label, "name", "Joffrey").getId(), 77.67397401574803);
-            expected.put(db.findNode(label, "name", "Robb").getId(), 73.56551401574802);
-            expected.put(db.findNode(label, "name", "Arya").getId(), 73.32532401574804	);
-            expected.put(db.findNode(label, "name", "Petyr").getId(), 72.26733401574802);
-            expected.put(db.findNode(label, "name", "Sansa").getId(), 71.56470401574803);
-            tx.success();
+            expected.put(tx.findNode(label, "name", "Ned").getId(), 111.68570401574802);
+            expected.put(tx.findNode(label, "name", "Robert").getId(), 88.09448401574804);
+            expected.put(tx.findNode(label, "name", "Cersei").getId(), 		84.59226401574804);
+            expected.put(tx.findNode(label, "name", "Catelyn").getId(), 	84.51566401574803);
+            expected.put(tx.findNode(label, "name", "Tyrion").getId(), 82.00291401574802);
+            expected.put(tx.findNode(label, "name", "Joffrey").getId(), 77.67397401574803);
+            expected.put(tx.findNode(label, "name", "Robb").getId(), 73.56551401574802);
+            expected.put(tx.findNode(label, "name", "Arya").getId(), 73.32532401574804	);
+            expected.put(tx.findNode(label, "name", "Petyr").getId(), 72.26733401574802);
+            expected.put(tx.findNode(label, "name", "Sansa").getId(), 71.56470401574803);
+            tx.commit();
         }
     }
 
@@ -255,18 +280,18 @@ public class EigenvectorCentralityProcIntegrationTest {
             String query,
             Map<String, Object> params,
             Consumer<Result.ResultRow> check) {
-        try (Result result = db.execute(query, params)) {
+        testResult(db, query, params, result -> {
             result.accept(row -> {
                 check.accept(row);
                 return true;
             });
-        }
+        });
     }
 
     private void assertResult(final String scoreProperty, Map<Long, Double> expected) {
         try (Transaction tx = db.beginTx()) {
             for (Map.Entry<Long, Double> entry : expected.entrySet()) {
-                double score = ((Number) db
+                double score = ((Number) tx
                         .getNodeById(entry.getKey())
                         .getProperty(scoreProperty)).doubleValue();
                 assertEquals(
@@ -275,7 +300,7 @@ public class EigenvectorCentralityProcIntegrationTest {
                         score,
                         0.1);
             }
-            tx.success();
+            tx.commit();
         }
     }
 

@@ -67,7 +67,7 @@ public class BalancedTriadsProc {
                 .overrideRelationshipTypeOrQuery(relationship);
 
         // load
-        final HugeGraph graph = (HugeGraph) new GraphLoader(api, Pools.DEFAULT)
+        final HugeGraph graph = (HugeGraph) new GraphLoader(api, Pools.DEFAULT, transaction)
                 .withOptionalLabel(configuration.getNodeLabelOrQuery())
                 .withOptionalRelationshipType(configuration.getRelationshipOrQuery())
                 .withOptionalRelationshipWeightsFromProperty(configuration.getWeightProperty(), 0.0)
@@ -112,7 +112,7 @@ public class BalancedTriadsProc {
 
         // load
         try (ProgressTimer timer = builder.timeLoad()) {
-            graph = (HugeGraph) new GraphLoader(api, Pools.DEFAULT)
+            graph = (HugeGraph) new GraphLoader(api, Pools.DEFAULT, transaction)
                     .withOptionalLabel(configuration.getNodeLabelOrQuery())
                     .withOptionalRelationshipType(configuration.getRelationshipOrQuery())
                     .withOptionalRelationshipWeightsFromProperty(configuration.getWeightProperty(), 0.0)

@@ -25,17 +25,22 @@ import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.api.RelationshipIntersect;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.internal.kernel.api.TokenWrite;
 import org.neo4j.internal.kernel.api.Write;
 import org.neo4j.kernel.api.KernelTransaction;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.PrimitiveIterator;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.getKernelTx;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withEmptyTx;
+import static org.neo4j.graphalgo.core.utils.TransactionUtil.withTx;
 
 public final class HugeIntersectionTest {
 
@@ -46,13 +51,14 @@ public final class HugeIntersectionTest {
     private static long[] TARGETS;
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setup() {
         long[] neoStarts = new long[2];
-        long[] neoTargets = DB.executeAndCommit(db -> {
-            try (KernelTransaction st = DB.transaction()) {
+        long[] neoTargets = withTx(DB, tx -> {
+            try {
+                KernelTransaction st = getKernelTx(tx);
                 TokenWrite token = st.tokenWrite();
                 int type = token.relationshipTypeGetOrCreateForName("TYPE");
                 Write write = st.dataWrite();
@@ -74,14 +80,14 @@ public final class HugeIntersectionTest {
                         targets[some++] = target;
                     }
                 }
-                st.success();
+                st.commit();
                 return Arrays.copyOf(targets, some);
             } catch (KernelException e) {
                 throw new RuntimeException(e);
             }
         });
 
-        final HugeGraph graph = (HugeGraph) new GraphLoader(DB).asUndirected(true).load(HugeGraphFactory.class);
+        final HugeGraph graph = (HugeGraph) new TransactionWrapper(DB).apply(ktx -> new GraphLoader(DB, ktx)).asUndirected(true).load(HugeGraphFactory.class);
         INTERSECT = graph.intersection();
         START1 = graph.toHugeMappedNodeId(neoStarts[0]);
         START2 = graph.toHugeMappedNodeId(neoStarts[1]);

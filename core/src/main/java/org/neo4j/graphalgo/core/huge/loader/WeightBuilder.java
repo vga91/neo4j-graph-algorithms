@@ -21,6 +21,7 @@ package org.neo4j.graphalgo.core.huge.loader;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.internal.kernel.api.CursorFactory;
 import org.neo4j.internal.kernel.api.Read;
+import org.neo4j.kernel.api.KernelTransaction;
 
 import static org.neo4j.graphalgo.core.utils.paged.MemoryUsage.sizeOfObjectArray;
 
@@ -34,8 +35,7 @@ abstract class WeightBuilder {
 
     // TODO: check thread safety
     abstract void addWeight(
-            CursorFactory cursors,
-            Read read,
+            KernelTransaction transaction,
             long relationshipReference,
             long propertiesReference,
             long sourceNodeId,
@@ -109,8 +109,7 @@ abstract class WeightBuilder {
 
         @Override
         void addWeight(
-                final CursorFactory cursors,
-                final Read read,
+                KernelTransaction transaction,
                 final long relationshipReference,
                 final long propertiesReference,
                 final long sourceNodeId,
@@ -122,8 +121,7 @@ abstract class WeightBuilder {
                     propertiesReference,
                     targetNodeId,
                     localId,
-                    cursors,
-                    read
+                    transaction
             );
         }
     }
@@ -147,8 +145,7 @@ abstract class WeightBuilder {
 
         @Override
         void addWeight(
-                final CursorFactory cursors,
-                final Read read,
+                KernelTransaction transaction,
                 final long relationshipReference,
                 final long propertiesReference,
                 final long sourceNodeId,

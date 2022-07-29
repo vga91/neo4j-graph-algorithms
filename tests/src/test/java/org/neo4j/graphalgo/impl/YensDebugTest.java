@@ -25,18 +25,22 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.yens.WeightedPath;
 import org.neo4j.graphalgo.impl.yens.YensKShortestPaths;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import java.util.List;
 import java.util.function.DoubleConsumer;
 
 import static org.mockito.AdditionalMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.neo4j.configuration.GraphDatabaseInternalSettings.track_cursor_close;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 /**
  * Graph:
@@ -54,7 +58,8 @@ public class YensDebugTest {
     public static final double DELTA = 0.001;
 
     @ClassRule
-    public static ImpermanentDatabaseRule db = new ImpermanentDatabaseRule();
+    public static DatabaseRule db = new ImpermanentDatabaseRule()
+            .setConfig(track_cursor_close, false);
 
     private static Graph graph;
 
@@ -79,15 +84,15 @@ public class YensDebugTest {
                         " (e)-[:TYPE {cost:2.0}]->(g),\n" +
                         " (f)-[:TYPE {cost:1.0}]->(g)";
 
-        db.execute(cypher);
+        db.executeTransactionally(cypher);
 
-        graph = (HeavyGraph) new GraphLoader(db)
+        graph = (HeavyGraph) new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .withoutNodeProperties()
                 .withRelationshipWeightsFromProperty("cost", Double.MAX_VALUE)
                 .withDirection(Direction.BOTH)
-                .load(HeavyGraphFactory.class);
+                .load(HeavyGraphFactory.class));
     }
 
     @Test
@@ -112,7 +117,7 @@ public class YensDebugTest {
 
     private static Node getNode(String name) {
         final Node[] node = new Node[1];
-        db.execute("MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n").accept(row -> {
+        executeAndAccept(db, "MATCH (n:Node) WHERE n.name = '" + name + "' RETURN n", row -> {
             node[0] = row.getNode("n");
             return false;
         });

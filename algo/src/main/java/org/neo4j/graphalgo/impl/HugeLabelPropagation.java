@@ -18,13 +18,13 @@
  */
 package org.neo4j.graphalgo.impl;
 
-import org.neo4j.collection.primitive.PrimitiveLongIterator;
 import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.api.HugeNodeProperties;
 import org.neo4j.graphalgo.api.HugeRelationshipConsumer;
 import org.neo4j.graphalgo.api.HugeRelationshipIterator;
 import org.neo4j.graphalgo.api.HugeRelationshipWeights;
 import org.neo4j.graphalgo.api.HugeWeightMapping;
+import org.neo4j.graphalgo.api.PrimitiveLongIterator;
 import org.neo4j.graphalgo.core.utils.ProgressLogger;
 import org.neo4j.graphalgo.core.utils.RandomLongIterable;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;

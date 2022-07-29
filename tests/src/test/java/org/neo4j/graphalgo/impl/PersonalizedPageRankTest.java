@@ -20,10 +20,10 @@ package org.neo4j.graphalgo.impl;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.GraphLoader;
@@ -31,9 +31,12 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyCypherGraphFactory;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.loader.HugeGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
+import org.neo4j.graphalgo.core.utils.TransactionWrapper;
 import org.neo4j.graphalgo.impl.pagerank.PageRankAlgorithm;
 import org.neo4j.graphalgo.impl.pagerank.PageRankResult;
 import org.neo4j.graphalgo.impl.results.CentralityResult;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -84,22 +87,13 @@ public final class PersonalizedPageRankTest {
             "  (todd)-[:PURCHASED]->(potter),\n" +
             "  (todd)-[:PURCHASED]->(hobbit)";
 
-    private static GraphDatabaseAPI db;
+    @ClassRule
+    public static DatabaseRule db = new ImpermanentDatabaseRule();
 
     @BeforeClass
     public static void setupGraph() {
-        db = TestDatabaseCreator.createTestDatabase();
-        try (Transaction tx = db.beginTx()) {
-            db.execute(DB_CYPHER).close();
-            tx.success();
-        }
+        db.executeTransactionally(DB_CYPHER);
     }
-
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        if (db!=null) db.shutdown();
-    }
-
     public PersonalizedPageRankTest(
             Class<? extends GraphFactory> graphImpl,
             String nameIgnoredOnlyForTestName) {
@@ -114,37 +108,37 @@ public final class PersonalizedPageRankTest {
 
         try (Transaction tx = db.beginTx()) {
 
-            expected.put(db.findNode(personLabel, "name", "John").getId(), 0.24851499999999993);
-            expected.put(db.findNode(personLabel, "name", "Jill").getId(), 0.12135449999999998);
-            expected.put(db.findNode(personLabel, "name", "Mary").getId(), 0.12135449999999998);
-            expected.put(db.findNode(personLabel, "name", "Todd").getId(), 0.043511499999999995);
+            expected.put(tx.findNode(personLabel, "name", "John").getId(), 0.24851499999999993);
+            expected.put(tx.findNode(personLabel, "name", "Jill").getId(), 0.12135449999999998);
+            expected.put(tx.findNode(personLabel, "name", "Mary").getId(), 0.12135449999999998);
+            expected.put(tx.findNode(personLabel, "name", "Todd").getId(), 0.043511499999999995);
 
-            expected.put(db.findNode(productLabel, "name", "Kindle Fire").getId(), 0.17415649999999996);
-            expected.put(db.findNode(productLabel, "name", "iPhone5").getId(), 0.17415649999999996);
-            expected.put(db.findNode(productLabel, "name", "Fitbit Flex Wireless").getId(), 0.08085200000000001);
-            expected.put(db.findNode(productLabel, "name", "Harry Potter").getId(), 0.01224);
-            expected.put(db.findNode(productLabel, "name", "Hobbit").getId(), 0.01224);
-            tx.close();
+            expected.put(tx.findNode(productLabel, "name", "Kindle Fire").getId(), 0.17415649999999996);
+            expected.put(tx.findNode(productLabel, "name", "iPhone5").getId(), 0.17415649999999996);
+            expected.put(tx.findNode(productLabel, "name", "Fitbit Flex Wireless").getId(), 0.08085200000000001);
+            expected.put(tx.findNode(productLabel, "name", "Harry Potter").getId(), 0.01224);
+            expected.put(tx.findNode(productLabel, "name", "Hobbit").getId(), 0.01224);
+            tx.commit();
         }
 
         final Graph graph;
         if (graphImpl.isAssignableFrom(HeavyCypherGraphFactory.class)) {
-            graph = new GraphLoader(db)
+            graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                     .withLabel("MATCH (n) RETURN id(n) as id")
                     .withRelationshipType("MATCH (n)-[:PURCHASED]-(m) RETURN id(n) as source,id(m) as target")
-                    .load(graphImpl);
+                    .load(graphImpl));
 
         } else {
-            graph = new GraphLoader(db)
+            graph = new TransactionWrapper(db).apply(ktx -> new GraphLoader(db, ktx)
                     .withDirection(Direction.BOTH)
                     .withRelationshipType("PURCHASED")
                     .asUndirected(true)
-                    .load(graphImpl);
+                    .load(graphImpl));
         }
 
         LongStream sourceNodeIds;
         try(Transaction tx = db.beginTx()) {
-            Node node = db.findNode(personLabel, "name", "John");
+            Node node = tx.findNode(personLabel, "name", "John");
             sourceNodeIds = LongStream.of(node.getId());
         }
 

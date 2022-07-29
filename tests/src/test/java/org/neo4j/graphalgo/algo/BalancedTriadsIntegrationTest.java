@@ -24,15 +24,17 @@ import org.junit.Test;
 import org.mockito.AdditionalMatchers;
 import org.neo4j.graphalgo.BalancedTriadsProc;
 import org.neo4j.graphalgo.api.HugeGraph;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.test.rule.ImpermanentDatabaseRule;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.graphalgo.test.rule.DatabaseRule;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.graphalgo.test.rule.ImpermanentDatabaseRule;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
+import static org.neo4j.graphalgo.core.utils.StatementApi.executeAndAccept;
 
 
 /**
@@ -47,7 +49,7 @@ public class BalancedTriadsIntegrationTest {
     }
 
     @ClassRule
-    public static final ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
+    public static final DatabaseRule DB = new ImpermanentDatabaseRule();
 
     private static HugeGraph graph;
 
@@ -78,15 +80,15 @@ public class BalancedTriadsIntegrationTest {
                         " (f)-[:TYPE {w:-1.0}]->(g),\n" +
                         " (g)-[:TYPE {w:1.0}]->(b)";
 
-        DB.execute(cypher);
-        DB.resolveDependency(Procedures.class).registerProcedure(BalancedTriadsProc.class);
+        DB.executeTransactionally(cypher);
+        DB.resolveDependency(GlobalProcedures.class).registerProcedure(BalancedTriadsProc.class);
     }
 
     @Test
     public void test() throws Exception {
 
-        DB.execute("CALL algo.balancedTriads('Node', 'TYPE', {weightProperty:'w'}) YIELD loadMillis, computeMillis, writeMillis, nodeCount, balancedTriadCount, unbalancedTriadCount")
-                .accept(row -> {
+        executeAndAccept(DB, "CALL algo.balancedTriads('Node', 'TYPE', {weightProperty:'w'}) YIELD loadMillis, computeMillis, writeMillis, nodeCount, balancedTriadCount, unbalancedTriadCount",
+                row -> {
                     assertEquals(3L, row.getNumber("balancedTriadCount"));
                     assertEquals(3L, row.getNumber("unbalancedTriadCount"));
                     return true;
@@ -97,8 +99,8 @@ public class BalancedTriadsIntegrationTest {
     @Test
     public void testStream() throws Exception {
         final BalancedTriadsConsumer mock = mock(BalancedTriadsConsumer.class);
-        DB.execute("CALL algo.balancedTriads.stream('Node', 'TYPE', {weightProperty:'w'}) YIELD nodeId, balanced, unbalanced")
-                .accept(row -> {
+        executeAndAccept(DB, "CALL algo.balancedTriads.stream('Node', 'TYPE', {weightProperty:'w'}) YIELD nodeId, balanced, unbalanced",
+                row -> {
                     final long nodeId = row.getNumber("nodeId").longValue();
                     final double balanced = row.getNumber("balanced").doubleValue();
                     final double unbalanced = row.getNumber("unbalanced").doubleValue();
